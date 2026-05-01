@@ -21,61 +21,28 @@ const LoginPage: React.FC = () => {
     setLoading(true);
     
     try {
-      // Hardcoded test credentials
-      if (username === 'admin' && password === 'admin123') {
-        // Mock admin login
-        const mockAdminUser = {
-          id: '1',
-          username: 'admin',
-          email: 'admin@example.com',
-          role: 'platform_admin',
-          full_name: 'System Administrator'
-        };
-        const mockToken = 'mock-admin-token-' + Date.now();
-        
-        localStorage.setItem('authToken', mockToken);
-        localStorage.setItem('userRole', 'platform_admin');
-        localStorage.setItem('user', JSON.stringify(mockAdminUser));
-        
-        console.log('Admin login successful');
-        navigate('/dashboard');
-        return;
-      }
-      
-      if (username === 'user' && password === 'user123') {
-        // Mock regular user login
-        const mockUser = {
-          id: '2',
-          username: 'user',
-          email: 'user@example.com',
-          role: 'user',
-          full_name: 'Test User'
-        };
-        const mockToken = 'mock-user-token-' + Date.now();
-        
-        localStorage.setItem('authToken', mockToken);
-        localStorage.setItem('userRole', 'user');
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        
-        console.log('User login successful');
-        navigate('/dashboard');
-        return;
-      }
+      // Use URLSearchParams for OAuth2 form data
+      const formData = new URLSearchParams();
+      formData.append('username', username);
+      formData.append('password', password);
 
-      // If credentials don't match hardcoded ones, try API call
-      const response = await apiClient<{ user: any; token: string }>('/auth/login', {
+      const response = await apiClient<{ user: any; access_token: string; token_type: string }>('/auth/login/token', {
         method: 'POST',
-        data: { username, password },
+        body: formData, // Overriding the default JSON behavior in apiClient for this specific OAuth2 call
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        requiresAuth: false
       });
       
-      localStorage.setItem('authToken', response.token);
+      localStorage.setItem('authToken', response.access_token);
       localStorage.setItem('user', JSON.stringify(response.user));
-      localStorage.setItem('userRole', response.user.role || 'user');
+      localStorage.setItem('userRole', response.user.is_superuser ? 'platform_admin' : 'user');
       navigate('/dashboard');
       
     } catch (err: any) {
       console.error('Login error:', err);
-      setError('Invalid credentials. Try admin/admin123 or user/user123 for testing.');
+      setError(err.message || 'Invalid username or password');
     } finally {
       setLoading(false);
     }
