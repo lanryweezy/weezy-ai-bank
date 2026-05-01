@@ -8,15 +8,7 @@ import decimal
 import uuid # For generating unique transaction IDs
 from datetime import datetime, timedelta
 
-# Placeholder for other service integrations
-# from weezy_cbs.accounts_ledger_management.services import (
-#     get_account_by_number as get_deposit_account,
-#     post_double_entry_transaction
-# )
-# from weezy_cbs.accounts_ledger_management.schemas import PostTransactionRequest as LedgerPostRequest
-# from weezy_cbs.integrations import nibss_service, ussd_aggregator_service # etc.
-# from weezy_cbs.fees_charges_commission_engine.services import calculate_and_apply_fees
-# from weezy_cbs.shared import exceptions
+from weezy_cbs.accounts_ledger_management.services import post_double_entry_transaction
 
 class NotFoundException(Exception): pass
 class InvalidOperationException(Exception): pass
@@ -29,37 +21,19 @@ def _generate_transaction_id(prefix="WZYTXN"):
 # --- Core Transaction Processing ---
 def initiate_transaction(db: Session, transaction_in: schemas.TransactionCreateRequest, initiated_by_customer_id: Optional[int] = None) -> models.FinancialTransaction:
     """
-    Initiates a new financial transaction.
-    This function creates the master transaction record and sets it to PENDING.
-    Actual processing (NIP call, ledger posting) happens in subsequent steps or async tasks.
+    Initiates and processes a new financial transaction.
     """
-    # Validate debit account if it's one of ours
-    if transaction_in.debit_account_number and (transaction_in.debit_bank_code is None or transaction_in.debit_bank_code == "OUR_BANK_CODE"): # Replace "OUR_BANK_CODE"
-        # debit_account = get_deposit_account(db, transaction_in.debit_account_number)
-        # if not debit_account:
-        #     raise NotFoundException(f"Debit account {transaction_in.debit_account_number} not found.")
-        # if debit_account.status != "ACTIVE": # Assuming status is string
-        #     raise InvalidOperationException(f"Debit account {transaction_in.debit_account_number} is not active.")
-        # if debit_account.available_balance < transaction_in.amount: # Basic pre-check
-        #     raise InsufficientFundsException("Insufficient funds in debit account.")
-        # transaction_in.debit_account_name = debit_account.customer.name # Assuming customer relation and name field
-        pass # Placeholder for above validation
-
-    # For interbank, name enquiry might be done first (see NIP services)
-    # For now, assume credit_account_name is provided or will be handled by NIP flow
-
     txn_id = _generate_transaction_id()
     db_transaction = models.FinancialTransaction(
         id=txn_id,
         transaction_type=transaction_in.transaction_type,
         channel=transaction_in.channel,
-        status=TransactionStatusEnum.PENDING, # Initial status
+        status=TransactionStatusEnum.PENDING,
         amount=transaction_in.amount,
         currency=transaction_in.currency,
         debit_account_number=transaction_in.debit_account_number,
-        debit_account_name=transaction_in.debit_account_name, # May need to fetch if our account
+        debit_account_name=transaction_in.debit_account_name,
         debit_bank_code=transaction_in.debit_bank_code,
-        # debit_customer_id=initiated_by_customer_id, # Or fetched from debit_account if internal
         credit_account_number=transaction_in.credit_account_number,
         credit_account_name=transaction_in.credit_account_name,
         credit_bank_code=transaction_in.credit_bank_code,
@@ -67,14 +41,43 @@ def initiate_transaction(db: Session, transaction_in: schemas.TransactionCreateR
         initiated_at=datetime.utcnow()
     )
     db.add(db_transaction)
+    db.flush()
+
+    # Process internal transactions immediately
+    if (not transaction_in.debit_bank_code or transaction_in.debit_bank_code == "OUR_BANK_CODE") and \
+       (not transaction_in.credit_bank_code or transaction_in.credit_bank_code == "OUR_BANK_CODE"):
+        try:
+            # Post to ledger
+            post_result = post_double_entry_transaction(
+                db=db,
+                debit_account_number=transaction_in.debit_account_number,
+                credit_account_number=transaction_in.credit_account_number,
+                amount=transaction_in.amount,
+                currency=transaction_in.currency,
+                narration=transaction_in.narration,
+                financial_transaction_id=txn_id,
+                channel=transaction_in.channel.value if hasattr(transaction_in.channel, 'value') else transaction_in.channel
+            )
+            db_transaction.status = TransactionStatusEnum.SUCCESSFUL
+            db_transaction.processed_at = datetime.utcnow()
+            db_transaction.system_remarks = "Internal transfer posted successfully."
+            db.commit()
+            db.refresh(db_transaction)
+            return db_transaction
+        except Exception as e:
+            db.rollback()
+            db_transaction.status = TransactionStatusEnum.FAILED
+            db_transaction.response_message = str(e)
+            db_transaction.processed_at = datetime.utcnow()
+            db.add(db_transaction) # Re-add to save the failed status
+            db.commit()
+            db.refresh(db_transaction)
+            raise InvalidOperationException(f"Transaction failed: {str(e)}")
+
     db.commit()
     db.refresh(db_transaction)
-
-    # Depending on channel, trigger next step (e.g., NIP call, USSD handler, ledger posting)
-    # This could be an async task:
-    # process_pending_transaction_async(db_transaction.id)
-
     return db_transaction
+
 
 def get_transaction_by_id(db: Session, transaction_id: str) -> Optional[models.FinancialTransaction]:
     return db.query(models.FinancialTransaction).filter(models.FinancialTransaction.id == transaction_id).first()

@@ -80,6 +80,8 @@ class AIAgentConfigService(BaseAIService):
     def get_all_agents(self, db: Session) -> List[models.AIAgentConfig]:
         return db.query(models.AIAgentConfig).filter(models.AIAgentConfig.is_active == True).all()
 
+from .engine import WorkflowEngine
+
 # --- Workflow Service ---
 class WorkflowService(BaseAIService):
     def create_workflow(self, db: Session, workflow_in: schemas.WorkflowCreate, username: str) -> models.Workflow:
@@ -119,6 +121,12 @@ class WorkflowService(BaseAIService):
         db.refresh(db_run)
         
         self._audit_log(db, "WORKFLOW_RUN_START", "WorkflowRun", db_run.id, f"Run started for workflow '{workflow.name}'.", username)
+        
+        # Trigger the engine
+        engine = WorkflowEngine(db)
+        engine.execute_next_steps(db_run.id)
+        
+        db.refresh(db_run)
         return db_run
 
 # --- Task Service ---

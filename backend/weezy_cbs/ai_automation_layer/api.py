@@ -66,6 +66,8 @@ async def run_workflow(
 ):
     return workflow_service.start_workflow_run(db, workflow_id, triggering_data, current_user.id, current_user.username)
 
+from .engine import WorkflowEngine
+
 # --- Tasks ---
 @ai_api_router.get("/tasks/me", response_model=List[schemas.TaskResponse])
 async def list_my_tasks(
@@ -73,3 +75,14 @@ async def list_my_tasks(
     current_user: CoreUser = Depends(get_current_active_user)
 ):
     return task_service.get_tasks_for_user(db, current_user.id)
+
+@ai_api_router.post("/tasks/{task_id}/complete")
+async def complete_task(
+    task_id: UUID,
+    output_data: Dict[str, Any] = Body(...),
+    db: Session = Depends(get_db),
+    current_user: CoreUser = Depends(get_current_active_user)
+):
+    engine = WorkflowEngine(db)
+    engine.complete_task(task_id, output_data, current_user.username)
+    return {"message": "Task completed and workflow continued"}

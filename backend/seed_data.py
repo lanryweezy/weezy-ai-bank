@@ -53,5 +53,55 @@ def seed_agent_templates():
     finally:
         db.close()
 
+def seed_demo_workflow(db: Session):
+    existing = db.query(models.Workflow).filter(models.Workflow.name == "Standard Loan Application").first()
+    if not existing:
+        print("Seeding Standard Loan Application Workflow...")
+        # Get the agent template ID
+        template = db.query(models.AIModelMetadata).filter(models.AIModelMetadata.source_identifier == "loan-checker-logic").first()
+        
+        # Create a dummy agent config
+        agent = models.AIAgentConfig(
+            agent_name="Loan Check Agent",
+            template_id=template.id if template else None,
+            role_description="Automated loan document verification",
+            goal_description="Verify all documents are present and valid",
+            is_active=True
+        )
+        db.add(agent)
+        db.flush()
+        
+        definition = {
+            "steps": [
+                {
+                    "name": "document_verification",
+                    "type": "agent_execution",
+                    "agent_id": str(agent.id)
+                },
+                {
+                    "name": "credit_analyst_review",
+                    "type": "human_review",
+                    "assigned_role": "credit_analyst"
+                },
+                {
+                    "name": "final_disbursement",
+                    "type": "agent_execution",
+                    "agent_id": str(agent.id)
+                }
+            ]
+        }
+        
+        workflow = models.Workflow(
+            name="Standard Loan Application",
+            description="End-to-end automated loan process with human review step.",
+            definition_json=definition,
+            is_active=True
+        )
+        db.add(workflow)
+        db.commit()
+
 if __name__ == "__main__":
+    db = SessionLocal()
     seed_agent_templates()
+    seed_demo_workflow(db)
+    db.close()

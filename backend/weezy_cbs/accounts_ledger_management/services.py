@@ -295,79 +295,88 @@ def _create_ledger_entry_internal(
     return ledger_entry
 
 
-def post_internal_transaction(db: Session, request: schemas.InternalTransactionPostingRequest) -> schemas.InternalTransactionPostingResponse:
+def post_double_entry_transaction(
+    db: Session, 
+    debit_account_number: str, 
+    credit_account_number: str, 
+    amount: decimal.Decimal, 
+    currency: CurrencyEnum, 
+    narration: str, 
+    financial_transaction_id: str,
+    channel: str = "SYSTEM"
+) -> Dict[str, Any]:
     """
-    Handles posting for internal transfers (Account-to-Account, Account-to-GL, GL-to-Account, GL-to-GL).
-    This is the primary service for moving funds within the bank's own books.
-    It ensures atomicity for double-entry postings.
+    Performs a strict double-entry ledger posting between two customer accounts.
+    Locks both accounts to prevent race conditions during concurrent transactions.
     """
-    debit_entry_model: Optional[models.LedgerEntry] = None
-    credit_entry_model: Optional[models.LedgerEntry] = None
+    # Always lock accounts in a consistent order to prevent deadlocks (e.g., sort by account number)
+    accounts = sorted([debit_account_number, credit_account_number])
+    
+    # Lock first account
+    acc1 = get_account_by_number(db, accounts[0], for_update=True)
+    if not acc1: raise NotFoundException(f"Account {accounts[0]} not found.")
+    
+    # Lock second account
+    acc2 = get_account_by_number(db, accounts[1], for_update=True)
+    if not acc2: raise NotFoundException(f"Account {accounts[1]} not found.")
+    
+    # Assign correct roles
+    debit_account = acc1 if acc1.account_number == debit_account_number else acc2
+    credit_account = acc1 if acc1.account_number == credit_account_number else acc2
 
-    # Determine debit and credit entities (Account or GL)
-    # This section needs robust logic to fetch account/GL models and check their status/validity.
-    # For brevity, assuming helper functions like _get_entity_for_posting(db, leg_details) exist.
-
-    # For example, if debit_leg specifies account_number:
-    # debit_target_account = get_account_by_number(db, request.debit_leg['account_number'], for_update=True)
-    # if not debit_target_account: raise NotFoundException("Debit account not found.")
-    # ... similar for credit_target_account or GLs ...
-
-    # For mock purposes, assume accounts are valid and fetched.
-    # In a real system, you'd lock rows for accounts involved.
-    mock_debit_account_id = 1 # Placeholder
-    mock_credit_account_id = 2 # Placeholder
+    # Validation
+    if debit_account.status != AccountStatusEnum.ACTIVE:
+        raise InvalidOperationException(f"Debit account {debit_account_number} is not ACTIVE.")
+    if credit_account.status != AccountStatusEnum.ACTIVE:
+        raise InvalidOperationException(f"Credit account {credit_account_number} is not ACTIVE.")
+    if debit_account.currency != currency or credit_account.currency != currency:
+        raise InvalidOperationException("Currency mismatch between accounts and transaction.")
+    if debit_account.is_post_no_debit:
+        raise InvalidOperationException(f"Debit account {debit_account_number} has a Post-No-Debit restriction.")
+    if debit_account.available_balance < amount:
+        raise InsufficientFundsException(f"Insufficient funds in account {debit_account_number}.")
 
     try:
-        if request.debit_leg: # Assuming it's an account for simplicity
-            debit_entry_model = _create_ledger_entry_internal(
-                db=db, account_id=mock_debit_account_id, # Replace with actual fetched account ID
-                financial_transaction_id=request.financial_transaction_id,
-                entry_type=TransactionTypeEnum.DEBIT,
-                amount=request.amount, currency=request.currency,
-                narration=request.debit_leg.get('narration', request.narration_overall),
-                value_date=request.value_date or datetime.utcnow(), channel=request.channel,
-                external_reference_number=request.external_reference
-            )
-
-        if request.credit_leg: # Assuming it's an account for simplicity
-             credit_entry_model = _create_ledger_entry_internal(
-                db=db, account_id=mock_credit_account_id, # Replace with actual fetched account ID
-                financial_transaction_id=request.financial_transaction_id,
-                entry_type=TransactionTypeEnum.CREDIT,
-                amount=request.amount, currency=request.currency,
-                narration=request.credit_leg.get('narration', request.narration_overall),
-                value_date=request.value_date or datetime.utcnow(), channel=request.channel,
-                external_reference_number=request.external_reference
-            )
-
-        # If only single leg info provided (e.g. system posting to one customer account from/to a GL)
-        # ... handle single leg posting logic ...
-
-        db.commit() # Commit all ledger entries and account balance updates together
-
-        # Refresh models after commit if their IDs or computed values are needed
-        if debit_entry_model: db.refresh(debit_entry_model)
-        if credit_entry_model: db.refresh(credit_entry_model)
-
-        # _log_account_event for both accounts involved if applicable.
-
-        return schemas.InternalTransactionPostingResponse(
-            financial_transaction_id=request.financial_transaction_id,
-            status="SUCCESSFUL_POSTING",
-            message="Transaction posted successfully to ledger.",
-            debit_ledger_entry_id=debit_entry_model.id if debit_entry_model else None,
-            credit_ledger_entry_id=credit_entry_model.id if credit_entry_model else None,
-            timestamp=datetime.utcnow()
+        # Create Debit Entry
+        debit_entry = _create_ledger_entry_internal(
+            db=db, 
+            account_id=debit_account.id,
+            financial_transaction_id=financial_transaction_id,
+            entry_type=TransactionTypeEnum.DEBIT,
+            amount=amount, 
+            currency=currency,
+            narration=narration,
+            value_date=datetime.utcnow(), 
+            channel=channel
         )
-    except (InsufficientFundsException, InvalidOperationException, NotFoundException) as e:
-        db.rollback()
-        # Log the specific error for the financial_transaction_id in TransactionManagement system
-        raise e # Re-raise for TransactionManagement to handle the master FT status
+
+        # Create Credit Entry
+        credit_entry = _create_ledger_entry_internal(
+            db=db, 
+            account_id=credit_account.id,
+            financial_transaction_id=financial_transaction_id,
+            entry_type=TransactionTypeEnum.CREDIT,
+            amount=amount, 
+            currency=currency,
+            narration=narration,
+            value_date=datetime.utcnow(), 
+            channel=channel
+        )
+
+        db.commit()
+        
+        return {
+            "status": "SUCCESS",
+            "debit_ledger_entry_id": debit_entry.id,
+            "credit_ledger_entry_id": credit_entry.id
+        }
     except Exception as e:
         db.rollback()
-        # Log generic error
-        raise InvalidOperationException(f"Ledger posting failed unexpectedly for FT ID {request.financial_transaction_id}: {str(e)}")
+        raise InvalidOperationException(f"Ledger posting failed: {str(e)}")
+
+def post_internal_transaction(db: Session, request: schemas.InternalTransactionPostingRequest) -> schemas.InternalTransactionPostingResponse:
+    # Deprecated for MVP double entry approach. Use post_double_entry_transaction instead.
+    pass
 
 
 def post_cash_deposit_to_account(db: Session, account_number: str, amount: decimal.Decimal, currency: CurrencyEnum,
