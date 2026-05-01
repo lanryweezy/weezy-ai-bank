@@ -57,7 +57,7 @@ app.include_router(ai_api.ai_api_router, prefix="/api", tags=["AI & Automation"]
 app.include_router(cim_api.router, prefix="/api/corebanking/cim", tags=["Customer Identity"])
 app.include_router(alm_api.router, prefix="/api/corebanking/alm", tags=["Accounts & Ledger"])
 app.include_router(loan_api.router, prefix="/api/corebanking/loans", tags=["Loans"])
-app.include_router(txn_api.router, prefix="/api/corebanking/transactions", tags=["Transactions"])
+app.include_router(txn_api.router, prefix="/api/transactions", tags=["Transactions"])
 app.include_router(card_api.router, prefix="/api/corebanking/cards-wallets", tags=["Cards & Wallets"])
 app.include_router(comp_rep_api.router, prefix="/api/corebanking/compliance", tags=["Compliance & Reporting"])
 app.include_router(treasury_api.router, prefix="/api/corebanking/treasury", tags=["Treasury & Liquidity"])

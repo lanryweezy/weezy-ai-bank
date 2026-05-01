@@ -34,27 +34,17 @@ const Dashboard: React.FC = () => {
     }
   }, []);
 
-  const { data: taskSummary, isLoading: loadingTasks, error: taskError } = useQuery({
-    queryKey: ['taskSummary'],
-    queryFn: () => apiClient('/tasks/summary?limit=5'),
-    refetchInterval: 30000,
+  const { data: txnSummary, isLoading: loadingTxns } = useQuery({
+    queryKey: ['txnSummary'],
+    queryFn: () => apiClient('/transactions/summary'),
+    refetchInterval: 15000,
   });
 
-  const { data: recentRuns, isLoading: loadingRuns, error: runsError } = useQuery({
-    queryKey: ['recentRuns'],
-    queryFn: () => apiClient('/workflow-runs/summary?limit=5'),
-    refetchInterval: 30000,
+  const { data: recentTransactions, isLoading: loadingRecentTxns } = useQuery({
+    queryKey: ['recentTransactions'],
+    queryFn: () => apiClient('/transactions/history?limit=5'),
+    refetchInterval: 15000,
   });
-
-  const getStatusColor = (status: string): string => {
-    switch (status?.toLowerCase()) {
-        case 'completed': return 'text-green-600 bg-green-100';
-        case 'in_progress': return 'text-blue-600 bg-blue-100';
-        case 'pending': case 'assigned': return 'text-yellow-600 bg-yellow-100';
-        case 'failed': return 'text-red-600 bg-red-100';
-        default: return 'text-gray-700 bg-gray-100';
-    }
-  };
 
   return (
     <Layout>
@@ -64,7 +54,7 @@ const Dashboard: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
                 Welcome back, {userName}! <Sparkles className="h-6 w-6 text-yellow-500" />
             </h1>
-            <p className="text-gray-600 mt-1">AI-Powered Banking Operations Dashboard</p>
+            <p className="text-gray-600 mt-1">AI-Powered Banking Operations Dashboard (Nigerian Market)</p>
           </div>
           <div className="flex gap-2">
             <Button size="sm" onClick={() => navigate('/workflows')} className="bg-indigo-600 hover:bg-indigo-700 shadow-md">
@@ -76,17 +66,17 @@ const Dashboard: React.FC = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Active Tasks', value: (taskSummary?.counts?.pending || 0) + (taskSummary?.counts?.assigned || 0), icon: ListChecks, color: 'indigo' },
-            { label: 'Growth', value: '+12.5%', icon: TrendingUp, color: 'green' },
-            { label: 'Active Loans', value: '12', icon: Landmark, color: 'blue' },
-            { label: 'Cards Issued', value: '45', icon: CreditCard, color: 'purple' },
+            { label: 'Pending Tasks', value: (taskSummary?.counts?.pending || 0), icon: ListChecks, color: 'indigo' },
+            { label: 'Txn Volume', value: txnSummary?.total_transactions || 0, icon: Activity, color: 'orange' },
+            { label: 'Success Rate', value: txnSummary?.total_transactions > 0 ? `${Math.round((txnSummary?.successful_transactions / txnSummary?.total_transactions) * 100)}%` : '0%', icon: CheckCircle, color: 'green' },
+            { label: 'Active Loans', value: '0', icon: Landmark, color: 'blue' },
           ].map((stat, i) => (
             <Card key={i} className="hover:scale-[1.02] transition-all border-none ring-1 ring-gray-200 shadow-sm">
                 <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                     <div>
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">{stat.label}</p>
-                    <h3 className="text-2xl font-bold mt-1">{loadingTasks ? <Skeleton className="h-8 w-12" /> : stat.value}</h3>
+                    <h3 className="text-2xl font-bold mt-1">{loadingTxns || loadingTasks ? <Skeleton className="h-8 w-12" /> : stat.value}</h3>
                     </div>
                     <div className={`p-3 bg-${stat.color}-50 rounded-xl`}>
                     <stat.icon className={`h-6 w-6 text-${stat.color}-600`} />
@@ -98,6 +88,44 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content Area */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="border-none shadow-sm ring-1 ring-gray-200">
+              <CardHeader>
+                <CardTitle>Recent Transactions</CardTitle>
+                <CardDescription>Latest NIP and Internal transfers across the bank.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {loadingRecentTxns ? (
+                    [1, 2, 3].map(i => <Skeleton key={i} className="h-12 w-full" />)
+                  ) : recentTransactions?.length > 0 ? (
+                    recentTransactions.map((txn: any) => (
+                      <div key={txn.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-100">
+                        <div className="flex items-center gap-4">
+                          <div className={`p-2 rounded-full ${txn.status === 'SUCCESSFUL' ? 'bg-green-100' : 'bg-red-100'}`}>
+                            <Activity className={`h-4 w-4 ${txn.status === 'SUCCESSFUL' ? 'text-green-600' : 'text-red-600'}`} />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">{txn.narration || 'Transfer'}</p>
+                            <p className="text-xs text-muted-foreground">{format(new Date(txn.initiated_at), 'MMM dd, HH:mm')}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-sm">₦{parseFloat(txn.amount).toLocaleString()}</p>
+                          <p className={`text-[10px] px-2 py-0.5 rounded-full inline-block ${getStatusColor(txn.status)}`}>
+                            {txn.status}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">No recent transactions found.</div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
           {/* Growth Chart */}
           <Card className="lg:col-span-2 border-none ring-1 ring-gray-200 shadow-sm overflow-hidden">
             <CardHeader className="bg-gray-50/50 border-b">
