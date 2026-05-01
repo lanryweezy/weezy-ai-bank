@@ -1,0 +1,72 @@
+# FastAPI and related
+fastapi
+uvicorn[standard]
+pydantic[email]
+python-multipart # For form data, file uploads
+
+# SQLAlchemy and DB drivers
+sqlalchemy
+psycopg2-binary # For PostgreSQL
+
+# HTTP client
+requests # General purpose synchronous HTTP client
+httpx    # For async HTTP requests (used by TestClient and good for service-to-service)
+
+# Date utilities
+python-dateutil
+
+# JWT for authentication tokens
+python-jose[cryptography] # Robust library for JWT, JWS, JWE, JWK
+
+# Password Hashing
+passlib[bcrypt]
+
+# Scheduling (if cron-like features are implemented)
+croniter
+
+# Data manipulation (optional, but often useful)
+# pandas
+
+# --- Optional AI/ML and Specific Integration Libraries (Examples) ---
+# Add these based on actual model implementations or third-party SDKs used.
+
+# AI/ML libraries (examples)
+# scikit-learn
+# tensorflow
+# torch
+# transformers # For HuggingFace LLMs
+# sentence-transformers
+
+# LLM Orchestration (examples)
+# crewai
+# langgraph
+# langchain
+# autogen-studio
+
+# For specific integrations (examples)
+# boto3 # For AWS
+# google-cloud-storage # For GCS
+# # Add official SDKs for Paystack, Flutterwave, NIBSS if used directly
+
+# Reporting/Templating (examples)
+# Jinja2
+# reportlab # For PDF generation
+# openpyxl # For Excel (XLSX)
+# weasyprint # For HTML/CSS to PDF
+
+# Other utilities
+# python-dotenv # For .env files
+# redis # For caching, queues, OTP store
+
+# --- Development & Testing Tools (Typically in a dev-requirements.txt) ---
+# flake8
+# black
+# isort
+# mypy
+# pytest
+# pytest-cov
+
+# NOTE: This list aims for core functionality based on the refined modules.
+# Commented-out sections are for future consideration or specific deeper implementations.
+# Ensure versions are pinned in a production environment (e.g., fastapi==0.100.0).
+# For now, unpinned versions are used for broader compatibility during development.

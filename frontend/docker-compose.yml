@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://backend:3001
+    networks:
+      - bankapp_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend/.env:/usr/src/app/.env
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=postgres_db
+      - DB_PORT=5432
+      - DB_NAME=bank_db
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - JWT_SECRET=production-secret-key-change-this
+      - BACKEND_PORT=3001
+    depends_on:
+      - postgres_db
+    networks:
+      - bankapp_network
+
+  postgres_db:
+    image: postgres:15-alpine
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/sql/core_banking_schema.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./backend/sql/schema.sql:/docker-entrypoint-initdb.d/02-original.sql
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: bank_db
+    networks:
+      - bankapp_network
+
+volumes:
+  postgres_data:
+
+networks:
+  bankapp_network:
+    driver: bridge

@@ -1,0 +1,331 @@
+# Pydantic schemas for Customer & Identity Management
+from pydantic import BaseModel, EmailStr, Field, field_validator
+from typing import Optional, List, Dict, Any
+from datetime import datetime, date # Use date for date-only fields
+import enum
+
+# Import enums from models to ensure consistency (or redefine if needed for API variations)
+from .models import CBNSupportedAccountTier as ModelAccountTierEnum
+from .models import CustomerTypeEnum as ModelCustomerTypeEnum
+from .models import GenderEnum as ModelGenderEnum
+
+
+# Schema version of Enums for API usage (explicit string values)
+class AccountTierSchema(str, enum.Enum):
+    TIER_1 = "TIER_1"
+    TIER_2 = "TIER_2"
+    TIER_3 = "TIER_3"
+
+class CustomerTypeSchema(str, enum.Enum):
+    INDIVIDUAL = "INDIVIDUAL"
+    SME = "SME"
+    CORPORATE = "CORPORATE"
+
+class GenderSchema(str, enum.Enum):
+    MALE = "MALE"
+    FEMALE = "FEMALE"
+    OTHER = "OTHER"
+    PREFER_NOT_TO_SAY = "PREFER_NOT_TO_SAY"
+
+
+class CustomerBase(BaseModel):
+    customer_type: CustomerTypeSchema = CustomerTypeSchema.INDIVIDUAL
+
+    bvn: Optional[str] = Field(None, min_length=11, max_length=11, pattern=r"^\d{11}$", description="Bank Verification Number")
+    nin: Optional[str] = Field(None, min_length=11, max_length=11, pattern=r"^\d{11}$", description="National Identity Number")
+    tin: Optional[str] = Field(None, description="Tax Identification Number")
+    rc_number: Optional[str] = Field(None, description="CAC Registration Number for businesses")
+
+    first_name: Optional[str] = Field(None, min_length=2)
+    last_name: Optional[str] = Field(None, min_length=2)
+    middle_name: Optional[str] = None
+    company_name: Optional[str] = Field(None, min_length=2, description="Required if customer_type is SME or CORPORATE")
+
+    email: Optional[EmailStr] = None
+    phone_number: str = Field(..., min_length=11, max_length=15, description="Primary phone number, e.g., 08012345678 or +2348012345678")
+
+    date_of_birth: Optional[date] = None # For individuals
+    date_of_incorporation: Optional[date] = None # For SME/Corporate
+
+    gender: Optional[GenderSchema] = None
+    nationality: str = Field("NG", min_length=2, max_length=2, description="ISO 2-letter country code")
+    mother_maiden_name: Optional[str] = None
+    occupation: Optional[str] = None
+    employer_name: Optional[str] = None
+
+    street_address1: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None # Nigerian State
+
+    account_tier: AccountTierSchema = AccountTierSchema.TIER_1 # Default, can be determined by service layer
+
+    # Next of Kin
+    next_of_kin_name: Optional[str] = None
+    next_of_kin_phone: Optional[str] = None
+    next_of_kin_relationship: Optional[str] = None
+    next_of_kin_address: Optional[str] = None
+
+    referral_code_used: Optional[str] = None
+    is_pep: Optional[bool] = Field(False, description="Is the customer a Politically Exposed Person?")
+
+
+    @field_validator('company_name')
+    def company_name_required_for_non_individual(cls, v, info):
+        if info.data.get('customer_type') in [CustomerTypeSchema.SME, CustomerTypeSchema.CORPORATE] and not v:
+            raise ValueError('company_name is required for SME/CORPORATE customer types')
+        if info.data.get('customer_type') == CustomerTypeSchema.INDIVIDUAL and v:
+            # Optionally clear or raise error if company_name provided for individual
+            # For now, let's allow it but it might not be used.
+            pass
+        return v
+
+    @field_validator('first_name', 'last_name', 'date_of_birth', 'gender', 'mother_maiden_name')
+    def individual_fields_consistency(cls, v, info):
+        if info.data.get('customer_type') == CustomerTypeSchema.INDIVIDUAL and v is None and info.field_name in ['first_name', 'last_name', 'date_of_birth']: # Gender MMN optional
+            raise ValueError(f'{info.field_name} is required for INDIVIDUAL customer type')
+        if info.data.get('customer_type') != CustomerTypeSchema.INDIVIDUAL and v is not None and info.field_name in ['date_of_birth', 'gender', 'mother_maiden_name']:
+             # Optionally clear or raise error for individual-specific fields on corporate
+            pass
+        return v
+
+    @field_validator('rc_number', 'date_of_incorporation')
+    def corporate_fields_consistency(cls, v, info):
+        if info.data.get('customer_type') in [CustomerTypeSchema.SME, CustomerTypeSchema.CORPORATE] and v is None and info.field_name in ['rc_number', 'date_of_incorporation']:
+            raise ValueError(f'{info.field_name} is required for SME/CORPORATE customer types')
+        return v
+
+
+class CustomerCreate(CustomerBase):
+    # Tier 1 might only require phone_number, first_name, last_name, (DOB or Address part for some tiers)
+    # This schema allows more, service layer will determine tier based on data provided.
+    # For strict Tier 1 minimal onboarding:
+    # phone_number: str
+    # first_name: str
+    # last_name: str
+    # (other fields become optional if not even in CustomerBase)
+    pass
+
+class CustomerUpdate(BaseModel): # Only allow updating specific fields
+    email: Optional[EmailStr] = None
+    # phone_number: Optional[str] = Field(None, min_length=11, max_length=15) # Primary phone usually not easily updatable
+    middle_name: Optional[str] = None
+    occupation: Optional[str] = None
+    employer_name: Optional[str] = None
+    street_address1: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+
+    # KYC related fields that might be updated post-verification
+    bvn: Optional[str] = Field(None, min_length=11, max_length=11, pattern=r"^\d{11}$")
+    nin: Optional[str] = Field(None, min_length=11, max_length=11, pattern=r"^\d{11}$")
+    tin: Optional[str] = None
+
+    # Next of Kin
+    next_of_kin_name: Optional[str] = None
+    next_of_kin_phone: Optional[str] = None
+    next_of_kin_relationship: Optional[str] = None
+    next_of_kin_address: Optional[str] = None
+
+    is_pep: Optional[bool] = None
+    segment: Optional[str] = None
+    # is_active: Optional[bool] = None # Status changes usually via specific endpoint/service
+
+class CustomerResponse(CustomerBase): # What is returned by API after creation or GET
+    id: int
+    is_active: bool
+    is_verified_bvn: bool
+    is_verified_nin: bool
+    is_verified_identity_document: bool
+    is_verified_address: bool
+    # own_referral_code: Optional[str] = None
+
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        orm_mode = True
+        use_enum_values = True # Serialize enums to their string values
+
+class CustomerDocumentBase(BaseModel):
+    document_type: str = Field(..., description="e.g., 'PASSPORT', 'NIN_SLIP', 'UTILITY_BILL', 'CAC_CERTIFICATE', 'SELFIE'")
+    document_number: Optional[str] = None
+    issuing_authority: Optional[str] = None
+    issue_date: Optional[date] = None
+    expiry_date: Optional[date] = None
+    document_url: str = Field(..., description="URL to the stored document")
+
+class CustomerDocumentCreate(CustomerDocumentBase):
+    customer_id: int # Provided when creating a document for a customer
+
+class CustomerDocumentResponse(CustomerDocumentBase):
+    id: int
+    customer_id: int
+    uploaded_at: datetime
+    verified_at: Optional[datetime] = None
+    is_verified: bool
+    verification_meta_json: Optional[Dict[str, Any]] = None # Parsed from Text by Pydantic
+
+    class Config:
+        orm_mode = True
+
+# Minimal account summary for embedding in CustomerProfileResponse
+class LinkedAccountSummarySchema(BaseModel):
+    account_number: str
+    account_type: str # e.g. "SAVINGS", "CURRENT"
+    currency: str
+    status: str
+    class Config:
+        orm_mode = True # If it ever maps from an ORM model fragment
+
+class CustomerProfileResponse(CustomerResponse): # For 360 view
+    documents: List[CustomerDocumentResponse] = []
+    linked_accounts_summary: List[LinkedAccountSummarySchema] = [] # Summary of linked accounts
+    # kyc_audit_logs: List[KYCAuditLogResponse] = [] # If exposing audit logs here
+    # overall_kyc_level_met: Optional[str] = None # e.g. "Tier 1 Complete", "Tier 3 Pending Address Verification"
+
+
+class BVNVerificationRequest(BaseModel):
+    bvn: str = Field(..., min_length=11, max_length=11, pattern=r"^\d{11}$")
+    # NIBSS often requires more for full validation, e.g. if used for account opening
+    # For simple validation, BVN alone might suffice for some NIBSS endpoints.
+    # Adding phone number as it's often part of NIBSS record.
+    phone_number: Optional[str] = Field(None, description="Phone number associated with BVN, for validation")
+    # first_name: Optional[str] = None
+    # last_name: Optional[str] = None
+    # date_of_birth: Optional[date] = None
+
+class BVNVerificationResponse(BaseModel):
+    is_valid: bool # Was the BVN found and does it match provided details (if any)?
+    message: str
+    bvn_data: Optional[Dict[str, Any]] = None # Parsed data from NIBSS (name, DOB, phone, photo ID ref etc.)
+
+class NINVerificationRequest(BaseModel):
+    nin: str = Field(..., min_length=11, max_length=11, pattern=r"^\d{11}$")
+    # Similar to BVN, other fields might be needed by NIMC for full validation.
+    # first_name: Optional[str] = None
+    # last_name: Optional[str] = None
+    # phone_number: Optional[str] = None # Often linked to NIN
+
+class NINVerificationResponse(BaseModel):
+    is_valid: bool
+    message: str
+    nin_data: Optional[Dict[str, Any]] = None # Parsed data from NIMC (name, DOB, photo etc.)
+
+class KYCStatusUpdateRequest(BaseModel): # For admin/system to update verification flags
+    is_verified_bvn: Optional[bool] = None
+    is_verified_nin: Optional[bool] = None
+    is_verified_identity_document: Optional[bool] = None # Specify which doc in notes or separate endpoint
+    is_verified_address: Optional[bool] = None
+    account_tier_override: Optional[AccountTierSchema] = None # If admin manually sets tier
+    is_pep_status_override: Optional[bool] = None # Admin overriding PEP status after review
+    notes: str = Field(..., description="Reason or audit note for this KYC status update")
+
+class PaginatedCustomerResponse(BaseModel):
+    items: List[CustomerResponse]
+    total: int
+    page: int
+    size: int
+
+# --- Helper Schemas for StaffCustomer360Response ---
+
+class StaffViewKYCDocumentSummarySchema(BaseModel):
+    document_type: str
+    status: str # e.g., "Verified", "Pending", "Rejected"
+    expiry_date: Optional[date] = None
+    document_url: Optional[str] = None # Optional link, Pydantic HttpUrl can be used if validated
+
+class StaffViewAccountSummarySchema(BaseModel):
+    account_id: int
+    account_number_masked: str
+    account_type: str # e.g., "SAVINGS", "CURRENT"
+    product_name: Optional[str] = None
+    currency: str # e.g., "NGN", "USD"
+    available_balance: float
+    ledger_balance: float
+    status: str # e.g., "ACTIVE", "DORMANT"
+    lien_amount: Optional[float] = 0.0
+
+class StaffViewTransactionSummarySchema(BaseModel):
+    transaction_id: str
+    date: datetime
+    description: str
+    amount: float
+    currency: str
+    type_category: str # e.g., "FUNDS_TRANSFER", "BILL_PAYMENT"
+    channel: str
+    status: str
+
+class StaffViewLoanSummarySchema(BaseModel):
+    loan_account_id: int
+    loan_account_number: str
+    product_name: str
+    disbursed_amount: float
+    total_outstanding: float
+    currency: str
+    status: str # e.g., "ACTIVE", "OVERDUE"
+    next_repayment_date: Optional[date] = None
+    next_repayment_amount: Optional[float] = None
+    days_past_due: Optional[int] = None
+
+class StaffViewSupportTicketSummarySchema(BaseModel):
+    ticket_id: int
+    ticket_number: str
+    subject: str
+    status: str # e.g., "OPEN", "RESOLVED"
+    priority: str
+    created_at: datetime
+    assigned_agent_name: Optional[str] = None
+
+class StaffViewCustomerNoteSummarySchema(BaseModel):
+    note_id: int
+    category: Optional[str] = None
+    note_snippet: str
+    created_at: datetime
+    agent_name: Optional[str] = None
+
+class StaffViewDigitalProfileSummarySchema(BaseModel):
+    username: str
+    status: str # e.g., "Active", "Locked"
+    last_login_at: Optional[datetime] = None
+    last_login_channel: Optional[str] = None
+    is_verified_email: bool
+    is_verified_phone: bool
+
+# --- Main StaffCustomer360Response Schema ---
+
+class StaffCustomer360Response(BaseModel):
+    customer_id: int
+    full_name: str
+    customer_type: str
+    bvn: Optional[str] = None
+    nin: Optional[str] = None
+    primary_phone: Optional[str] = None
+    primary_email: Optional[EmailStr] = None
+    date_onboarded: date
+    relationship_manager_name: Optional[str] = None
+
+    overall_kyc_status: str
+    account_tier: str
+    is_pep: bool
+    sanction_status: str
+    last_kyc_review_date: Optional[date] = None
+    key_documents: List[StaffViewKYCDocumentSummarySchema] = []
+
+    total_deposit_balance_ngn_equivalent: Optional[float] = None
+    total_loan_exposure_ngn_equivalent: Optional[float] = None
+
+    accounts: List[StaffViewAccountSummarySchema] = []
+    recent_transactions: List[StaffViewTransactionSummarySchema] = []
+    active_loans: List[StaffViewLoanSummarySchema] = []
+
+    recent_support_tickets: List[StaffViewSupportTicketSummarySchema] = []
+    important_customer_notes: List[StaffViewCustomerNoteSummarySchema] = []
+
+    digital_profile: Optional[StaffViewDigitalProfileSummarySchema] = None
+
+    active_alerts_count: int = 0
+    key_flags: List[str] = []
+
+    class Config:
+        orm_mode = True
+        use_enum_values = True
