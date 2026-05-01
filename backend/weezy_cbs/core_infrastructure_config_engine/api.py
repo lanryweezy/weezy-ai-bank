@@ -13,31 +13,51 @@ from .services import (
     create_access_token
 )
 
-# --- Authentication & Authorization Dependencies ---
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
 
-# Placeholder for a more robust current_user dependency
-# In a real app, this would decode JWT and fetch user, check active status etc.
-# For now, we'll simulate a superuser or pass username for auditing.
-async def get_current_active_superuser(
-    # This would typically take: token: str = Depends(oauth2_scheme)
-    # For now, let's assume a header or a mock for simplicity in this phase
-    # current_user: models.User = Depends(get_current_user_from_token) # A proper function
-    db: Session = Depends(get_db) # Example, not fully implemented for mock
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login/token")
+
+async def get_current_user(
+    db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme)
 ) -> models.User:
-    # Mocking a superuser for now. Replace with actual JWT token processing.
-    user = user_service.get_user_by_username(db, "admin") # Assuming an 'admin' user exists
-    if not user or not user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Superuser privileges required for this operation."
-        )
-    if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, services.JWT_SECRET_KEY, algorithms=[services.ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = schemas.TokenData(username=username)
+    except JWTError:
+        raise credentials_exception
+    user = user_service.get_user_by_username(db, username=token_data.username)
+    if user is None:
+        raise credentials_exception
     return user
 
-# A simpler dependency that just gets a username, perhaps from a header or a default
-# This is a placeholder for how performing_user could be obtained.
-async def get_performing_user_username(current_user: models.User = Depends(get_current_active_superuser)) -> str:
+async def get_current_active_user(
+    current_user: models.User = Depends(get_current_user)
+) -> models.User:
+    if not current_user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
+
+async def get_current_active_superuser(
+    current_user: models.User = Depends(get_current_active_user)
+) -> models.User:
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The user doesn't have enough privileges"
+        )
+    return current_user
+
+async def get_performing_user_username(current_user: models.User = Depends(get_current_active_user)) -> str:
     return current_user.username
 
 
