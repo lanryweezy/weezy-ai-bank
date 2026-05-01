@@ -32,12 +32,12 @@ class InsufficientFundsException(InvalidOperationException):
     def __init__(self, message="Insufficient funds"):
         super().__init__(message)
 
-# NUBAN Generation Utility (Simplified - Real NUBAN has specific CBN algorithm)
-def _generate_nuban(bank_code: str = "999999", serial_length: int = 9) -> str:
-    """Generates a NUBAN-like account number. Bank code is usually fixed for the institution."""
-    serial_number = ''.join(random.choices(string.digits, k=serial_length))
-    check_digit = random.choice(string.digits)
-    return serial_number + check_digit
+from weezy_cbs.nigerian_market_utils import NigerianMarketUtils
+
+# NUBAN Generation Utility (Official CBN Algorithm)
+def _generate_nuban(bank_code: str = "999") -> str:
+    """Generates a valid 10-digit NUBAN using NigerianMarketUtils."""
+    return NigerianMarketUtils.generate_nuban(bank_code)
 
 def _log_account_event(db: Session, account_id: int, event_type: str, details: Optional[Dict[str, Any]] = None, changed_by_user_id: str = "SYSTEM"):
     # print(f"AUDIT LOG (Account: {account_id}): Event='{event_type}', Details='{details}', By='{changed_by_user_id}'")

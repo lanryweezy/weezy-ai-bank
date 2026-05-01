@@ -53,47 +53,54 @@ def _log_kyc_event_detailed(
     # Commit should be handled by the calling function's transaction
 
 
+from weezy_cbs.nigerian_market_utils import NigerianMarketUtils
+
 # --- Customer Services ---
-def create_customer(db: Session, customer_in: schemas.CustomerCreate, created_by_user_id: Optional[str] = "SYSTEM") -> models.Customer:
+async def create_customer(db: Session, customer_in: schemas.CustomerCreate, created_by_user_id: Optional[str] = "SYSTEM") -> models.Customer:
     """
-    Creates a new customer, determines initial account tier.
+    Creates a new customer, verifies BVN/NIN, and determines initial account tier.
     """
-    # Validate required fields based on customer_type
+    # 1. Basic Validation
     if customer_in.customer_type == schemas.CustomerTypeSchema.INDIVIDUAL:
-        if not all([customer_in.first_name, customer_in.last_name, customer_in.phone_number]): # DOB also important for Tiers
-            raise InvalidInputException("First name, last name, and phone number are required for individual customers.")
-    elif customer_in.customer_type in [schemas.CustomerTypeSchema.SME, schemas.CustomerTypeSchema.CORPORATE]:
-        if not all([customer_in.company_name, customer_in.phone_number, customer_in.rc_number, customer_in.date_of_incorporation]): # TIN also important
-            raise InvalidInputException("Company name, phone, RC number, and incorporation date are required for business customers.")
-
-    # Check for existing customer by phone (primary unique identifier for initial check)
+        if not all([customer_in.first_name, customer_in.last_name, customer_in.phone_number]):
+            raise InvalidInputException("First name, last name, and phone number are required.")
+    
+    # 2. Duplicate Checks
     if db.query(models.Customer).filter(models.Customer.phone_number == customer_in.phone_number).first():
-        raise DuplicateEntryException(f"Customer with phone number {customer_in.phone_number} already exists.")
-    if customer_in.email and db.query(models.Customer).filter(models.Customer.email == customer_in.email).first():
-        raise DuplicateEntryException(f"Customer with email {customer_in.email} already exists.")
-    if customer_in.bvn and db.query(models.Customer).filter(models.Customer.bvn == customer_in.bvn).first():
-        raise DuplicateEntryException(f"Customer with BVN {customer_in.bvn} already exists.")
-    if customer_in.nin and db.query(models.Customer).filter(models.Customer.nin == customer_in.nin).first():
-        raise DuplicateEntryException(f"Customer with NIN {customer_in.nin} already exists.")
+        raise DuplicateEntryException(f"Phone number {customer_in.phone_number} already exists.")
+    
+    # 3. Nigerian Market Verification (BVN/NIN)
+    if customer_in.bvn:
+        bvn_result = await NigerianMarketUtils.verify_bvn(customer_in.bvn)
+        if bvn_result["status"] != "success":
+            raise InvalidInputException(f"BVN Verification Failed: {bvn_result['message']}")
+        # In a real app, we'd compare names/DOB from NIBSS with input
+    
+    if customer_in.nin:
+        nin_result = await NigerianMarketUtils.verify_nin(customer_in.nin)
+        if nin_result["status"] != "success":
+            raise InvalidInputException(f"NIN Verification Failed: {nin_result['message']}")
 
-    # Determine initial account tier based on data provided (simplified logic)
-    # A full implementation would check specific documents and verification statuses.
-    determined_tier = CBNSupportedAccountTier.TIER_1 # Default
-    if customer_in.bvn or customer_in.nin: # Presence of BVN/NIN might allow Tier 2 start, pending verification
+    # 4. Tier Determination
+    determined_tier = CBNSupportedAccountTier.TIER_1
+    if customer_in.bvn and customer_in.nin:
+        determined_tier = CBNSupportedAccountTier.TIER_3
+    elif customer_in.bvn or customer_in.nin:
         determined_tier = CBNSupportedAccountTier.TIER_2
-    # Tier 3 typically requires verified ID and address proof.
 
     db_customer = models.Customer(
-        **customer_in.dict(exclude_unset=True, exclude={'account_tier'}), # Don't use tier from input directly yet
-        account_tier=determined_tier # Use determined tier
+        **customer_in.dict(exclude_unset=True, exclude={'account_tier'}),
+        account_tier=determined_tier
     )
 
     db.add(db_customer)
     db.commit()
     db.refresh(db_customer)
 
-    _log_kyc_event_detailed(db, customer_id=db_customer.id, event_type="CUSTOMER_CREATED", details_after=customer_in.dict(), changed_by_user_id=created_by_user_id, notes=f"Initial tier set to {determined_tier.value}")
-    db.commit() # Commit log
+    _log_kyc_event_detailed(db, customer_id=db_customer.id, event_type="CUSTOMER_CREATED_NG", 
+                            details_after=customer_in.dict(), changed_by_user_id=created_by_user_id, 
+                            notes=f"Nigerian Customer created with Tier: {determined_tier.value}")
+    db.commit()
 
     return db_customer
 

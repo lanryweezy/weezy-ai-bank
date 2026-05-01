@@ -69,7 +69,22 @@ def get_fee_config_by_code(db: Session, fee_code: str) -> Optional[models.FeeCon
 def list_fee_configs(db: Session, skip: int = 0, limit: int = 100) -> List[models.FeeConfig]:
     return db.query(models.FeeConfig).offset(skip).limit(limit).all()
 
+from weezy_cbs.nigerian_market_utils import NigerianMarketUtils
+
 # --- Fee Calculation and Application Services ---
+def calculate_nigerian_taxes(amount: decimal.Decimal, service_fee: decimal.Decimal) -> Dict[str, decimal.Decimal]:
+    """
+    Calculates Nigerian-specific taxes: Stamp Duty and VAT.
+    """
+    stamp_duty = NigerianMarketUtils.calculate_stamp_duty(amount)
+    vat = NigerianMarketUtils.calculate_vat(service_fee)
+    
+    return {
+        "stamp_duty": stamp_duty,
+        "vat": vat,
+        "total_tax": stamp_duty + vat
+    }
+
 def _calculate_single_fee(fee_config: models.FeeConfig, base_amount: Optional[decimal.Decimal]) -> decimal.Decimal:
     """Calculates fee amount based on a single FeeConfig and a base amount."""
     # Ensure base_amount is Decimal if provided

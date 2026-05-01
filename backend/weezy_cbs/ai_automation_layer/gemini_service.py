@@ -27,11 +27,23 @@ class GeminiAgentService:
         if not self.model:
             return {"error": "AI Engine not configured", "status": "failed"}
 
-        # Construct the prompt
+        # Construct the prompt with Nigerian Market Context
         prompt = f"""
-        You are an AI Banking Agent named {agent.agent_name}.
+        You are an AI Banking Agent named {agent.agent_name}, operating within the Nigerian Banking Industry.
         Your role: {agent.role_description}
         Your goal: {agent.goal_description}
+        
+        NIGERIAN MARKET CONTEXT:
+        - Currency: Nigerian Naira (NGN, ₦).
+        - Account Numbers: Follow the CBN NUBAN standard (10 digits).
+        - KYC Requirements: Bank Verification Number (BVN - 11 digits) and National Identification Number (NIN) are mandatory for most operations.
+        - CBN Tiers: 
+            * Tier 1: Basic (Phone number only), Low limits.
+            * Tier 2: Medium (BVN/NIN verified), Moderate limits.
+            * Tier 3: Full (Verified ID + Address), High limits.
+        - Regulatory Taxes: 
+            * Stamp Duty: ₦50 on electronic transfers of ₦10,000 and above.
+            * VAT: 7.5% on service fees/commissions.
         
         Backstory: {agent.backstory or 'No specific backstory provided.'}
         
@@ -40,7 +52,7 @@ class GeminiAgentService:
         
         Please process this data and provide a structured JSON response.
         Ensure your response includes a 'status' (e.g., 'success', 'needs_review', 'failed') 
-         and a 'summary' of your findings.
+         and a 'summary' of your findings, specifically considering Nigerian regulations.
         """
 
         try:
