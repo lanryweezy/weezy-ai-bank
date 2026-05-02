@@ -85,17 +85,39 @@ def get_all_report_logs(db: Session, skip: int = 0, limit: int = 100, report_nam
         query = query.filter(models.GeneratedReportLog.status == status)
     return query.order_by(models.GeneratedReportLog.reporting_period_end_date.desc(), models.GeneratedReportLog.id.desc()).offset(skip).limit(limit).all()
 
-# --- Report Generation (Conceptual - Specific logic for each report type) ---
+from weezy_cbs.loan_management_module.models import LoanAccount, LoanApplication
+from weezy_cbs.customer_identity_management.models import Customer
+
+# --- Report Generation (Specific logic for each report type) ---
 def _generate_cbn_crms_report_data(db: Session, start_date: date, end_date: date) -> List[dict]:
-    # Query loan_management_module for all relevant loan data (new loans, performing, NPLs, restructures, write-offs)
-    # within the reporting period.
-    # Format data according to CRMS XML schema specifications.
-    # loan_data = get_loan_data_for_reporting(db, start_date, end_date, report_type="CRMS")
-    # Example structure (highly simplified):
-    return [
-        {"loan_id": "L001", "bvn": "11122233344", "amount_disbursed": 100000, "status": "PERFORMING", "npl_since": None},
-        {"loan_id": "L002", "bvn": "55566677788", "amount_disbursed": 500000, "status": "NPL", "npl_since": "2023-01-15"},
-    ]
+    """
+    Aggregates loan and customer data required for CBN CRMS reporting.
+    """
+    # Join LoanAccount with Customer to get full CRMS details
+    results = db.query(LoanAccount, Customer).join(
+        Customer, LoanAccount.customer_id == Customer.id
+    ).filter(
+        LoanAccount.disbursement_date >= start_date,
+        LoanAccount.disbursement_date <= end_date
+    ).all()
+
+    report_data = []
+    for loan, customer in results:
+        report_data.append({
+            "bank_code": "999", # Weezy Bank Code
+            "customer_name": f"{customer.first_name} {customer.last_name}" if customer.first_name else customer.company_name,
+            "bvn": customer.bvn,
+            "loan_account_number": loan.loan_account_number,
+            "loan_amount": float(loan.principal_disbursed),
+            "outstanding_balance": float(loan.principal_outstanding),
+            "status": loan.status.value,
+            "disbursement_date": str(loan.disbursement_date),
+            "maturity_date": str(loan.maturity_date),
+            "repayment_frequency": "MONTHLY", # Default for now
+            "crms_loan_status": loan.crms_loan_status or "PERFORMING"
+        })
+    
+    return report_data
 
 def _generate_nfiu_ctr_report_data(db: Session, start_date: date, end_date: date) -> List[schemas.CTRRecordData]:
     # Query transaction_management and/or deposit_collection_module for cash transactions
@@ -340,7 +362,16 @@ def get_sanction_screening_logs(db: Session, skip: int = 0, limit: int = 100, bv
         query = query.filter(models.SanctionScreeningLog.match_found == match_found)
     return query.order_by(models.SanctionScreeningLog.screening_date.desc()).offset(skip).limit(limit).all()
 
-# Note: Actual report file generation and submission often involve complex transformations,
-# specific file formats (XML schemas, fixed-width text), and secure transfer protocols or portal interactions.
-# This service layer provides the hooks and logging for these processes.
-# AML monitoring and Sanction Screening are continuous processes. Sanction lists need frequent updates.
+def trigger_report_generation(db: Session, report_request: schemas.ReportGenerationRequest, user_id: Optional[str] = None) -> models.GeneratedReportLog:
+    """
+    Public entry point to trigger report generation.
+    Handles logging, status updates, and calling the specific generation logic.
+    """
+    # 1. Create initial log entry
+    report_log = create_report_log_entry(db, report_request, user_id)
+    
+    # 2. Trigger the file generation (in a real app, this would be an async background task)
+    # For this implementation, we run it synchronously for simplicity.
+    generated_log = generate_report_file(db, report_log.id)
+    
+    return generated_log
