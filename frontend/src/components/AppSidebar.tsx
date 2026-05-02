@@ -64,6 +64,7 @@ const bankingModules = [
   { name: 'Customer Base', href: '/customers', icon: UserCheck },
   { name: 'Agent Banking', href: '/agent-banking', icon: Store },
   { name: 'Merchant Ops', href: '/merchant-console', icon: ShoppingBag },
+  { name: 'Virtual Accounts', href: '/virtual-accounts', icon: Hash },
   { name: 'Corporate Payroll', href: '/payroll', icon: Building2 },
   { name: 'Bills & Airtime', href: '/bills', icon: Zap },
   { name: 'Wealth & Savings', href: '/savings', icon: PiggyBank },
