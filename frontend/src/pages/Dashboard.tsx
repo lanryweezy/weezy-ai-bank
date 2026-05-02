@@ -22,9 +22,12 @@ const chartData = [
   { name: 'Sun', value: 1000 },
 ];
 
+import TransferModal from '@/components/TransferModal';
+
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState<string>('');
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -34,17 +37,22 @@ const Dashboard: React.FC = () => {
     }
   }, []);
 
-  const { data: txnSummary, isLoading: loadingTxns } = useQuery({
+  const { data: txnSummary, isLoading: loadingTxns, refetch: refetchSummary } = useQuery({
     queryKey: ['txnSummary'],
     queryFn: () => apiClient('/transactions/summary'),
     refetchInterval: 15000,
   });
 
-  const { data: recentTransactions, isLoading: loadingRecentTxns } = useQuery({
+  const { data: recentTransactions, isLoading: loadingRecentTxns, refetch: refetchHistory } = useQuery({
     queryKey: ['recentTransactions'],
     queryFn: () => apiClient('/transactions/history?limit=5'),
     refetchInterval: 15000,
   });
+
+  const handleTransferSuccess = () => {
+    refetchSummary();
+    refetchHistory();
+  };
 
   return (
     <Layout>
@@ -57,11 +65,20 @@ const Dashboard: React.FC = () => {
             <p className="text-gray-600 mt-1">AI-Powered Banking Operations Dashboard (Nigerian Market)</p>
           </div>
           <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setIsTransferModalOpen(true)} className="border-indigo-200 text-indigo-600 hover:bg-indigo-50">
+              <ArrowUpRight className="mr-2 h-4 w-4" /> Send Money
+            </Button>
             <Button size="sm" onClick={() => navigate('/workflows')} className="bg-indigo-600 hover:bg-indigo-700 shadow-md">
               <PlayCircle className="mr-2 h-4 w-4" /> Start Workflow
             </Button>
           </div>
         </div>
+
+        <TransferModal 
+          isOpen={isTransferModalOpen} 
+          onClose={() => setIsTransferModalOpen(false)} 
+          onSuccess={handleTransferSuccess}
+        />
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
