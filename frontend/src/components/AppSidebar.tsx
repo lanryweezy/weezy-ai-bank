@@ -58,6 +58,7 @@ const navigation = [
   { name: 'Financial Reports', href: '/reports', icon: FileText },
   { name: 'Security Center', href: '/security', icon: Shield },
   { name: 'Integrations', href: '/integrations', icon: Plug },
+  { name: 'Developer Hub', href: '/developer', icon: Code2 },
 ];
 
 const bankingModules = [

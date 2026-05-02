@@ -68,21 +68,26 @@ async def run_workflow(
 
 from .engine import WorkflowEngine
 
-# --- Tasks ---
-@ai_api_router.get("/tasks/me", response_model=List[schemas.TaskResponse])
-async def list_my_tasks(
-    db: Session = Depends(get_db),
-    current_user: CoreUser = Depends(get_current_active_user)
-):
-    return task_service.get_tasks_for_user(db, current_user.id)
+from weezy_cbs.agentic_engine.core import weezy_agentic_core
 
-@ai_api_router.post("/tasks/{task_id}/complete")
-async def complete_task(
-    task_id: UUID,
-    output_data: Dict[str, Any] = Body(...),
+# --- Fully Agentic Prime ---
+@ai_api_router.post("/prime/chat")
+async def agentic_prime_chat(
+    message: str = Body(..., embed=True),
+    history: List[Dict] = Body([], embed=True),
     db: Session = Depends(get_db),
     current_user: CoreUser = Depends(get_current_active_user)
 ):
-    engine = WorkflowEngine(db)
-    engine.complete_task(task_id, output_data, current_user.username)
-    return {"message": "Task completed and workflow continued"}
+    """
+    Talk to 'Weezy Prime', a fully agentic banking core that can execute tools.
+    """
+    # Prime needs customer context for certain tools
+    from weezy_cbs.customer_identity_management.models import Customer
+    customer = db.query(Customer).first() # Demo fallback
+
+    # We could inject customer_id into the prompt context here
+    enriched_query = f"[Customer ID: {customer.id}, Name: {customer.first_name}] {message}"
+
+    result = await weezy_agentic_core.chat(enriched_query, history)
+    return result
+
