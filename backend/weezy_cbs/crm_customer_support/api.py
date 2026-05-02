@@ -287,9 +287,37 @@ async def get_campaign_logs_endpoint(
     return {"items": logs, "total": total, "page": (skip // limit) + 1, "size": limit}
 
 
+from .ai_support_service import ai_support_service
+from weezy_cbs.core_infrastructure_config_engine.api import get_current_active_user, get_current_active_superuser
+
+# --- AI Chatbot Endpoints ---
+chatbot_router = APIRouter(prefix="/chatbot", tags=["AI Support Bot"])
+
+@chatbot_router.post("/query")
+async def ai_support_query(
+    message: str = Body(..., embed=True),
+    db: Session = Depends(get_db),
+    current_user: CoreUser = Depends(get_current_active_user)
+):
+    """
+    Handles a customer support query using AI, localized for Nigeria.
+    """
+    # Try to find a customer matching the user
+    from weezy_cbs.customer_identity_management.models import Customer
+    customer = db.query(Customer).first() # Demo fallback
+
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer profile not found")
+
+    response_text = await ai_support_service.get_chat_response(db, customer.id, message)
+    return {"reply": response_text, "timestamp": datetime.utcnow()}
+
+
 # Include all routers into the main CRM API router
 crm_api_router.include_router(tickets_router)
-crm_api_router.include_router(customer_notes_router) # Includes /customers/{id}/notes and /notes/{id}
+crm_api_router.include_router(chatbot_router)
+crm_api_router.include_router(customer_notes_router)
+ # Includes /customers/{id}/notes and /notes/{id}
 crm_api_router.include_router(faq_public_router) # Publicly accessible GETs for FAQs
 crm_api_router.include_router(faq_admin_router)  # Admin CUD for FAQs
 crm_api_router.include_router(campaigns_router)
