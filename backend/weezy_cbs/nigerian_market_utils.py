@@ -46,6 +46,22 @@ class NigerianMarketUtils:
         return "Unknown Bank"
 
     @staticmethod
+    def get_ussd_bank_list(page: int = 1) -> str:
+        """Returns a string formatted for USSD bank selection."""
+        start = (page - 1) * 5
+        end = start + 5
+        subset = NigerianMarketUtils.NIGERIAN_BANKS[start:end]
+        
+        menu = ""
+        for i, bank in enumerate(subset):
+            menu += f"{i+1}. {bank['name']}\n"
+        
+        if len(NigerianMarketUtils.NIGERIAN_BANKS) > end:
+            menu += "9. Next Page"
+            
+        return menu
+
+    @staticmethod
     async def nip_name_enquiry(bank_code: str, account_number: str) -> Dict[str, Any]:
         """
         Simulates NIBSS NIP Name Enquiry.

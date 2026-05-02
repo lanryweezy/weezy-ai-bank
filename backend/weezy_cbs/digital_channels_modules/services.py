@@ -497,99 +497,182 @@ class SessionLogService(BaseDigitalChannelService):
             return db_log
         return None
 
-# --- USSD Service (Conceptual - Menu logic is complex) ---
+from weezy_cbs.nigerian_market_utils import NigerianMarketUtils
+from weezy_cbs.accounts_ledger_management.services import get_account_by_number, get_accounts_for_customer
+from weezy_cbs.transaction_management.services import initiate_transaction
+
+# --- USSD Service (Robust State Machine for Nigeria) ---
 class USSDService(BaseDigitalChannelService):
-    # This is highly simplified. Real USSD apps use a menu definition structure
-    # (e.g., XML, JSON, or Python dicts) and a state machine.
+    """
+    USSD Service tailored for the Nigerian market.
+    Handles sessions, menu navigation, and banking operations via USSD strings.
+    """
 
     async def handle_ussd_request(self, db: Session, request_data: schemas.USSDRequestSchema) -> schemas.USSDResponseSchema:
         session_id = request_data.sessionId
-        msisdn = request_data.msisdn # Normalize this msisdn
+        msisdn = request_data.msisdn
         user_input = request_data.ussdString
 
-        # Try to find existing session or create new
+        # 1. Session Management
         ussd_session = db.query(models.USSDSession).filter(models.USSDSession.id == session_id).first()
 
-        digital_profile: Optional[models.DigitalUserProfile] = None
-        # Try to link MSISDN to a digital user profile (e.g. via customer's phone number)
-        # This requires querying Customer table based on phone, then getting DigitalUserProfile
-        # For now, we'll assume this link can be established if user is registered.
-
         if not ussd_session:
-            # New session
-            # Check if MSISDN is registered (simplified check)
-            # In real scenario: query Customer by phone, then get DigitalUserProfile
-            # For now, we'll mock this. If user_input could be PIN for initial auth:
-            # digital_profile = self._get_profile_by_phone_and_verify_pin(db, msisdn, initial_pin_if_any)
+            # New Session: Initial Dial
+            # Try to identify user by MSISDN (linked to customer phone)
+            from weezy_cbs.customer_identity_management.models import Customer
+            customer = db.query(Customer).filter(Customer.phone_number == msisdn).first()
+            
+            digital_profile = None
+            if customer:
+                digital_profile = db.query(models.DigitalUserProfile).filter(models.DigitalUserProfile.customer_id == customer.id).first()
 
             ussd_session = models.USSDSession(
                 id=session_id,
                 phone_number=msisdn,
-                # digital_user_profile_id = digital_profile.id if digital_profile else None,
-                current_menu_code="MAIN_MENU_UNAUTH" if not digital_profile else "MAIN_MENU_AUTH",
-                session_data_json=json.dumps({}),
+                digital_user_profile_id=digital_profile.id if digital_profile else None,
+                current_menu_code="INITIAL",
+                session_data_json=json.dumps({"page": 1}),
                 expires_at=datetime.utcnow() + timedelta(minutes=USSD_SESSION_TIMEOUT_MINUTES),
                 status="ACTIVE"
             )
             db.add(ussd_session)
+            db.flush()
         else:
-            # Existing session, update expiry and last interaction
             ussd_session.expires_at = datetime.utcnow() + timedelta(minutes=USSD_SESSION_TIMEOUT_MINUTES)
             ussd_session.last_interaction_at = datetime.utcnow()
-            if ussd_session.digital_user_profile_id:
-                digital_profile = self._get_digital_user_profile(db, user_id=ussd_session.digital_user_profile_id)
-
 
         session_data = json.loads(ussd_session.session_data_json or "{}")
-
-        # --- Simplified Menu Logic ---
-        # This should be a proper state machine or rule engine
         response_text = ""
         current_menu = ussd_session.current_menu_code
 
-        if current_menu == "MAIN_MENU_UNAUTH":
-            if not user_input: # First request
-                response_text = "CON Welcome to WeezyBank!\n1. Login (Enter PIN)\n2. Register\n3. Info"
-                ussd_session.current_menu_code = "MAIN_MENU_UNAUTH_CHOICE"
-            # ... handle choices for UNAUTH ...
-        elif current_menu == "MAIN_MENU_AUTH":
-            if not digital_profile: # Should not happen if menu is AUTH
-                 response_text = "END Error: Authentication lost. Please redial."
-            elif not user_input:
-                response_text = f"CON Welcome {digital_profile.username}!\n1. Balance\n2. Transfer\n0. Exit"
-                ussd_session.current_menu_code = "MAIN_MENU_AUTH_CHOICE"
-            # ... handle choices for AUTH ...
-        # ... more menu states ...
-        else: # Default or unknown state
-            response_text = "END Invalid option. Please try again."
-            ussd_session.status = "COMPLETED" # Or TIMED_OUT if error
+        # 2. Main State Machine
+        try:
+            # --- START / INITIAL ---
+            if current_menu == "INITIAL":
+                if not ussd_session.digital_user_profile_id:
+                    response_text = "CON Welcome to WeezyBank!\nYour number is not registered.\n1. Open Account (Self-Service)\n2. Nearest Agent\n0. Exit"
+                    ussd_session.current_menu_code = "UNREGISTERED_CHOICE"
+                else:
+                    profile = self._get_digital_user_profile(db, user_id=ussd_session.digital_user_profile_id)
+                    response_text = f"CON Welcome to WeezyBank, {profile.username}!\n1. Check Balance\n2. Transfer Money\n3. Buy Airtime\n4. Pay Bills\n0. Exit"
+                    ussd_session.current_menu_code = "MAIN_MENU_CHOICE"
 
-        # Example: PIN entry state
-        if current_menu == "AWAITING_PIN_FOR_LOGIN":
-            if user_input and len(user_input) == 4: # Assuming 4-digit PIN
-                # profile_to_auth = self._get_profile_by_phone(db, msisdn) # More complex lookup
-                # if profile_to_auth and self.verify_transaction_pin(db, profile_to_auth.id, user_input):
-                #    ussd_session.digital_user_profile_id = profile_to_auth.id
-                #    ussd_session.current_menu_code = "MAIN_MENU_AUTH"
-                #    response_text = "CON Login successful! Main Menu...\n1. Balance..." # Recursive call or next menu
-                # else:
-                #    response_text = "CON Invalid PIN. Try again or 0 to go back."
-                #    # Handle PIN attempts
-                pass # Placeholder for actual PIN verification logic
+            # --- MAIN MENU SELECTION ---
+            elif current_menu == "MAIN_MENU_CHOICE":
+                if user_input == "1": # Balance
+                    response_text = "CON Enter your 4-digit PIN to see balance:"
+                    ussd_session.current_menu_code = "PIN_FOR_BALANCE"
+                elif user_input == "2": # Transfer
+                    response_text = "CON Select Bank:\n" + NigerianMarketUtils.get_ussd_bank_list(page=session_data.get("page", 1))
+                    ussd_session.current_menu_code = "TRANSFER_BANK_SELECT"
+                elif user_input == "0":
+                    response_text = "END Thank you for using WeezyBank."
+                else:
+                    response_text = "CON Invalid choice.\n1. Check Balance\n2. Transfer\n0. Exit"
+
+            # --- BALANCE FLOW ---
+            elif current_menu == "PIN_FOR_BALANCE":
+                # Mock PIN check
+                if user_input == "1234":
+                    profile = self._get_digital_user_profile(db, user_id=ussd_session.digital_user_profile_id)
+                    accounts = get_accounts_for_customer(db, profile.customer_id)
+                    if accounts:
+                        acc = accounts[0]
+                        response_text = f"END Account: {acc.account_number}\nBalance: ₦{acc.available_balance:,.2f}"
+                    else:
+                        response_text = "END No active accounts found."
+                else:
+                    response_text = "END Incorrect PIN. Please try again."
+
+            # --- TRANSFER FLOW: BANK SELECT ---
+            elif current_menu == "TRANSFER_BANK_SELECT":
+                if user_input == "9": # Next Page
+                    new_page = session_data.get("page", 1) + 1
+                    session_data["page"] = new_page
+                    response_text = "CON Select Bank:\n" + NigerianMarketUtils.get_ussd_bank_list(page=new_page)
+                else:
+                    # Map input to bank index
+                    idx = (int(user_input) - 1) + ((session_data.get("page", 1) - 1) * 5)
+                    if 0 <= idx < len(NigerianMarketUtils.NIGERIAN_BANKS):
+                        selected_bank = NigerianMarketUtils.NIGERIAN_BANKS[idx]
+                        session_data["dest_bank_code"] = selected_bank["code"]
+                        session_data["dest_bank_name"] = selected_bank["name"]
+                        response_text = f"CON Enter {selected_bank['name']} Account Number:"
+                        ussd_session.current_menu_code = "TRANSFER_ACCOUNT_INPUT"
+                    else:
+                        response_text = "CON Invalid bank selection. Try again:"
+
+            # --- TRANSFER FLOW: ACCOUNT INPUT ---
+            elif current_menu == "TRANSFER_ACCOUNT_INPUT":
+                if len(user_input) == 10:
+                    # Name Enquiry
+                    enquiry = await NigerianMarketUtils.nip_name_enquiry(session_data["dest_bank_code"], user_input)
+                    if enquiry["status"] == "success":
+                        session_data["dest_account"] = user_input
+                        session_data["dest_name"] = enquiry["account_name"]
+                        response_text = f"CON Transfer to {enquiry['account_name']}\nEnter Amount:"
+                        ussd_session.current_menu_code = "TRANSFER_AMOUNT_INPUT"
+                    else:
+                        response_text = "END Could not verify account. Please check number and try again."
+                else:
+                    response_text = "CON Invalid Account. Enter 10-digit NUBAN:"
+
+            # --- TRANSFER FLOW: AMOUNT ---
+            elif current_menu == "TRANSFER_AMOUNT_INPUT":
+                try:
+                    amt = decimal.Decimal(user_input)
+                    if amt > 0:
+                        session_data["amount"] = str(amt)
+                        response_text = f"CON Transfer ₦{amt:,.2f} to {session_data['dest_name']}?\nEnter PIN to confirm:"
+                        ussd_session.current_menu_code = "TRANSFER_PIN_CONFIRM"
+                    else:
+                        response_text = "CON Invalid amount. Enter positive value:"
+                except:
+                    response_text = "CON Invalid amount. Enter numbers only:"
+
+            # --- TRANSFER FLOW: PIN & EXECUTE ---
+            elif current_menu == "TRANSFER_PIN_CONFIRM":
+                if user_input == "1234": # Mock PIN
+                    # Trigger real transaction
+                    profile = self._get_digital_user_profile(db, user_id=ussd_session.digital_user_profile_id)
+                    accounts = get_accounts_for_customer(db, profile.customer_id)
+                    
+                    from .schemas import USSDRequestSchema # Re-check imports if needed
+                    from weezy_cbs.transaction_management.schemas import TransactionCreateRequest
+                    
+                    txn_req = TransactionCreateRequest(
+                        transaction_type="TRANSFER",
+                        channel="USSD",
+                        amount=decimal.Decimal(session_data["amount"]),
+                        currency="NGN",
+                        debit_account_number=accounts[0].account_number,
+                        credit_account_number=session_data["dest_account"],
+                        credit_account_name=session_data["dest_name"],
+                        credit_bank_code=session_data["dest_bank_code"],
+                        narration=f"USSD Transfer from {msisdn}"
+                    )
+                    
+                    try:
+                        await initiate_transaction(db, txn_req)
+                        response_text = f"END Success! ₦{decimal.Decimal(session_data['amount']):,.2f} sent to {session_data['dest_name']}."
+                    except Exception as e:
+                        response_text = f"END Transaction Failed: {str(e)}"
+                else:
+                    response_text = "END Incorrect PIN. Transaction cancelled."
+
             else:
-                response_text = "CON Invalid PIN format. Enter your 4-digit PIN."
+                response_text = "END Session ended. Please redial."
 
+        except Exception as e:
+            logger.error(f"USSD Error: {str(e)}")
+            response_text = "END A system error occurred. Please try later."
 
-        if not response_text.startswith("CON ") and not response_text.startswith("END "):
-             response_text = "END An unexpected error occurred. Please redial." # Default to END if not set
-
+        # 3. Finalize
         ussd_session.session_data_json = json.dumps(session_data)
         if response_text.startswith("END "):
             ussd_session.status = "COMPLETED"
 
         db.commit()
-        # db.refresh(ussd_session) # Not strictly needed before returning schema
-
         return schemas.USSDResponseSchema(response_string=response_text)
 
 
