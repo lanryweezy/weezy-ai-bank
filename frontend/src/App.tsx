@@ -68,6 +68,7 @@ import CardCenter from "./pages/CardCenter";
 import CorporatePayroll from "./pages/CorporatePayroll";
 import BillsPayment from "./pages/BillsPayment";
 import ComplianceDashboard from "./pages/ComplianceDashboard";
+import RegulatoryReporting from "./pages/RegulatoryReporting";
 import MerchantConsole from "./pages/MerchantConsole";
 import LoanRecoveryDashboard from "./pages/LoanRecoveryDashboard";
 import SavingsInvestments from "./pages/SavingsInvestments";
@@ -116,6 +117,7 @@ const App = () => (
           <Route path="/fraud-shield" element={<ProtectedRoute allowedRoles={['platform_admin']}><FraudShieldDashboard /></ProtectedRoute>} />
           <Route path="/loan-recovery" element={<ProtectedRoute allowedRoles={['platform_admin']}><LoanRecoveryDashboard /></ProtectedRoute>} />
           <Route path="/compliance" element={<ProtectedRoute allowedRoles={['platform_admin']}><ComplianceDashboard /></ProtectedRoute>} />
+          <Route path="/regulatory-reporting" element={<ProtectedRoute allowedRoles={['platform_admin']}><RegulatoryReporting /></ProtectedRoute>} />
           <Route path="/ai-templates" element={<ProtectedRoute><AIAgentTemplatesPage /></ProtectedRoute>} />
           <Route path="/configure-agent" element={<ProtectedRoute><ConfigureAgentPage /></ProtectedRoute>} />
           <Route path="/my-agents" element={<ProtectedRoute><MyConfiguredAgentsPage /></ProtectedRoute>} />

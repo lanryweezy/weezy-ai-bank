@@ -85,10 +85,31 @@ def get_all_report_logs(db: Session, skip: int = 0, limit: int = 100, report_nam
         query = query.filter(models.GeneratedReportLog.status == status)
     return query.order_by(models.GeneratedReportLog.reporting_period_end_date.desc(), models.GeneratedReportLog.id.desc()).offset(skip).limit(limit).all()
 
-from weezy_cbs.loan_management_module.models import LoanAccount, LoanApplication
+from weezy_cbs.accounts_ledger_management.models import LoanAccount, GeneralLedgerAccount, GLTypeEnum
 from weezy_cbs.customer_identity_management.models import Customer
 
 # --- Report Generation (Specific logic for each report type) ---
+def _generate_cbn_fina_report_data(db: Session, end_date: date) -> List[dict]:
+    """
+    Aggregates General Ledger (GL) balances for CBN FinA (Financial Analysis) reporting.
+    This report provides the bank's Balance Sheet and P&L state.
+    """
+    gl_accounts = db.query(GeneralLedgerAccount).all()
+    
+    report_data = []
+    for gl in gl_accounts:
+        report_data.append({
+            "schedule_code": "SCH_001" if gl.gl_type == GLTypeEnum.ASSET else "SCH_002",
+            "gl_code": gl.gl_code,
+            "gl_name": gl.name,
+            "gl_type": gl.gl_type.value,
+            "balance": float(gl.current_balance),
+            "currency": gl.currency.value,
+            "reporting_date": str(end_date)
+        })
+    
+    return report_data
+
 def _generate_cbn_crms_report_data(db: Session, start_date: date, end_date: date) -> List[dict]:
     """
     Aggregates loan and customer data required for CBN CRMS reporting.
@@ -166,6 +187,11 @@ def generate_report_file(db: Session, report_log_id: int) -> models.GeneratedRep
             data = _generate_cbn_crms_report_data(db, report_log.reporting_period_start_date, report_log.reporting_period_end_date)
             # CRMS is usually XML, requires specific schema. This is a placeholder.
             file_content_str = _format_data_as_xml(data, "CRMSReport", "LoanRecord")
+            file_format = "XML"
+        elif report_log.report_name == ReportNameEnum.CBN_FINA:
+            data = _generate_cbn_fina_report_data(db, report_log.reporting_period_end_date)
+            # FinA is also XML based in Nigeria
+            file_content_str = _format_data_as_xml(data, "FinAReport", "GLRecord")
             file_format = "XML"
         elif report_log.report_name == ReportNameEnum.NFIU_CTR:
             ctr_records_schema = _generate_nfiu_ctr_report_data(db, report_log.reporting_period_start_date, report_log.reporting_period_end_date)
