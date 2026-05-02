@@ -84,6 +84,7 @@ const businessBanking = [
   { name: 'Virtual Accounts', href: '/virtual-accounts', icon: Hash },
   { name: 'Corporate Payroll', href: '/payroll', icon: Building2 },
   { name: 'Agent Network', href: '/agent-banking', icon: Store },
+  { name: 'Revenue Hub', href: '/agent-earnings', icon: TrendingUp },
 ];
 
 const riskAndCompliance = [

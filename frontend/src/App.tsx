@@ -102,6 +102,7 @@ const App = () => (
           {/* User Routes */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/agent-banking" element={<ProtectedRoute><AgentBankingPage /></ProtectedRoute>} />
+          <Route path="/agent-earnings" element={<ProtectedRoute><AgentEarnings /></ProtectedRoute>} />
           <Route path="/card-center" element={<ProtectedRoute><CardCenter /></ProtectedRoute>} />
           <Route path="/comms-hub" element={<ProtectedRoute><CommunicationsLog /></ProtectedRoute>} />
           <Route path="/payroll" element={<ProtectedRoute><CorporatePayroll /></ProtectedRoute>} />
