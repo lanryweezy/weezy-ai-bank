@@ -78,6 +78,7 @@ import FraudShieldDashboard from "./pages/FraudShieldDashboard";
 import TellerOperations from "./pages/TellerOperations";
 import ChartOfAccounts from "./pages/ChartOfAccounts";
 import LoanOrigination from "./pages/LoanOrigination";
+import LoanCollateral from "./pages/LoanCollateral";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -143,6 +144,7 @@ const App = () => (
           <Route path="/open-banking" element={<ProtectedRoute><OpenBankingPage /></ProtectedRoute>} />
           <Route path="/loans" element={<ProtectedRoute><LoanManagementPage /></ProtectedRoute>} />
           <Route path="/loan-origination" element={<ProtectedRoute><LoanOrigination /></ProtectedRoute>} />
+          <Route path="/loan-collateral" element={<ProtectedRoute><LoanCollateral /></ProtectedRoute>} />
           <Route path="/transactions" element={<ProtectedRoute><TransactionManagementPage /></ProtectedRoute>} />
 
           {/* Admin Routes - Protected by role */}

@@ -59,8 +59,9 @@ from weezy_cbs.teller_operations import api as teller_api
 from weezy_cbs.gl_management import api as gl_api
 from weezy_cbs.fixed_deposits import api as fd_api
 from weezy_cbs.loan_origination import api as loan_orig_api
-from weezy_cbs.intelligence_terminal import api as terminal_api
-from weezy_cbs.messaging_notifications import api as messaging_api
+from weezy_cbs.loan_origination import api as loan_orig_api
+from weezy_cbs.loan_collateral import api as loan_collateral_api
+from weezy_cbs.loan_api import router as loan_api # Assuming router exists there or update accordingly
 
 # Core CBS Modules
 app.include_router(cim_api.router, prefix="/api/corebanking/cim", tags=["Customer Identity"])
@@ -69,7 +70,9 @@ app.include_router(gl_api.router, prefix="/api/corebanking/gl", tags=["General L
 app.include_router(teller_api.router, prefix="/api/corebanking/teller", tags=["Branch & Teller Operations"])
 app.include_router(fd_api.router, prefix="/api/corebanking/investments/fd", tags=["Fixed & Term Deposits"])
 app.include_router(loan_orig_api.router, prefix="/api/corebanking/loans/origination", tags=["Loan Origination & Appraisal"])
-app.include_router(loan_api.router, prefix="/api/corebanking/loans", tags=["Loans"])
+app.include_router(loan_collateral_api.router, prefix="/api/corebanking/loans/collateral", tags=["Loan Collateral Management"])
+app.include_router(loan_api, prefix="/api/corebanking/loans", tags=["Loans"])
+
 app.include_router(messaging_api.router, prefix="/api/messaging", tags=["Messaging & Notifications"])
 
 app.include_router(txn_api.router, prefix="/api/transactions", tags=["Transactions"])
