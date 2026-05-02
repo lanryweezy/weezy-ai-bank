@@ -66,6 +66,7 @@ const bankingModules = [
   { name: 'Corporate Payroll', href: '/payroll', icon: Building2 },
   { name: 'Bills & Airtime', href: '/bills', icon: Zap },
   { name: 'Compliance & AML', href: '/compliance', icon: ShieldAlert },
+  { name: 'Loan Recovery', href: '/loan-recovery', icon: MessageSquare },
   { name: 'Loans & Credit', href: '/loans', icon: CreditCard },
   { name: 'Financial Switch', href: '/transactions', icon: ArrowRightLeft },
   { name: 'Treasury & Liquidity', href: '/treasury', icon: Landmark },
