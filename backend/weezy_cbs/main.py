@@ -50,9 +50,10 @@ async def startup_event():
 # AI & Automation Layer (Unified with bank-ai-orchestrator frontend)
 app.include_router(ai_api.ai_api_router, prefix="/api", tags=["AI & Automation"])
 
-# Core CBS Modules
 from weezy_cbs.interest_engine import api as interest_api
+from weezy_cbs.open_banking import api as open_banking_api
 
+# Core CBS Modules
 app.include_router(cim_api.router, prefix="/api/corebanking/cim", tags=["Customer Identity"])
 app.include_router(alm_api.router, prefix="/api/corebanking/alm", tags=["Accounts & Ledger"])
 app.include_router(loan_api.router, prefix="/api/corebanking/loans", tags=["Loans"])
@@ -75,6 +76,7 @@ app.include_router(qr_api.router, prefix="/api/qr", tags=["NQR Payments (NIBSS S
 app.include_router(dual_api.router, prefix="/api/admin/dual-control", tags=["Dual Authorization (Maker-Checker)"])
 app.include_router(treasury_api.router, prefix="/api/corebanking/treasury", tags=["Treasury & Liquidity"])
 app.include_router(interest_api.router, prefix="/api/interest", tags=["Automated Interest Engine"])
+app.include_router(open_banking_api.router, prefix="/api/open-banking", tags=["Nigerian Open Banking"])
 
 app.include_router(dev_api.router, prefix="/api/dev", tags=["Developer Portal"])
 app.include_router(fee_api.router, prefix="/api/corebanking/fees", tags=["Fees & Charges"])
