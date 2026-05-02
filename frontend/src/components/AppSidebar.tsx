@@ -67,6 +67,7 @@ const bankingModules = [
   { name: 'Merchant Ops', href: '/merchant-console', icon: ShoppingBag },
   { name: 'Virtual Accounts', href: '/virtual-accounts', icon: Hash },
   { name: 'Corporate Payroll', href: '/payroll', icon: Building2 },
+  { name: 'FX & Global', href: '/fx-global', icon: Globe },
   { name: 'Bills & Airtime', href: '/bills', icon: Zap },
   { name: 'Wealth & Savings', href: '/savings', icon: PiggyBank },
   { name: 'Compliance & AML', href: '/compliance', icon: ShieldAlert },

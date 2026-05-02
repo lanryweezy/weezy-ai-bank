@@ -100,6 +100,7 @@ const App = () => (
           <Route path="/payroll" element={<ProtectedRoute><CorporatePayroll /></ProtectedRoute>} />
           <Route path="/bills" element={<ProtectedRoute><BillsPayment /></ProtectedRoute>} />
           <Route path="/savings" element={<ProtectedRoute><SavingsInvestments /></ProtectedRoute>} />
+          <Route path="/fx-global" element={<ProtectedRoute><FXDomiciliary /></ProtectedRoute>} />
           <Route path="/merchant-console" element={<ProtectedRoute><MerchantConsole /></ProtectedRoute>} />
           <Route path="/virtual-accounts" element={<ProtectedRoute><VirtualAccounts /></ProtectedRoute>} />
           <Route path="/developer" element={<ProtectedRoute allowedRoles={['platform_admin']}><DeveloperHub /></ProtectedRoute>} />

@@ -62,7 +62,8 @@ from weezy_cbs.merchant_management import api as merchant_api
 from weezy_cbs.customer_risk_profiling import api as risk_api
 from weezy_cbs.savings_investments import api as savings_api
 from weezy_cbs.virtual_accounts import api as va_api
-from weezy_cbs.developer_portal import api as dev_api
+from weezy_cbs.virtual_accounts import api as va_api
+from weezy_cbs.fx_domiciliary_management import api as fx_api
 
 # Core CBS Modules
 app.include_router(cim_api.router, prefix="/api/corebanking/cim", tags=["Customer Identity"])
@@ -79,6 +80,8 @@ app.include_router(merchant_api.router, prefix="/api/merchant", tags=["Merchant 
 app.include_router(recovery_api.router, prefix="/api/recovery", tags=["Loan Recovery & Collections"])
 app.include_router(savings_api.router, prefix="/api/savings", tags=["Savings & Investments"])
 app.include_router(va_api.router, prefix="/api/virtual-accounts", tags=["Virtual Accounts & Collections"])
+app.include_router(fx_api.router, prefix="/api/fx", tags=["International FX & Domiciliary"])
+
 app.include_router(dev_api.router, prefix="/api/dev", tags=["Developer Portal"])
 
 
