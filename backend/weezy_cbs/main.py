@@ -31,11 +31,25 @@ from weezy_cbs.ai_automation_layer import api as ai_api
 # To run this manually: `python -m weezy_cbs.database` (if database.py has `if __name__ == "__main__": create_all_tables()`)
 # Or, add a startup event.
 
+from fastapi.responses import JSONResponse
+from weezy_cbs.exceptions import WeezyBankingException
+
 app = FastAPI(
-    title="Weezy Core Banking System (CBS)",
-    description="API for the Weezy CBS, providing comprehensive banking functionalities.",
-    version="0.1.0",
+    title="Weezy AI Core Banking System",
+    description="Agentic, AI-Native Core Banking localized for Nigeria.",
+    version="1.0.0",
 )
+
+@app.exception_handler(WeezyBankingException)
+async def weezy_exception_handler(request, exc: WeezyBankingException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "status": "error",
+            "error_code": exc.error_code,
+            "message": exc.message
+        },
+    )
 
 @app.on_event("startup")
 async def startup_event():

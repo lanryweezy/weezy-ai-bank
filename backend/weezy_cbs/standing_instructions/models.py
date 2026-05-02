@@ -42,10 +42,10 @@ class StandingInstruction(Base):
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=True) # None for indefinite
     
-    next_run_date = Column(Date, nullable=False)
+    next_run_date = Column(Date, nullable=False, index=True)
     last_run_date = Column(Date, nullable=True)
     
-    status = Column(SQLAlchemyEnum(SIStatusEnum), default=SIStatusEnum.ACTIVE)
+    status = Column(SQLAlchemyEnum(SIStatusEnum), default=SIStatusEnum.ACTIVE, index=True)
     
     # Retry logic if balance was insufficient
     retry_on_failure = Column(Boolean, default=True)

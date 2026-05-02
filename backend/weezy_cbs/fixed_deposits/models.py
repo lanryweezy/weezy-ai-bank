@@ -48,13 +48,17 @@ class FixedDepositAccount(Base):
     maturity_date = Column(Date, nullable=False)
     
     accrued_interest = Column(Numeric(precision=18, scale=2), default=0.00)
-    status = Column(SQLAlchemyEnum(FDStatusEnum), default=FDStatusEnum.ACTIVE)
+    status = Column(SQLAlchemyEnum(FDStatusEnum), default=FDStatusEnum.ACTIVE, index=True)
     
     rollover_instruction = Column(SQLAlchemyEnum(RolloverInstructionEnum), default=RolloverInstructionEnum.NONE)
     linked_savings_account = Column(String(10), nullable=False) # For liquidation/payout
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     liquidated_at = Column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        Index('idx_fd_maturity_status', 'maturity_date', 'status'),
+    )
 
     customer = relationship("Customer")
     product = relationship("FixedDepositProduct")

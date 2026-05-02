@@ -142,10 +142,10 @@ class LoanAccount(Base):
     crms_loan_status = Column(String(50), nullable=True) # For CRMS
     loan_purpose_code = Column(String(10), nullable=True) # Standardized purpose code
 
-    disbursement_date = Column(Date, nullable=False)
+    disbursement_date = Column(Date, nullable=False, index=True)
     first_repayment_date = Column(Date, nullable=False)
     next_repayment_date = Column(Date, nullable=True, index=True)
-    maturity_date = Column(Date, nullable=False)
+    maturity_date = Column(Date, nullable=False, index=True)
 
     days_past_due = Column(Integer, default=0, index=True)
     last_repayment_date = Column(DateTime(timezone=True), nullable=True)

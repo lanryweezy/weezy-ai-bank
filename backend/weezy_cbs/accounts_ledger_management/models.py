@@ -113,6 +113,11 @@ class LedgerEntry(Base):
 
     account = relationship("Account", back_populates="ledger_entries")
 
+    __table_args__ = (
+        Index('idx_ledger_acc_value_date', 'account_id', 'value_date'),
+        Index('idx_ledger_acc_txn_date', 'account_id', 'transaction_date'),
+    )
+
     def __repr__(self):
         return f"<LedgerEntry(id={self.id}, acc_id={self.account_id}, type='{self.entry_type.value}', amt='{self.amount}')>"
 
@@ -131,7 +136,7 @@ class GeneralLedgerAccount(Base):
     name = Column(String(100), nullable=False)
     currency = Column(SQLAlchemyEnum(CurrencyEnum), nullable=False)
     
-    gl_type = Column(SQLAlchemyEnum(GLTypeEnum), nullable=False, default=GLTypeEnum.ASSET)
+    gl_type = Column(SQLAlchemyEnum(GLTypeEnum), nullable=False, default=GLTypeEnum.ASSET, index=True)
     parent_gl_code = Column(String(20), ForeignKey("gl_accounts.gl_code"), nullable=True) # For hierarchical chart of accounts
     
     is_control_account = Column(Boolean, default=False) # If it's a control account for customer/subsidiary ledgers

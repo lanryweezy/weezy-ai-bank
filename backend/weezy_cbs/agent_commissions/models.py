@@ -43,7 +43,7 @@ class CommissionLog(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     financial_transaction_id = Column(String(50), ForeignKey("financial_transactions.id"), nullable=False)
-    agent_id = Column(Integer, ForeignKey("agents.id"), nullable=True) # Linked to the agent who performed txn
+    agent_id = Column(Integer, ForeignKey("agents.id"), nullable=True, index=True) # Linked to the agent who performed txn
     
     total_fee_collected = Column(Numeric(precision=18, scale=2), nullable=False)
     
@@ -51,10 +51,10 @@ class CommissionLog(Base):
     agent_amount = Column(Numeric(precision=18, scale=2), default=0.00)
     super_agent_amount = Column(Numeric(precision=18, scale=2), default=0.00)
     
-    status = Column(SQLAlchemyEnum(CommissionStatusEnum), default=CommissionStatusEnum.PENDING)
+    status = Column(SQLAlchemyEnum(CommissionStatusEnum), default=CommissionStatusEnum.PENDING, index=True)
     settled_at = Column(DateTime(timezone=True), nullable=True)
     
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
 class AgentWallet(Base):
     """

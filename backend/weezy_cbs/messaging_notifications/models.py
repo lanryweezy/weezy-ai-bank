@@ -24,7 +24,7 @@ class NotificationLog(Base):
     __tablename__ = "notification_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, index=True)
     
     channel = Column(SQLAlchemyEnum(ChannelEnum), nullable=False)
     recipient = Column(String(100), nullable=False) # Phone number or Email
@@ -40,7 +40,7 @@ class NotificationLog(Base):
     error_details = Column(Text, nullable=True)
     
     is_read = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     sent_at = Column(DateTime(timezone=True), nullable=True)
 
     customer = relationship("Customer")
