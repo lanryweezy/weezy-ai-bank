@@ -53,12 +53,15 @@ async def startup_event():
 # AI & Automation Layer (Unified with bank-ai-orchestrator frontend)
 app.include_router(ai_api.ai_api_router, prefix="/api", tags=["AI & Automation"])
 
+from weezy_cbs.agent_banking import api as agent_api
+
 # Core CBS Modules
 app.include_router(cim_api.router, prefix="/api/corebanking/cim", tags=["Customer Identity"])
 app.include_router(alm_api.router, prefix="/api/corebanking/alm", tags=["Accounts & Ledger"])
 app.include_router(loan_api.router, prefix="/api/corebanking/loans", tags=["Loans"])
 app.include_router(txn_api.router, prefix="/api/transactions", tags=["Transactions"])
 app.include_router(comp_rep_api.router, prefix="/api/compliance", tags=["Compliance & Reporting"])
+app.include_router(agent_api.router, prefix="/api/agent-banking", tags=["Agent Banking (SANEF)"])
 
 app.include_router(treasury_api.router, prefix="/api/corebanking/treasury", tags=["Treasury & Liquidity"])
 app.include_router(fee_api.router, prefix="/api/corebanking/fees", tags=["Fees & Charges"])

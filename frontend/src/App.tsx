@@ -63,6 +63,8 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: JSX.Element, all
   return children;
 };
 
+import AgentBankingPage from "./pages/AgentBanking";
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -84,6 +86,7 @@ const App = () => (
 
           {/* User Routes */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/agent-banking" element={<ProtectedRoute><AgentBankingPage /></ProtectedRoute>} />
           <Route path="/ai-templates" element={<ProtectedRoute><AIAgentTemplatesPage /></ProtectedRoute>} />
           <Route path="/configure-agent" element={<ProtectedRoute><ConfigureAgentPage /></ProtectedRoute>} />
           <Route path="/my-agents" element={<ProtectedRoute><MyConfiguredAgentsPage /></ProtectedRoute>} />
