@@ -58,6 +58,7 @@ from weezy_cbs.cognitive_core import api as cognitive_api
 from weezy_cbs.teller_operations import api as teller_api
 from weezy_cbs.gl_management import api as gl_api
 from weezy_cbs.fixed_deposits import api as fd_api
+from weezy_cbs.loan_origination import api as loan_orig_api
 from weezy_cbs.intelligence_terminal import api as terminal_api
 
 # Core CBS Modules
@@ -66,8 +67,9 @@ app.include_router(alm_api.router, prefix="/api/corebanking/alm", tags=["Account
 app.include_router(gl_api.router, prefix="/api/corebanking/gl", tags=["General Ledger (Chart of Accounts)"])
 app.include_router(teller_api.router, prefix="/api/corebanking/teller", tags=["Branch & Teller Operations"])
 app.include_router(fd_api.router, prefix="/api/corebanking/investments/fd", tags=["Fixed & Term Deposits"])
-app.include_router(terminal_api.router, prefix="/api/corebanking/terminal", tags=["Intelligence Terminal (BI CLI)"])
+app.include_router(loan_orig_api.router, prefix="/api/corebanking/loans/origination", tags=["Loan Origination & Appraisal"])
 app.include_router(loan_api.router, prefix="/api/corebanking/loans", tags=["Loans"])
+
 app.include_router(txn_api.router, prefix="/api/transactions", tags=["Transactions"])
 app.include_router(comp_rep_api.router, prefix="/api/compliance", tags=["Compliance & Reporting"])
 app.include_router(agent_api.router, prefix="/api/agent-banking", tags=["Agent Banking (SANEF)"])

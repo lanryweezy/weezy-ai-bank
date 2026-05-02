@@ -71,6 +71,7 @@ const retailBanking = [
   { name: 'Branch & Teller', href: '/teller-ops', icon: Store },
   { name: 'Send Money', href: '/qr-payments', icon: QrCode },
   { name: 'Naira Cards', href: '/card-center', icon: CardIcon },
+  { name: 'Loan Portal', href: '/loan-origination', icon: Briefcase },
   { name: 'Fixed Vault', href: '/fixed-deposits', icon: PiggyBank },
   { name: 'Bills & Airtime', href: '/bills', icon: Zap },
   { name: 'International', href: '/fx-global', icon: Plane },
