@@ -118,6 +118,7 @@ const App = () => (
           <Route path="/virtual-accounts" element={<ProtectedRoute><VirtualAccounts /></ProtectedRoute>} />
           <Route path="/developer" element={<ProtectedRoute allowedRoles={['platform_admin']}><DeveloperHub /></ProtectedRoute>} />
           <Route path="/terminal" element={<ProtectedRoute allowedRoles={['platform_admin']}><IntelligenceTerminal /></ProtectedRoute>} />
+          <Route path="/assets" element={<ProtectedRoute allowedRoles={['platform_admin']}><FixedAssets /></ProtectedRoute>} />
           <Route path="/fraud-shield" element={<ProtectedRoute allowedRoles={['platform_admin']}><FraudShieldDashboard /></ProtectedRoute>} />
           <Route path="/loan-recovery" element={<ProtectedRoute allowedRoles={['platform_admin']}><LoanRecoveryDashboard /></ProtectedRoute>} />
           <Route path="/compliance" element={<ProtectedRoute allowedRoles={['platform_admin']}><ComplianceDashboard /></ProtectedRoute>} />

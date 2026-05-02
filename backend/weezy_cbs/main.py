@@ -63,6 +63,7 @@ from weezy_cbs.loan_origination import api as loan_orig_api
 from weezy_cbs.loan_collateral import api as loan_collateral_api
 from weezy_cbs.agent_commissions import api as agent_comm_api
 from weezy_cbs.cheque_leaf_management import api as cheque_leaf_api
+from weezy_cbs.fixed_assets import api as assets_api
 from weezy_cbs.loan_api import router as loan_api
 
 # Core CBS Modules
@@ -71,6 +72,7 @@ app.include_router(alm_api.router, prefix="/api/corebanking/alm", tags=["Account
 app.include_router(gl_api.router, prefix="/api/corebanking/gl", tags=["General Ledger (Chart of Accounts)"])
 app.include_router(teller_api.router, prefix="/api/corebanking/teller", tags=["Branch & Teller Operations"])
 app.include_router(fd_api.router, prefix="/api/corebanking/investments/fd", tags=["Fixed & Term Deposits"])
+app.include_router(assets_api.router, prefix="/api/corebanking/assets", tags=["Internal Fixed Assets"])
 app.include_router(loan_orig_api.router, prefix="/api/corebanking/loans/origination", tags=["Loan Origination & Appraisal"])
 app.include_router(loan_collateral_api.router, prefix="/api/corebanking/loans/collateral", tags=["Loan Collateral Management"])
 app.include_router(agent_comm_api.router, prefix="/api/corebanking/agent-commissions", tags=["Agent Commissions & Revenue Sharing"])

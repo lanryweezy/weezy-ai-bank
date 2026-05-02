@@ -98,6 +98,7 @@ const riskAndCompliance = [
 
 const developerTools = [
   { name: 'Intelligence Terminal', href: '/terminal', icon: Terminal },
+  { name: 'Bank Assets', href: '/assets', icon: Building2 },
   { name: 'Developer Hub', href: '/developer', icon: Code2 },
   { name: 'Integrations', href: '/integrations', icon: Plug },
   { name: 'Knowledge Base', href: '/knowledge', icon: Database },
