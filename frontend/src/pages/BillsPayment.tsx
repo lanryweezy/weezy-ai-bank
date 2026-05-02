@@ -90,50 +90,55 @@ const BillsPayment = () => {
 
   return (
     <Layout>
-      <div className="p-6 space-y-8 animate-in fade-in duration-500">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
-                Bills & Utility Payments <Zap className="h-6 w-6 text-yellow-500" />
+      <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="space-y-1">
+            <h1 className="text-4xl font-black text-slate-900 tracking-tighter flex items-center gap-4 italic">
+                LIFESTYLE <div className="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-200"><Zap className="h-6 w-6 text-white" /></div>
             </h1>
-            <p className="text-gray-600 mt-1">Pay for Airtime, Data, Power, and Cable TV instantly.</p>
+            <p className="text-slate-500 font-medium">Instant Utility, Power, and Airtime Settlement Core.</p>
           </div>
+          <Badge className="bg-indigo-100 text-indigo-700 border-none px-4 py-1.5 font-black text-[9px] tracking-widest uppercase">Real-time Provisioning</Badge>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
            {/* Categories Sidebar */}
-           <div className="space-y-2">
-              <Label className="text-xs font-bold text-muted-foreground uppercase ml-2">Categories</Label>
-              {['AIRTIME', 'DATA', 'CABLE_TV', 'ELECTRICITY', 'GOVERNMENT'].map((cat) => (
-                <Button 
-                  key={cat}
-                  variant={selectedCategory === cat ? 'default' : 'ghost'}
-                  className={`w-full justify-start gap-3 h-12 rounded-xl ${selectedCategory === cat ? 'bg-indigo-600' : 'hover:bg-indigo-50'}`}
-                  onClick={() => { setSelectedCategory(cat); setStep(1); }}
-                >
-                  {categoryIcons[cat] || <Zap className="h-5 w-5" />}
-                  <span className="capitalize">{cat.replace('_', ' ').toLowerCase()}</span>
-                </Button>
-              ))}
+           <div className="space-y-4">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Services</h3>
+              <div className="grid grid-cols-1 gap-2">
+                {['AIRTIME', 'DATA', 'CABLE_TV', 'ELECTRICITY', 'GOVERNMENT'].map((cat) => (
+                    <Button 
+                    key={cat}
+                    variant={selectedCategory === cat ? 'default' : 'ghost'}
+                    className={`w-full justify-start gap-4 h-14 rounded-2xl transition-all duration-300 ${selectedCategory === cat ? 'bg-indigo-600 shadow-xl shadow-indigo-200 translate-x-2' : 'hover:bg-indigo-50 text-slate-600'}`}
+                    onClick={() => { setSelectedCategory(cat); setStep(1); }}
+                    >
+                    <div className={`p-2 rounded-lg ${selectedCategory === cat ? 'bg-white/20' : 'bg-slate-100'}`}>
+                        {categoryIcons[cat] || <Zap className="h-4 w-4" />}
+                    </div>
+                    <span className="font-bold text-xs uppercase tracking-widest">{cat.replace('_', ' ')}</span>
+                    </Button>
+                ))}
+              </div>
            </div>
 
            {/* Main Area */}
            <div className="lg:col-span-3">
               {step === 1 && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {loadingBillers ? (
-                    [1,2,3].map(i => <Card key={i} className="h-32 animate-pulse bg-gray-100 border-none" />)
+                    [1,2,3,4,5,6].map(i => <Card key={i} className="h-40 animate-pulse bg-slate-50 border-none rounded-[32px]" />)
                   ) : billers?.map((biller: any) => (
                     <Card 
                       key={biller.id} 
-                      className="cursor-pointer hover:scale-[1.03] transition-all border-none shadow-sm ring-1 ring-gray-200"
+                      className="group cursor-pointer hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border-none ring-1 ring-slate-200/60 rounded-[32px] bg-white overflow-hidden"
                       onClick={() => handleBillerSelect(biller)}
                     >
-                      <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-                        <div className="bg-indigo-50 p-4 rounded-full mb-3">
-                            {categoryIcons[biller.category] || <Zap className="h-6 w-6 text-indigo-600" />}
+                      <CardContent className="flex flex-col items-center justify-center p-8 text-center">
+                        <div className="bg-slate-50 p-5 rounded-3xl mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500 shadow-inner">
+                            {categoryIcons[biller.category] || <Zap className="h-8 w-8" />}
                         </div>
-                        <p className="font-bold text-sm">{biller.name}</p>
+                        <p className="font-black text-slate-900 text-sm tracking-tight group-hover:text-indigo-600 transition-colors">{biller.name}</p>
                       </CardContent>
                     </Card>
                   ))}
@@ -141,87 +146,102 @@ const BillsPayment = () => {
               )}
 
               {step === 2 && (
-                <Card className="max-w-md border-none shadow-xl ring-1 ring-gray-200">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        {categoryIcons[selectedBiller.category]} {selectedBiller.name}
+                <Card className="max-w-md border-none shadow-2xl ring-1 ring-slate-200/60 bg-white rounded-[40px] overflow-hidden mx-auto">
+                  <CardHeader className="bg-slate-50/50 p-10 pb-6 border-b border-slate-100">
+                    <CardTitle className="flex items-center gap-3 text-2xl font-black italic tracking-tighter">
+                        <div className="bg-indigo-600 p-2 rounded-lg">{categoryIcons[selectedBiller.category]}</div>
+                        {selectedBiller.name}
                     </CardTitle>
-                    <CardDescription>Enter your details to proceed with the payment.</CardDescription>
+                    <CardDescription className="font-medium mt-2">Provisioning details required for settlement.</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="p-10 space-y-6">
                     <div className="space-y-2">
-                        <Label>{selectedBiller.requires_validation ? 'Smartcard/Meter Number' : 'Phone Number'}</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                            {selectedBiller.requires_validation ? 'Smartcard / Meter Reference' : 'Recipient Phone Number'}
+                        </Label>
                         <Input 
                             placeholder={selectedBiller.requires_validation ? "e.g. 45012345678" : "08137502933"} 
                             value={identifier}
+                            className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-lg"
                             onChange={e => setIdentifier(e.target.value)}
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label>Amount (₦)</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Payment Amount (₦)</Label>
                         <Input 
                             type="number" 
                             placeholder="1,000" 
                             value={amount}
+                            className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-lg"
                             onChange={e => setAmount(e.target.value)}
                         />
                     </div>
-                    <Button className="w-full bg-indigo-600" onClick={handleNext} disabled={validateMutation.isPending}>
-                        {validateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                        {selectedBiller.requires_validation ? 'Validate Account' : 'Continue'}
+                    <Button className="w-full bg-indigo-600 h-14 rounded-2xl font-black shadow-xl shadow-indigo-100 mt-4 text-white border-none" onClick={handleNext} disabled={validateMutation.isPending}>
+                        {validateMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin mr-3 text-white" /> : null}
+                        {selectedBiller.requires_validation ? 'Verify Credential' : 'Continue to Payment'}
                     </Button>
-                    <Button variant="ghost" className="w-full" onClick={() => setStep(1)}>Back</Button>
+                    <Button variant="ghost" className="w-full h-12 rounded-2xl font-bold text-slate-400" onClick={() => setStep(1)}>Cancel Request</Button>
                   </CardContent>
                 </Card>
               )}
 
               {step === 3 && (
-                <Card className="max-w-md border-none shadow-xl ring-1 ring-gray-200 overflow-hidden">
-                   <div className="bg-indigo-600 p-6 text-white text-center">
-                        <p className="text-indigo-100 text-xs uppercase tracking-widest mb-1">Confirm Payment</p>
-                        <h3 className="text-3xl font-bold">₦{parseFloat(amount).toLocaleString()}</h3>
+                <Card className="max-w-md border-none shadow-2xl ring-1 ring-indigo-200 bg-white rounded-[40px] overflow-hidden mx-auto">
+                   <div className="bg-indigo-600 p-10 text-white text-center relative">
+                        <div className="absolute top-0 right-0 p-6 opacity-10">
+                            <Sparkles className="h-20 w-20" />
+                        </div>
+                        <p className="text-indigo-100 text-[10px] font-black uppercase tracking-[0.3em] mb-3">Confirm Transaction</p>
+                        <h3 className="text-5xl font-black tracking-tighter">₦{parseFloat(amount).toLocaleString()}</h3>
                    </div>
-                   <CardContent className="p-6 space-y-4">
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="text-gray-500 text-sm">Biller</span>
-                        <span className="font-bold text-sm">{selectedBiller.name}</span>
+                   <CardContent className="p-10 space-y-5">
+                      <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl">
+                        <span className="text-slate-400 text-[10px] font-black uppercase">Service</span>
+                        <span className="font-black text-slate-900 text-sm">{selectedBiller.name}</span>
                       </div>
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="text-gray-500 text-sm">ID</span>
-                        <span className="font-bold text-sm">{identifier}</span>
+                      <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl">
+                        <span className="text-slate-400 text-[10px] font-black uppercase">Identifier</span>
+                        <span className="font-mono font-black text-slate-900 text-sm">{identifier}</span>
                       </div>
                       {validationResult?.customer_name && (
-                        <div className="flex justify-between border-b pb-2">
-                            <span className="text-gray-500 text-sm">Customer</span>
-                            <span className="font-bold text-sm text-indigo-600">{validationResult.customer_name}</span>
+                        <div className="flex justify-between items-center bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+                            <span className="text-indigo-400 text-[10px] font-black uppercase tracking-widest">Verified Owner</span>
+                            <span className="font-black text-indigo-700 text-sm">{validationResult.customer_name}</span>
                         </div>
                       )}
-                      <Button className="w-full bg-indigo-600 h-12 mt-4 shadow-lg shadow-indigo-200" onClick={handlePay} disabled={payMutation.isPending}>
-                        {payMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : 'Confirm & Pay Now'}
-                      </Button>
-                      <Button variant="ghost" className="w-full" onClick={() => setStep(2)}>Back</Button>
+                      <div className="pt-4 space-y-4">
+                        <Button className="w-full bg-indigo-600 h-16 rounded-[24px] font-black text-lg shadow-2xl shadow-indigo-100 active:scale-95 transition-all text-white border-none" onClick={handlePay} disabled={payMutation.isPending}>
+                            {payMutation.isPending ? <Loader2 className="h-6 w-6 animate-spin mr-3 text-white" /> : <ShieldCheck className="h-6 w-6 mr-3 text-white" />}
+                            Confirm & Pay Now
+                        </Button>
+                        <Button variant="ghost" className="w-full font-bold text-slate-400" onClick={() => setStep(2)}>Modify Details</Button>
+                      </div>
                    </CardContent>
                 </Card>
               )}
 
               {step === 4 && (
-                <Card className="max-w-md border-none shadow-2xl ring-1 ring-green-100 text-center py-10">
-                   <div className="bg-green-100 text-green-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                <Card className="max-w-md border-none shadow-2xl ring-1 ring-green-100 bg-white rounded-[40px] text-center py-20 mx-auto">
+                   <div className="bg-green-50 text-green-600 w-24 h-24 rounded-[32px] flex items-center justify-center mx-auto mb-8 shadow-xl shadow-green-50 animate-bounce">
                         <CheckCircle2 className="h-12 w-12" />
                    </div>
                    <CardHeader>
-                        <CardTitle className="text-2xl text-green-700">Payment Successful</CardTitle>
-                        <CardDescription>₦{parseFloat(amount).toLocaleString()} paid to {selectedBiller.name}</CardDescription>
+                        <CardTitle className="text-3xl font-black text-slate-900 tracking-tighter">Settlement Successful</CardTitle>
+                        <CardDescription className="font-bold text-slate-500 uppercase tracking-widest mt-2">₦{parseFloat(amount).toLocaleString()} paid to {selectedBiller.name}</CardDescription>
                    </CardHeader>
-                   <CardContent className="space-y-4">
+                   <CardContent className="space-y-6 pt-6 px-10">
                         {validationResult?.token && (
-                            <div className="p-4 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                                <p className="text-xs text-gray-500 uppercase mb-2">Prepaid Token</p>
-                                <p className="text-xl font-mono font-bold tracking-widest text-indigo-600">{validationResult.token}</p>
+                            <div className="p-6 bg-slate-900 rounded-3xl border-2 border-dashed border-indigo-500/30 relative group">
+                                <div className="absolute top-2 right-4 text-[8px] font-black text-indigo-400 uppercase tracking-widest">Prepaid Token</div>
+                                <p className="text-2xl font-mono font-black tracking-[0.2em] text-white py-2">{validationResult.token}</p>
+                                <Button variant="ghost" className="mt-2 text-[9px] font-black text-indigo-400 uppercase hover:bg-white/5 h-8" onClick={() => copyToClipboard(validationResult.token)}>Copy Token</Button>
                             </div>
                         )}
-                        <p className="text-xs text-muted-foreground italic">Reference: {validationResult?.provider_reference}</p>
-                        <Button className="w-full mt-6" onClick={reset}>Done</Button>
+                        <div className="flex flex-col items-center gap-1">
+                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Reference</p>
+                            <p className="text-xs font-mono font-bold text-slate-600">{validationResult?.provider_reference}</p>
+                        </div>
+                        <Button className="w-full h-14 rounded-2xl bg-indigo-600 font-black text-white border-none shadow-xl shadow-indigo-100" onClick={reset}>Close Receipt</Button>
                    </CardContent>
                 </Card>
               )}
