@@ -32,7 +32,8 @@ import {
   Store,
   ShoppingBag,
   PiggyBank,
-  ShieldCheck
+  ShieldCheck,
+  QrCode
 } from 'lucide-react';
 import {
   Sidebar,
@@ -71,6 +72,7 @@ const bankingModules = [
   { name: 'Virtual Accounts', href: '/virtual-accounts', icon: Hash },
   { name: 'Corporate Payroll', href: '/payroll', icon: Building2 },
   { name: 'FX & Global', href: '/fx-global', icon: Globe },
+  { name: 'NQR Payments', href: '/qr-payments', icon: QrCode },
   { name: 'Bills & Airtime', href: '/bills', icon: Zap },
   { name: 'Wealth & Savings', href: '/savings', icon: PiggyBank },
   { name: 'Compliance & AML', href: '/compliance', icon: ShieldAlert },
