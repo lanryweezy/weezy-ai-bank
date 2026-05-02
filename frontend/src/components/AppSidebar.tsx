@@ -74,6 +74,7 @@ const retailBanking = [
   { name: 'Naira Cards', href: '/card-center', icon: CardIcon },
   { name: 'Loan Portal', href: '/loan-origination', icon: Briefcase },
   { name: 'Collateral Vault', href: '/loan-collateral', icon: Gavel },
+  { name: 'Cheque Vault', href: '/cheque-vault', icon: BookOpen },
   { name: 'Fixed Vault', href: '/fixed-deposits', icon: PiggyBank },
   { name: 'Bills & Airtime', href: '/bills', icon: Zap },
   { name: 'International', href: '/fx-global', icon: Plane },

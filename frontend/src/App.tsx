@@ -79,6 +79,7 @@ import TellerOperations from "./pages/TellerOperations";
 import ChartOfAccounts from "./pages/ChartOfAccounts";
 import LoanOrigination from "./pages/LoanOrigination";
 import LoanCollateral from "./pages/LoanCollateral";
+import ChequeManagement from "./pages/ChequeManagement";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -146,6 +147,7 @@ const App = () => (
           <Route path="/loans" element={<ProtectedRoute><LoanManagementPage /></ProtectedRoute>} />
           <Route path="/loan-origination" element={<ProtectedRoute><LoanOrigination /></ProtectedRoute>} />
           <Route path="/loan-collateral" element={<ProtectedRoute><LoanCollateral /></ProtectedRoute>} />
+          <Route path="/cheque-vault" element={<ProtectedRoute><ChequeManagement /></ProtectedRoute>} />
           <Route path="/transactions" element={<ProtectedRoute><TransactionManagementPage /></ProtectedRoute>} />
 
           {/* Admin Routes - Protected by role */}
