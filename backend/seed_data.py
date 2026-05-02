@@ -28,6 +28,22 @@ def seed_agent_templates():
                 status=models.AIModelStatusEnum.ACTIVE
             )
             db.add(template)
+            
+        # Credit Risk Assessor Template
+        credit_risk_id = "credit-risk-assessor-logic"
+        existing = db.query(models.AIModelMetadata).filter(models.AIModelMetadata.source_identifier == credit_risk_id).first()
+        if not existing:
+            print(f"Seeding '{credit_risk_id}'...")
+            template = models.AIModelMetadata(
+                model_name="AI Credit Risk Assessor",
+                model_type=models.AIModelTypeEnum.CREDIT_SCORING_ML,
+                version="1.0.0",
+                description="Analyzes transaction history and KYC tiers to predict default risk and suggest loan limits.",
+                source_type="INTERNAL_LOGIC",
+                source_identifier=credit_risk_id,
+                status=models.AIModelStatusEnum.ACTIVE
+            )
+            db.add(template)
         
         # Data Extractor Template
         extractor_id = "data-extractor-logic"
@@ -57,18 +73,30 @@ def seed_demo_workflow(db: Session):
     existing = db.query(models.Workflow).filter(models.Workflow.name == "Standard Loan Application").first()
     if not existing:
         print("Seeding Standard Loan Application Workflow...")
-        # Get the agent template ID
-        template = db.query(models.AIModelMetadata).filter(models.AIModelMetadata.source_identifier == "loan-checker-logic").first()
         
-        # Create a dummy agent config
-        agent = models.AIAgentConfig(
-            agent_name="Loan Check Agent",
-            template_id=template.id if template else None,
+        # Get the agent template IDs
+        checker_template = db.query(models.AIModelMetadata).filter(models.AIModelMetadata.source_identifier == "loan-checker-logic").first()
+        risk_template = db.query(models.AIModelMetadata).filter(models.AIModelMetadata.source_identifier == "credit-risk-assessor-logic").first()
+        
+        # Create agents
+        checker_agent = models.AIAgentConfig(
+            agent_name="Document Verification Agent",
+            template_id=checker_template.id if checker_template else None,
             role_description="Automated loan document verification",
             goal_description="Verify all documents are present and valid",
             is_active=True
         )
-        db.add(agent)
+        db.add(checker_agent)
+        
+        risk_agent = models.AIAgentConfig(
+            agent_name="Credit Risk Analysis Agent",
+            template_id=risk_template.id if risk_template else None,
+            role_description="Senior Credit Risk Analyst for the Nigerian Market",
+            goal_description="Analyze transaction history to determine credit worthiness, calculate debt-to-income ratio, and approve/reject loan requests based on CBN guidelines.",
+            backstory="You are an expert in the Nigerian financial sector. You understand the nuances of NUBAN activity, salary inflows, and common default patterns in the region.",
+            is_active=True
+        )
+        db.add(risk_agent)
         db.flush()
         
         definition = {
@@ -76,7 +104,12 @@ def seed_demo_workflow(db: Session):
                 {
                     "name": "document_verification",
                     "type": "agent_execution",
-                    "agent_id": str(agent.id)
+                    "agent_id": str(checker_agent.id)
+                },
+                {
+                    "name": "ai_credit_scoring",
+                    "type": "agent_execution",
+                    "agent_id": str(risk_agent.id)
                 },
                 {
                     "name": "credit_analyst_review",
@@ -86,14 +119,14 @@ def seed_demo_workflow(db: Session):
                 {
                     "name": "final_disbursement",
                     "type": "agent_execution",
-                    "agent_id": str(agent.id)
+                    "agent_id": str(checker_agent.id) # Reusing checker as a simple automated executor for now
                 }
             ]
         }
         
         workflow = models.Workflow(
             name="Standard Loan Application",
-            description="End-to-end automated loan process with human review step.",
+            description="End-to-end automated loan process with AI credit scoring and human review.",
             definition_json=definition,
             is_active=True
         )
@@ -105,3 +138,4 @@ if __name__ == "__main__":
     seed_agent_templates()
     seed_demo_workflow(db)
     db.close()
+

@@ -66,12 +66,34 @@ class WorkflowEngine:
         if agent_id:
             agent = self.db.query(models.AIAgentConfig).filter(models.AIAgentConfig.id == UUID(agent_id)).first()
             
+        # Prepare context data
+        context_data = run.context_json or {}
+        
+        # Dynamic Data Injection based on Step Name
+        if step.get('name') == "ai_credit_scoring" and "customer_id" in context_data:
+            customer_id = context_data["customer_id"]
+            # Fetch recent transactions for analysis
+            from weezy_cbs.transaction_management.services import get_transactions_for_account
+            from weezy_cbs.accounts_ledger_management.services import get_accounts_for_customer
+            
+            # Simplified: get the first account for the customer and its last 10 txns
+            accounts = get_accounts_for_customer(self.db, customer_id)
+            if accounts:
+                primary_account = accounts[0].account_number
+                txns = get_transactions_for_account(self.db, primary_account, limit=10)
+                context_data["financial_history"] = [
+                    {"amount": float(t.amount), "type": "DEBIT" if t.debit_account_number == primary_account else "CREDIT", "narration": t.narration, "date": str(t.initiated_at)}
+                    for t in txns
+                ]
+            else:
+                context_data["financial_history"] = "No accounts found for customer."
+
         task_in = schemas.TaskBase(
             run_id=run.id,
             step_name_in_workflow=step.get('name'),
             type=models.TaskTypeEnum.AGENT_EXECUTION,
             assigned_to_agent_id=agent.id if agent else None,
-            input_data_json=run.context_json
+            input_data_json=context_data
         )
         task = self.task_service.create_task(self.db, task_in, "SYSTEM")
         
