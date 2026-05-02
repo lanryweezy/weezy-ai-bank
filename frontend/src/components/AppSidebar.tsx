@@ -62,8 +62,8 @@ const navigation = [
   { name: 'Overview', href: '/dashboard', icon: Activity },
   { name: 'Cognitive Core', href: '/cognitive-core', icon: Brain, highlight: true },
   { name: 'Task Manager', href: '/tasks', icon: CheckSquare },
+  { name: 'Auto-Schedule', href: '/standing-instructions', icon: GitBranch },
   { name: 'AI Templates', href: '/ai-templates', icon: Cpu },
-  { name: 'Workflow Automator', href: '/workflows', icon: GitBranch },
 ];
 
 const retailBanking = [
