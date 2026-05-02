@@ -1,52 +1,39 @@
 # API Endpoints for Accounts & Ledger Management using FastAPI
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Any
 from datetime import datetime, date # For date query params
 import decimal
 
 from . import services, schemas, models
 from weezy_cbs.database import get_db
-
-def get_current_user_placeholder(): return {"id": "user_SYSTEM", "username": "system"} # Mock
-get_current_active_user = get_current_user_placeholder
-def get_current_admin_user_placeholder(): return {"id": "admin_ACC", "username": "acc_admin"} # Mock
-get_current_active_admin_user = get_current_admin_user_placeholder
-def get_current_teller_or_system_user_placeholder(): return {"id": "teller01", "username": "teller_main"}
-get_current_teller_or_system_user = get_current_teller_or_system_user_placeholder
-
+from weezy_cbs.core_infrastructure_config_engine.api import get_current_active_user, get_current_active_superuser
 
 router = APIRouter(
-    prefix="/accounts-ledger", # Consistent prefix
+    prefix="/accounts-ledger",
     tags=["Accounts & Ledger Management"],
     responses={404: {"description": "Not found"}},
 )
 
 # --- Account Management Endpoints ---
-@router.post("/accounts", response_model=schemas.AccountResponse, status_code=status.HTTP_201_CREATED)
-def create_new_account_endpoint( # Renamed from create_customer_account for clarity
+@router.post("/accounts", response_model=Any, status_code=status.HTTP_201_CREATED)
+def create_new_account_endpoint(
     account_in: schemas.AccountCreateRequest,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_active_user) # User performing action (e.g. system, teller)
+    current_user: Any = Depends(get_current_active_user)
 ):
     """
     Create a new bank account for a customer, linked to a specific product code.
     - `customer_id` and `product_code` must be provided.
-    - Account number (NUBAN) is system-generated.
-    - `initial_deposit_amount` if provided, will trigger an initial credit transaction to the new account.
+    - `initial_deposit_amount` > ₦1,000,000 triggers Dual Control.
     """
-    if db is None and False: raise HTTPException(status_code=503, detail="Database not configured for API.")
-    user_id_str = str(current_user.get("id"))
     try:
-        # Customer existence and product_code validity checks are now within the service
-        account = services.create_account(db=db, account_in=account_in, created_by_user_id=user_id_str)
-        return account
-    except services.NotFoundException as e: # If customer or product_code not found
+        return services.create_account(db=db, account_in=account_in, current_user=current_user)
+    except services.NotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except services.InvalidOperationException as e: # For other validation errors like min deposit
+    except services.InvalidOperationException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
-        # Log e
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"An unexpected error occurred: {str(e)}")
 
 @router.get("/accounts/{account_number}", response_model=schemas.AccountResponse)

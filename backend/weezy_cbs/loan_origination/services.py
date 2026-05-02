@@ -11,6 +11,7 @@ from datetime import datetime
 from . import models, schemas
 from weezy_cbs.loan_management_module.models import LoanApplication, LoanProduct, LoanApplicationStatusEnum
 from weezy_cbs.customer_identity_management.models import Customer
+from weezy_cbs.messaging_notifications.services import notification_engine
 
 logger = logging.getLogger(__name__)
 
@@ -129,8 +130,15 @@ class LoanOriginationService:
             
             # Update app status
             app.status = LoanApplicationStatusEnum.UNDER_REVIEW
-            
             db.commit()
+
+            # --- REAL-TIME ALERT ---
+            await notification_engine.send_loan_update_alert(db, app.customer_id, {
+                "status": appraisal.status.value,
+                "amount": app.requested_amount,
+                "ref": app.application_reference
+            })
+            
             return raw_text
         except Exception as e:
             logger.error(f"AI Appraisal Error: {str(e)}")

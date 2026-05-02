@@ -40,6 +40,7 @@ import WorkflowDefinitionsListPageAdmin from "./pages/Admin/WorkflowDefinitionsL
 import WorkflowDefinitionEditPage from "./pages/Admin/WorkflowDefinitionEditPage";
 import AgentMonitoringPage from "./pages/Admin/AgentMonitoringPage";
 import AuditTrail from "./pages/Admin/AuditTrail";
+import EODDashboard from "./pages/EODDashboard";
 
 
 const queryClient = new QueryClient();
@@ -121,6 +122,7 @@ const App = () => (
           <Route path="/developer" element={<ProtectedRoute allowedRoles={['platform_admin']}><DeveloperHub /></ProtectedRoute>} />
           <Route path="/terminal" element={<ProtectedRoute allowedRoles={['platform_admin']}><IntelligenceTerminal /></ProtectedRoute>} />
           <Route path="/assets" element={<ProtectedRoute allowedRoles={['platform_admin']}><FixedAssets /></ProtectedRoute>} />
+          <Route path="/eod-center" element={<ProtectedRoute allowedRoles={['platform_admin']}><EODDashboard /></ProtectedRoute>} />
           <Route path="/fraud-shield" element={<ProtectedRoute allowedRoles={['platform_admin']}><FraudShieldDashboard /></ProtectedRoute>} />
           <Route path="/loan-recovery" element={<ProtectedRoute allowedRoles={['platform_admin']}><LoanRecoveryDashboard /></ProtectedRoute>} />
           <Route path="/compliance" element={<ProtectedRoute allowedRoles={['platform_admin']}><ComplianceDashboard /></ProtectedRoute>} />

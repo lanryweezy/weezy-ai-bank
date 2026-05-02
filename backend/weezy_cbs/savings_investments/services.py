@@ -59,6 +59,23 @@ class SavingsInvestmentsService:
         db.refresh(goal)
         return goal
 
+    def run_daily_accrual(self, db: Session):
+        """
+        Calculates and adds daily interest to all ACTIVE savings goals.
+        Called by EOD Orchestrator.
+        """
+        active_goals = db.query(models.SavingsGoal).filter(models.SavingsGoal.status == models.SavingsStatusEnum.ACTIVE).all()
+        
+        for goal in active_goals:
+            # Daily: (Bal * Rate) / 365
+            daily_rate = (goal.interest_rate / decimal.Decimal("365"))
+            interest = goal.current_balance * daily_rate
+            
+            goal.current_balance += interest
+            
+        db.commit()
+        return len(active_goals)
+
     async def get_ai_investment_advice(self, db: Session, customer_id: int) -> str:
         """
         AI Investment Advisor: Analyzes spending and suggests saving plans.

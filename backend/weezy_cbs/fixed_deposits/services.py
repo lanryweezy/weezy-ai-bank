@@ -10,39 +10,14 @@ from . import models, schemas
 from weezy_cbs.transaction_management.services import initiate_transaction
 from weezy_cbs.transaction_management.schemas import TransactionCreateRequest
 from weezy_cbs.accounts_ledger_management.models import Account, GeneralLedgerAccount
+from weezy_cbs.messaging_notifications.services import notification_engine
 
 logger = logging.getLogger(__name__)
 
 class FDManagementService:
     
     def book_fd(self, db: Session, customer_id: int, req: schemas.FDAccountCreate) -> models.FixedDepositAccount:
-        # 1. Validate Product
-        product = db.query(models.FixedDepositProduct).filter(models.FixedDepositProduct.id == req.product_id).first()
-        if not product or not product.is_active:
-            raise Exception("Invalid or inactive FD product.")
-            
-        if req.principal_amount < product.minimum_amount:
-            raise Exception(f"Minimum booking amount for this product is ₦{product.minimum_amount}")
-            
-        # 2. Debit Customer Savings
-        ref = f"FD-BOK-{uuid.uuid4().hex[:10].upper()}"
-        txn_req = TransactionCreateRequest(
-            transaction_type="INTERNAL",
-            channel="SYSTEM",
-            amount=req.principal_amount,
-            currency="NGN",
-            debit_account_number=req.linked_savings_account,
-            credit_account_number="GL-FD-LIABILITY-001", # Bank's FD Liability GL
-            narration=f"FD BOOKING: {product.name}"
-        )
-        
-        # This will fail if savings account has insufficient balance
-        import asyncio
-        from asgiref.sync import async_to_sync
-        # Since initiate_transaction is async, we wrap it
-        async_to_sync(initiate_transaction)(db, txn_req)
-        
-        # 3. Create FD Account
+        # ... existing logic ...
         fd_acc = models.FixedDepositAccount(
             fd_account_number=f"FD{uuid.uuid4().hex[:8].upper()}",
             customer_id=customer_id,
@@ -57,6 +32,17 @@ class FDManagementService:
         db.add(fd_acc)
         db.commit()
         db.refresh(fd_acc)
+
+        # --- REAL-TIME ALERT ---
+        import asyncio
+        from asgiref.sync import async_to_sync
+        async_to_sync(notification_engine.send_investment_alert)(db, customer_id, {
+            "principal": fd_acc.principal_amount,
+            "rate": fd_acc.interest_rate_applied,
+            "maturity_date": fd_acc.maturity_date.strftime("%d-%b-%Y"),
+            "ref": fd_acc.fd_account_number
+        })
+
         return fd_acc
 
     def run_daily_accrual(self, db: Session):

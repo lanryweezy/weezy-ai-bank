@@ -48,25 +48,23 @@ def _log_account_event(db: Session, account_id: int, event_type: str, details: O
 # (create_account, get_account_by_id_internal, get_account_by_number, get_accounts_by_customer_id, update_account_status, place_lien_on_account, release_lien_on_account - already implemented in previous step)
 # ... (previous Part 1 code from above) ...
 # --- Account Services (Part 1: Account Management) ---
-def create_account(db: Session, account_in: schemas.AccountCreateRequest, created_by_user_id: str = "SYSTEM") -> models.Account:
+from weezy_cbs.dual_authorization.services import dual_auth_service
+
+def create_account(db: Session, account_in: schemas.AccountCreateRequest, current_user: Any, created_by_user_id: str = "SYSTEM") -> Any:
     """
     Creates a new bank account for a customer, linked to a product_code.
+    Triggers Dual Control for large initial deposits.
     """
-    # 1. Validate Customer
-    # customer = get_customer(db, account_in.customer_id) # Assumes get_customer is available
-    # if not customer:
-    #     raise NotFoundException(f"Customer with ID {account_in.customer_id} not found.")
-    # if not customer.is_active:
-    #     raise InvalidOperationException(f"Customer {account_in.customer_id} is not active.")
-    # TODO: Check if customer's KYC tier allows opening this type of account/product.
+    # 1. Dual Control Check
+    if account_in.initial_deposit_amount > decimal.Decimal("1000000.00"):
+        return dual_auth_service.create_request(
+            db=db,
+            action_type="OPEN_ACCOUNT_LARGE_DEPOSIT",
+            payload=account_in.dict(),
+            maker=current_user
+        )
 
-    # 2. Validate Product Code and get product details
-    # product_config_model = get_product_config(db, account_in.product_code) # Assumes service from core_infra
-    # if not product_config_model or not product_config_model.is_active:
-    #     raise NotFoundException(f"Active Product Configuration with code '{account_in.product_code}' not found.")
-    # product_params = json.loads(product_config_model.config_parameters_json)
-
-    # Mock product config fetching:
+    # 2. Mock product config fetching:
     mock_product_params = {}
     if "SAV" in account_in.product_code.upper():
         mock_product_params = {"account_type": "SAVINGS", "currency": "NGN", "min_opening_balance": 0}
@@ -80,12 +78,12 @@ def create_account(db: Session, account_in: schemas.AccountCreateRequest, create
     account_type_from_product = AccountTypeEnum[mock_product_params["account_type"]]
     currency_from_product = CurrencyEnum[mock_product_params["currency"]]
 
-    # 3. Check initial deposit against product minimum (if any)
+    # 3. Check initial deposit against product minimum
     min_opening_balance = decimal.Decimal(str(mock_product_params.get("min_opening_balance", 0)))
     if account_in.initial_deposit_amount < min_opening_balance:
         raise InvalidOperationException(f"Initial deposit {account_in.initial_deposit_amount} is less than minimum {min_opening_balance} for product {account_in.product_code}.")
 
-    # 4. Generate unique NUBAN account number
+    # 4. Generate unique NUBAN
     cbn_bank_code = "999999"
     while True:
         nuban = _generate_nuban(bank_code=cbn_bank_code)
@@ -102,45 +100,31 @@ def create_account(db: Session, account_in: schemas.AccountCreateRequest, create
         available_balance=decimal.Decimal('0.00'),
         status=AccountStatusEnum.ACTIVE,
         opened_date=date.today(),
-        last_customer_initiated_activity_date=datetime.utcnow(),
-        fd_maturity_date=account_in.fd_maturity_date if account_type_from_product == AccountTypeEnum.FIXED_DEPOSIT else None,
-        fd_interest_rate_pa=account_in.fd_interest_rate_pa if account_type_from_product == AccountTypeEnum.FIXED_DEPOSIT else None,
-        fd_principal_amount=account_in.fd_principal_amount if account_type_from_product == AccountTypeEnum.FIXED_DEPOSIT else None,
+        last_customer_initiated_activity_date=datetime.utcnow()
     )
     db.add(db_account)
 
     try:
         db.commit()
         db.refresh(db_account)
-    except IntegrityError as e:
+    except IntegrityError:
         db.rollback()
-        if "accounts_account_number_key" in str(e.orig):
-             raise InvalidOperationException("Generated account number conflict. Please try again.")
-        raise InvalidOperationException(f"Could not create account due to a database conflict: {str(e)}")
-
-    _log_account_event(db, db_account.id, "ACCOUNT_CREATED", {"product_code": account_in.product_code, "initial_deposit": account_in.initial_deposit_amount}, created_by_user_id)
+        raise InvalidOperationException("Generated account number conflict. Please try again.")
 
     if account_in.initial_deposit_amount > 0:
-        # For initial deposit, directly update balances after account creation is committed.
-        # A full ledger entry will also be created by the calling service (e.g. deposit module)
-        # or a system transaction if this is purely an internal opening balance.
-        # Here we simulate the balance update that would result from such a posting.
-        # This step is simplified for now; a full ledger posting would be preferred.
-        financial_transaction_id_opening = f"SYS_OPEN_{db_account.account_number}"
         _create_ledger_entry_internal(
             db=db,
             account_id=db_account.id,
-            financial_transaction_id=financial_transaction_id_opening,
+            financial_transaction_id=f"SYS_OPEN_{db_account.account_number}",
             entry_type=TransactionTypeEnum.CREDIT,
             amount=account_in.initial_deposit_amount,
             currency=db_account.currency,
             narration=f"Initial opening deposit for {db_account.account_number}",
             value_date=datetime.utcnow(),
             channel="SYSTEM",
-            is_system_tx=True # Bypass some checks for system-generated entries
+            is_system_tx=True
         )
-        # _create_ledger_entry_internal handles balance update and commit within itself now.
-        db.refresh(db_account) # Refresh to get updated balances from ledger posting
+        db.refresh(db_account)
     return db_account
 
 def get_account_by_id_internal(db: Session, account_id: int, for_update: bool = False) -> Optional[models.Account]:

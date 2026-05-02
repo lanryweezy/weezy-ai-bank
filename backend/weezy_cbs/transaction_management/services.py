@@ -75,12 +75,38 @@ async def initiate_transaction(db: Session, transaction_in: schemas.TransactionC
                 db=db,
                 debit_account_number=transaction_in.debit_account_number,
                 credit_account_number=transaction_in.credit_account_number,
-                amount=total_to_debit, # Debit including taxes
+                amount=transaction_in.amount, # Base amount
                 currency=transaction_in.currency,
                 narration=transaction_in.narration,
                 financial_transaction_id=txn_id,
                 channel=transaction_in.channel.value if hasattr(transaction_in.channel, 'value') else transaction_in.channel
             )
+            
+            # --- POST TAX LEGS ---
+            if taxes["stamp_duty"] > 0:
+                post_double_entry_transaction(
+                    db=db,
+                    debit_account_number=transaction_in.debit_account_number,
+                    credit_account_number="GL-TAX-STAMP-DUTY-PAYABLE",
+                    amount=taxes["stamp_duty"],
+                    currency=transaction_in.currency,
+                    narration=f"STAMP DUTY: {transaction_in.narration}",
+                    financial_transaction_id=f"TAX_STAMP_{txn_id}",
+                    channel="SYSTEM_TAX"
+                )
+            
+            if taxes["vat"] > 0:
+                post_double_entry_transaction(
+                    db=db,
+                    debit_account_number=transaction_in.debit_account_number,
+                    credit_account_number="GL-TAX-VAT-PAYABLE",
+                    amount=taxes["vat"],
+                    currency=transaction_in.currency,
+                    narration=f"VAT: {transaction_in.narration}",
+                    financial_transaction_id=f"TAX_VAT_{txn_id}",
+                    channel="SYSTEM_TAX"
+                )
+
             db_transaction.status = TransactionStatusEnum.SUCCESSFUL
             db_transaction.processed_at = datetime.utcnow()
             db_transaction.system_remarks = f"Internal transfer posted. Tax: ₦{taxes['total_tax']}"

@@ -54,6 +54,29 @@ class NotificationEngine:
         if customer.email:
             await self.send_notification(db, customer_id, models.ChannelEnum.EMAIL, customer.email, body, subject)
 
+    async def send_investment_alert(self, db: Session, customer_id: int, fd_data: Dict[str, Any]):
+        """Notification for a new Fixed Deposit booking."""
+        amount = f"₦{float(fd_data.get('principal', 0)):,.2f}"
+        yield_rate = fd_data.get('rate', '0.00')
+        maturity = fd_data.get('maturity_date', 'N/A')
+        
+        body = f"Fixed Deposit Active!\nAmt: {amount}\nYield: {yield_rate}% P.A.\nMaturity: {maturity}\nRef: {fd_data.get('ref')}\nThank you for choosing Weezy."
+        
+        customer = db.query(Customer).filter(Customer.id == customer_id).first()
+        if customer and customer.phone_number:
+            await self.send_notification(db, customer_id, models.ChannelEnum.SMS, customer.phone_number, body, "WEEZY INVESTMENT")
+
+    async def send_loan_update_alert(self, db: Session, customer_id: int, loan_data: Dict[str, Any]):
+        """Notification for loan application status changes."""
+        status = loan_data.get('status', 'UNDER_REVIEW')
+        amount = f"₦{float(loan_data.get('amount', 0)):,.2f}"
+        
+        body = f"Loan Update: {status}\nAmt: {amount}\nRef: {loan_data.get('ref')}\nCheck your dashboard for details."
+        
+        customer = db.query(Customer).filter(Customer.id == customer_id).first()
+        if customer and customer.phone_number:
+            await self.send_notification(db, customer_id, models.ChannelEnum.SMS, customer.phone_number, body, "WEEZY CREDIT")
+
     async def send_notification(
         self, db: Session, 
         customer_id: int, 
