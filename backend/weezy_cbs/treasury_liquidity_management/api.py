@@ -42,3 +42,15 @@ async def list_active_investments(
 ):
     """Returns the bank's active Treasury Bills and Interbank Placements."""
     return treasury_service.get_latest_investments(db)
+
+@router.post("/placements/book", response_model=schemas.InterbankPlacementResponse)
+async def book_new_interbank_placement(
+    req: schemas.InterbankPlacementCreateRequest,
+    db: Session = Depends(get_db),
+    current_admin: Any = Depends(get_current_active_superuser)
+):
+    """Books a new interbank placement and posts GL entries."""
+    try:
+        return await services.treasury_service.book_placement(db, req)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

@@ -9,6 +9,9 @@ from weezy_cbs.customer_identity_management.models import Customer
 
 logger = logging.getLogger(__name__)
 
+from weezy_cbs.fees_charges_commission_engine.services import charge_notification_fee
+from weezy_cbs.accounts_ledger_management.models import Account, CurrencyEnum
+
 class NotificationEngine:
     """
     The Communication Hub for Weezy Bank.
@@ -37,6 +40,15 @@ class NotificationEngine:
         # 1. Send SMS (Mock)
         if customer.phone_number:
             await self.send_notification(db, customer_id, models.ChannelEnum.SMS, customer.phone_number, body)
+            
+            # --- SMS FEE COLLECTION ---
+            # Charge the primary NGN account for the alert
+            primary_acc = db.query(Account).filter(
+                Account.customer_id == customer_id, 
+                Account.currency == CurrencyEnum.NGN
+            ).first()
+            if primary_acc:
+                charge_notification_fee(db, customer_id, primary_acc.account_number)
             
         # 2. Send Email (Mock)
         if customer.email:

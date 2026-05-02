@@ -71,6 +71,31 @@ def list_fee_configs(db: Session, skip: int = 0, limit: int = 100) -> List[model
 
 from weezy_cbs.nigerian_market_utils import NigerianMarketUtils
 
+def charge_notification_fee(db: Session, customer_id: int, account_number: str):
+    """
+    Charges a flat fee for an SMS notification.
+    Standard Nigerian MFB fee: ₦4.00 per SMS.
+    """
+    from weezy_cbs.transaction_management.services import post_double_entry_transaction
+    
+    fee_amount = decimal.Decimal("4.00")
+    
+    try:
+        post_double_entry_transaction(
+            db=db,
+            debit_account_number=account_number,
+            credit_account_number="GL-FEE-INCOME-SMS-001",
+            amount=fee_amount,
+            currency="NGN",
+            narration="SMS ALERT CHARGE",
+            channel="SYSTEM_FEE"
+        )
+        return True
+    except Exception as e:
+        # If charge fails (e.g. N0 balance), we still send the SMS but log the failure
+        logger.warning(f"Failed to charge SMS fee for customer {customer_id}: {str(e)}")
+        return False
+
 # --- Fee Calculation and Application Services ---
 def calculate_nigerian_taxes(amount: decimal.Decimal, service_fee: decimal.Decimal) -> Dict[str, decimal.Decimal]:
     """

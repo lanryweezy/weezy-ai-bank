@@ -26,7 +26,7 @@ import MakerCheckerPage from "./pages/MakerChecker";
 import ReportsPage from "./pages/Reports";
 import AIInsightsPage from "./pages/AIInsights";
 import OnboardingPage from "./pages/Onboarding";
-import TreasuryPage from "./pages/Treasury";
+import TreasuryDashboard from "./pages/TreasuryDashboard";
 import OpenBankingPage from "./pages/OpenBanking";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage"; // Added

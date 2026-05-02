@@ -92,6 +92,7 @@ const riskAndCompliance = [
   { name: 'Fraud Shield', href: '/fraud-shield', icon: ShieldCheck },
   { name: 'Compliance & AML', href: '/compliance', icon: ShieldAlert },
   { name: 'Regulatory Exports', href: '/regulatory-reporting', icon: FileText },
+  { name: 'Treasury Core', href: '/treasury', icon: Landmark },
   { name: 'Loan Recovery', href: '/loan-recovery', icon: MessageSquare },
   { name: 'Onboarding (T3)', href: '/onboarding', icon: UserCheck },
 ];

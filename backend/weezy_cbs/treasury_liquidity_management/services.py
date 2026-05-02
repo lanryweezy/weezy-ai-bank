@@ -118,6 +118,53 @@ class TreasuryLiquidityService:
             logger.error(f"Treasury AI Error: {str(e)}")
             raise e
 
+    async def book_placement(self, db: Session, req: schemas.InterbankPlacementCreateRequest) -> models.InterbankPlacement:
+        """
+        Placing bank liquidity with another financial institution.
+        Asset swap: Cash at Central Bank -> Interbank Placement Asset.
+        """
+        ref = f"TR-PLM-{uuid.uuid4().hex[:8].upper()}"
+        
+        # 1. Post Ledger Entry
+        # Debit: Interbank Placement GL (Asset)
+        # Credit: Bank Settlement/Cash Account (Asset)
+        from weezy_cbs.transaction_management.services import post_double_entry_transaction
+        
+        try:
+            post_double_entry_transaction(
+                db=db,
+                debit_account_number="GL-ASSET-INTERBANK-PLACEMENTS",
+                credit_account_number="GL-ASSET-BANK-CASH-001",
+                amount=req.principal_amount,
+                currency=req.currency.value,
+                narration=f"INTERBANK PLACEMENT: {req.counterparty_bank_name} ({ref})",
+                channel="TREASURY"
+            )
+            
+            # 2. Create Record
+            placement = models.InterbankPlacement(
+                deal_reference=ref,
+                placement_type=req.placement_type,
+                counterparty_bank_code=req.counterparty_bank_code,
+                counterparty_bank_name=req.counterparty_bank_name,
+                principal_amount=req.principal_amount,
+                currency=models.CurrencyEnum(req.currency.value),
+                interest_rate_pa=req.interest_rate_pa,
+                placement_date=req.placement_date,
+                maturity_date=req.maturity_date,
+                tenor_days=req.tenor_days,
+                status="ACTIVE"
+            )
+            db.add(placement)
+            db.commit()
+            db.refresh(placement)
+            return placement
+            
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Failed to book interbank placement: {str(e)}")
+            raise e
+
     def get_latest_investments(self, db: Session) -> Dict[str, List[Any]]:
         t_bills = db.query(models.TreasuryBillInvestment).filter(models.models.TreasuryBillInvestment.status == "ACTIVE").all()
         placements = db.query(models.InterbankPlacement).filter(models.models.InterbankPlacement.status == "ACTIVE").all()
