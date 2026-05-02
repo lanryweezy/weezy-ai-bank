@@ -120,6 +120,7 @@ export function AppSidebar() {
   };
 
   const adminNavigation = [
+    { name: 'Chart of Accounts', href: '/chart-of-accounts', icon: BookOpen },
     { name: 'Staff Management', href: '/admin/agent-templates', icon: SlidersHorizontal },
     { name: 'System Logs', href: '/admin/audit-trail', icon: History },
   ];

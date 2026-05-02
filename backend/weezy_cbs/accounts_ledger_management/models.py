@@ -116,6 +116,13 @@ class LedgerEntry(Base):
     def __repr__(self):
         return f"<LedgerEntry(id={self.id}, acc_id={self.account_id}, type='{self.entry_type.value}', amt='{self.amount}')>"
 
+class GLTypeEnum(enum.Enum):
+    ASSET = "ASSET"
+    LIABILITY = "LIABILITY"
+    EQUITY = "EQUITY"
+    INCOME = "INCOME"
+    EXPENSE = "EXPENSE"
+
 class GeneralLedgerAccount(Base):
     __tablename__ = "gl_accounts"
 
@@ -123,8 +130,10 @@ class GeneralLedgerAccount(Base):
     gl_code = Column(String(20), unique=True, index=True, nullable=False)
     name = Column(String(100), nullable=False)
     currency = Column(SQLAlchemyEnum(CurrencyEnum), nullable=False)
-    # gl_type = Column(String) # ASSET, LIABILITY, EQUITY, INCOME, EXPENSE (important for financial statements)
-    # parent_gl_code = Column(String(20), ForeignKey("gl_accounts.gl_code"), nullable=True) # For hierarchical chart of accounts
+    
+    gl_type = Column(SQLAlchemyEnum(GLTypeEnum), nullable=False, default=GLTypeEnum.ASSET)
+    parent_gl_code = Column(String(20), ForeignKey("gl_accounts.gl_code"), nullable=True) # For hierarchical chart of accounts
+    
     is_control_account = Column(Boolean, default=False) # If it's a control account for customer/subsidiary ledgers
     current_balance = Column(Numeric(precision=20, scale=2), default=0.00, nullable=False) # GLs also have balances
 

@@ -75,6 +75,7 @@ import VirtualAccounts from "./pages/VirtualAccounts";
 import DeveloperHub from "./pages/DeveloperHub";
 import FraudShieldDashboard from "./pages/FraudShieldDashboard";
 import TellerOperations from "./pages/TellerOperations";
+import ChartOfAccounts from "./pages/ChartOfAccounts";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
