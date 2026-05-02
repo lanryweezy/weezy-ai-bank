@@ -30,7 +30,8 @@ import {
   History,
   FileText,
   Store,
-  ShoppingBag
+  ShoppingBag,
+  PiggyBank
 } from 'lucide-react';
 import {
   Sidebar,
@@ -65,6 +66,7 @@ const bankingModules = [
   { name: 'Merchant Ops', href: '/merchant-console', icon: ShoppingBag },
   { name: 'Corporate Payroll', href: '/payroll', icon: Building2 },
   { name: 'Bills & Airtime', href: '/bills', icon: Zap },
+  { name: 'Wealth & Savings', href: '/savings', icon: PiggyBank },
   { name: 'Compliance & AML', href: '/compliance', icon: ShieldAlert },
   { name: 'Loan Recovery', href: '/loan-recovery', icon: MessageSquare },
   { name: 'Loans & Credit', href: '/loans', icon: CreditCard },

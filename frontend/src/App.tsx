@@ -70,6 +70,7 @@ import BillsPayment from "./pages/BillsPayment";
 import ComplianceDashboard from "./pages/ComplianceDashboard";
 import MerchantConsole from "./pages/MerchantConsole";
 import LoanRecoveryDashboard from "./pages/LoanRecoveryDashboard";
+import SavingsInvestments from "./pages/SavingsInvestments";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -96,6 +97,7 @@ const App = () => (
           <Route path="/card-center" element={<ProtectedRoute><CardCenter /></ProtectedRoute>} />
           <Route path="/payroll" element={<ProtectedRoute><CorporatePayroll /></ProtectedRoute>} />
           <Route path="/bills" element={<ProtectedRoute><BillsPayment /></ProtectedRoute>} />
+          <Route path="/savings" element={<ProtectedRoute><SavingsInvestments /></ProtectedRoute>} />
           <Route path="/merchant-console" element={<ProtectedRoute><MerchantConsole /></ProtectedRoute>} />
           <Route path="/loan-recovery" element={<ProtectedRoute allowedRoles={['platform_admin']}><LoanRecoveryDashboard /></ProtectedRoute>} />
           <Route path="/compliance" element={<ProtectedRoute allowedRoles={['platform_admin']}><ComplianceDashboard /></ProtectedRoute>} />
