@@ -63,7 +63,7 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: JSX.Element, all
   return children;
 };
 
-import AgentBankingPage from "./pages/AgentBanking";
+import CardCenter from "./pages/CardCenter";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -87,6 +87,7 @@ const App = () => (
           {/* User Routes */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/agent-banking" element={<ProtectedRoute><AgentBankingPage /></ProtectedRoute>} />
+          <Route path="/card-center" element={<ProtectedRoute><CardCenter /></ProtectedRoute>} />
           <Route path="/ai-templates" element={<ProtectedRoute><AIAgentTemplatesPage /></ProtectedRoute>} />
           <Route path="/configure-agent" element={<ProtectedRoute><ConfigureAgentPage /></ProtectedRoute>} />
           <Route path="/my-agents" element={<ProtectedRoute><MyConfiguredAgentsPage /></ProtectedRoute>} />

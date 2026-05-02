@@ -52,7 +52,7 @@ async def wallet_p2p_transfer(
         narration=narration
     )
 
-@router.get("/wallets/me", response_model=schemas.WalletAccountResponse)
+@router.get("/me", response_model=schemas.WalletAccountResponse)
 async def get_my_wallet(
     db: Session = Depends(get_db),
     current_user: Any = Depends(get_current_active_user)
@@ -64,3 +64,35 @@ async def get_my_wallet(
     if not wallet:
         raise HTTPException(status_code=404, detail="Wallet not found")
     return wallet
+
+# --- Card Endpoints ---
+@router.post("/cards/request", response_model=schemas.CardResponse)
+async def request_new_card(
+    card_in: schemas.CardCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Requests a new Virtual or Physical card."""
+    from weezy_cbs.customer_identity_management.models import Customer
+    customer = db.query(Customer).first() # Demo fallback
+    return card_service.request_card(db, customer.id, card_in)
+
+@router.get("/cards/me", response_model=List[schemas.CardResponse])
+async def list_my_cards(
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Returns all cards issued to the current user."""
+    from weezy_cbs.customer_identity_management.models import Customer
+    customer = db.query(Customer).first()
+    return card_service.get_cards_for_customer(db, customer.id)
+
+@router.patch("/cards/{card_id}/status", response_model=schemas.CardResponse)
+async def update_my_card_status(
+    card_id: int,
+    new_status: models.CardStatusEnum = Body(..., embed=True),
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Activates, Blocks, or Freezes a card."""
+    return card_service.update_card_status(db, card_id, new_status)
