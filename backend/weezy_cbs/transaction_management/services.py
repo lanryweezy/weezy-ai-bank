@@ -18,12 +18,20 @@ class ExternalServiceException(Exception): pass
 def _generate_transaction_id(prefix="WZYTXN"):
     return f"{prefix}{uuid.uuid4().hex[:16].upper()}"
 
+from weezy_cbs.nigerian_market_utils import NigerianMarketUtils
+from weezy_cbs.fees_charges_commission_engine.services import calculate_nigerian_taxes
+
 # --- Core Transaction Processing ---
-def initiate_transaction(db: Session, transaction_in: schemas.TransactionCreateRequest, initiated_by_customer_id: Optional[int] = None) -> models.FinancialTransaction:
+async def initiate_transaction(db: Session, transaction_in: schemas.TransactionCreateRequest, initiated_by_customer_id: Optional[int] = None) -> models.FinancialTransaction:
     """
-    Initiates and processes a new financial transaction.
+    Initiates and processes a new financial transaction (Internal or Inter-bank NIP).
     """
     txn_id = _generate_transaction_id()
+    
+    # Calculate Nigerian Taxes for transactions
+    taxes = calculate_nigerian_taxes(transaction_in.amount, decimal.Decimal("0.00")) # Service fee is 0 for now
+    total_to_debit = transaction_in.amount + taxes["total_tax"]
+    
     db_transaction = models.FinancialTransaction(
         id=txn_id,
         transaction_type=transaction_in.transaction_type,
@@ -33,26 +41,28 @@ def initiate_transaction(db: Session, transaction_in: schemas.TransactionCreateR
         currency=transaction_in.currency,
         debit_account_number=transaction_in.debit_account_number,
         debit_account_name=transaction_in.debit_account_name,
-        debit_bank_code=transaction_in.debit_bank_code,
+        debit_bank_code=transaction_in.debit_bank_code or "999",
         credit_account_number=transaction_in.credit_account_number,
         credit_account_name=transaction_in.credit_account_name,
         credit_bank_code=transaction_in.credit_bank_code,
         narration=transaction_in.narration,
-        initiated_at=datetime.utcnow()
+        initiated_at=datetime.utcnow(),
+        tax_amount=taxes["total_tax"]
     )
     db.add(db_transaction)
     db.flush()
 
-    # Process internal transactions immediately
-    if (not transaction_in.debit_bank_code or transaction_in.debit_bank_code == "OUR_BANK_CODE") and \
-       (not transaction_in.credit_bank_code or transaction_in.credit_bank_code == "OUR_BANK_CODE"):
+    # Determine if Internal or Inter-bank
+    is_internal = not transaction_in.credit_bank_code or transaction_in.credit_bank_code == "999"
+
+    if is_internal:
         try:
-            # Post to ledger
-            post_result = post_double_entry_transaction(
+            # Internal Double-Entry
+            post_double_entry_transaction(
                 db=db,
                 debit_account_number=transaction_in.debit_account_number,
                 credit_account_number=transaction_in.credit_account_number,
-                amount=transaction_in.amount,
+                amount=total_to_debit, # Debit including taxes
                 currency=transaction_in.currency,
                 narration=transaction_in.narration,
                 financial_transaction_id=txn_id,
@@ -60,7 +70,7 @@ def initiate_transaction(db: Session, transaction_in: schemas.TransactionCreateR
             )
             db_transaction.status = TransactionStatusEnum.SUCCESSFUL
             db_transaction.processed_at = datetime.utcnow()
-            db_transaction.system_remarks = "Internal transfer posted successfully."
+            db_transaction.system_remarks = f"Internal transfer posted. Tax: ₦{taxes['total_tax']}"
             db.commit()
             db.refresh(db_transaction)
             return db_transaction
@@ -68,15 +78,39 @@ def initiate_transaction(db: Session, transaction_in: schemas.TransactionCreateR
             db.rollback()
             db_transaction.status = TransactionStatusEnum.FAILED
             db_transaction.response_message = str(e)
-            db_transaction.processed_at = datetime.utcnow()
-            db.add(db_transaction) # Re-add to save the failed status
             db.commit()
-            db.refresh(db_transaction)
             raise InvalidOperationException(f"Transaction failed: {str(e)}")
+    else:
+        # INTER-BANK (NIP) FLOW
+        try:
+            nip_result = await NigerianMarketUtils.nip_outbound_transfer(
+                source_account=transaction_in.debit_account_number,
+                dest_bank_code=transaction_in.credit_bank_code,
+                dest_account=transaction_in.credit_account_number,
+                amount=transaction_in.amount,
+                narration=transaction_in.narration
+            )
+            
+            if nip_result["status"] == "success":
+                db_transaction.status = TransactionStatusEnum.SUCCESSFUL
+                db_transaction.processed_at = datetime.utcnow()
+                db_transaction.external_reference = nip_result["transaction_reference"]
+                db_transaction.system_remarks = f"Inter-bank NIP Transfer Successful. SessionID: {nip_result['session_id']}"
+                db.commit()
+            else:
+                db_transaction.status = TransactionStatusEnum.FAILED
+                db_transaction.response_message = nip_result["response_message"]
+                db.commit()
+            
+            db.refresh(db_transaction)
+            return db_transaction
 
-    db.commit()
-    db.refresh(db_transaction)
-    return db_transaction
+        except Exception as e:
+            db.rollback()
+            db_transaction.status = TransactionStatusEnum.FAILED
+            db_transaction.response_message = str(e)
+            db.commit()
+            raise InvalidOperationException(f"NIP Transfer failed: {str(e)}")
 
 
 def get_transaction_by_id(db: Session, transaction_id: str) -> Optional[models.FinancialTransaction]:

@@ -12,6 +12,81 @@ class NigerianMarketUtils:
     Includes NUBAN generation, BVN/NIN validation logic, and local tax (VAT/Stamp Duty).
     """
 
+    NIGERIAN_BANKS = [
+        {"name": "Access Bank", "code": "044"},
+        {"name": "Citibank Nigeria", "code": "023"},
+        {"name": "Ecobank Nigeria", "code": "050"},
+        {"name": "Fidelity Bank", "code": "070"},
+        {"name": "First Bank of Nigeria", "code": "011"},
+        {"name": "First City Monument Bank", "code": "214"},
+        {"name": "Guaranty Trust Bank", "code": "058"},
+        {"name": "Heritage Bank", "code": "030"},
+        {"name": "Keystone Bank", "code": "082"},
+        {"name": "Polaris Bank", "code": "076"},
+        {"name": "Providus Bank", "code": "101"},
+        {"name": "Stanbic IBTC Bank", "code": "039"},
+        {"name": "Standard Chartered Bank", "code": "068"},
+        {"name": "Sterling Bank", "code": "030"},
+        {"name": "Suntrust Bank", "code": "100"},
+        {"name": "Union Bank of Nigeria", "code": "032"},
+        {"name": "United Bank for Africa", "code": "033"},
+        {"name": "Unity Bank", "code": "215"},
+        {"name": "Wema Bank", "code": "035"},
+        {"name": "Zenith Bank", "code": "057"},
+        {"name": "OPay (Digital)", "code": "999992"},
+        {"name": "Moniepoint (Digital)", "code": "50515"},
+        {"name": "Kuda Microfinance Bank", "code": "50211"},
+    ]
+
+    @staticmethod
+    def get_bank_name(bank_code: str) -> str:
+        for bank in NigerianMarketUtils.NIGERIAN_BANKS:
+            if bank["code"] == bank_code:
+                return bank["name"]
+        return "Unknown Bank"
+
+    @staticmethod
+    async def nip_name_enquiry(bank_code: str, account_number: str) -> Dict[str, Any]:
+        """
+        Simulates NIBSS NIP Name Enquiry.
+        """
+        if len(account_number) != 10:
+            return {"status": "error", "message": "Invalid Account Number"}
+        
+        # Mock logic: return a name based on the account number
+        # In a real app, this calls NIBSS NIP Soap/REST service
+        return {
+            "status": "success",
+            "account_name": "SULAIMAN OLANREWAJU ADEBAYO",
+            "account_number": account_number,
+            "bank_code": bank_code,
+            "bank_name": NigerianMarketUtils.get_bank_name(bank_code),
+            "session_id": f"NIP-ENQ-{uuid.uuid4().hex[:12].upper()}"
+        }
+
+    @staticmethod
+    async def nip_outbound_transfer(
+        source_account: str, 
+        dest_bank_code: str, 
+        dest_account: str, 
+        amount: decimal.Decimal,
+        narration: str
+    ) -> Dict[str, Any]:
+        """
+        Simulates NIBSS NIP Outbound Transfer.
+        """
+        # Simulated delay for inter-bank communication
+        await asyncio.sleep(1)
+        
+        return {
+            "status": "success",
+            "response_code": "00", # Approved
+            "response_message": "Transaction Approved",
+            "transaction_reference": f"NIP-TXN-{uuid.uuid4().hex[:16].upper()}",
+            "amount": amount,
+            "session_id": f"NIP-SESS-{uuid.uuid4().hex[:12].upper()}"
+        }
+
     @staticmethod
     def calculate_nuban_check_digit(bank_code: str, serial_number: str) -> int:
         """
