@@ -63,7 +63,8 @@ const navigation = [
 ];
 
 const bankingModules = [
-  { name: 'Customer Base', href: '/customers', icon: UserCheck },
+  { name: 'Onboarding (Tier 3)', href: '/onboarding', icon: UserCheck },
+  { name: 'Customer Base', href: '/customers', icon: Users },
   { name: 'Agent Banking', href: '/agent-banking', icon: Store },
   { name: 'Merchant Ops', href: '/merchant-console', icon: ShoppingBag },
   { name: 'AI Fraud Shield', href: '/fraud-shield', icon: ShieldCheck },
