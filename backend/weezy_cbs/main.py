@@ -61,6 +61,8 @@ from weezy_cbs.fx_domiciliary_management import api as fx_api
 from weezy_cbs.biometric_identity import api as biometric_api
 from weezy_cbs.fx_domiciliary_management import api as fx_api
 from weezy_cbs.qr_payments import api as qr_api
+from weezy_cbs.fx_domiciliary_management import api as fx_api
+from weezy_cbs.international_wire_transfers import api as wire_api
 
 # Core CBS Modules
 app.include_router(cim_api.router, prefix="/api/corebanking/cim", tags=["Customer Identity"])
@@ -78,9 +80,12 @@ app.include_router(recovery_api.router, prefix="/api/recovery", tags=["Loan Reco
 app.include_router(savings_api.router, prefix="/api/savings", tags=["Savings & Investments"])
 app.include_router(va_api.router, prefix="/api/virtual-accounts", tags=["Virtual Accounts & Collections"])
 app.include_router(fx_api.router, prefix="/api/fx", tags=["International FX & Domiciliary"])
+app.include_router(wire_api.router, prefix="/api/fx/wire", tags=["International Wire & SWIFT"])
+
 app.include_router(biometric_api.router, prefix="/api/biometric", tags=["Biometric Identity & Face Match"])
 app.include_router(fraud_api.router, prefix="/api/fraud", tags=["AI Fraud Shield"])
 app.include_router(qr_api.router, prefix="/api/qr", tags=["NQR Payments (NIBSS Standard)"])
+app.include_router(dual_api.router, prefix="/api/admin/dual-control", tags=["Dual Authorization (Maker-Checker)"])
 
 app.include_router(treasury_api.router, prefix="/api/corebanking/treasury", tags=["Treasury & Liquidity"])
 

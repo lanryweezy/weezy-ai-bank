@@ -73,6 +73,7 @@ const bankingModules = [
   { name: 'Corporate Payroll', href: '/payroll', icon: Building2 },
   { name: 'FX & Global', href: '/fx-global', icon: Globe },
   { name: 'NQR Payments', href: '/qr-payments', icon: QrCode },
+  { name: 'International Wire', href: '/fx-wire', icon: Plane },
   { name: 'Bills & Airtime', href: '/bills', icon: Zap },
   { name: 'Wealth & Savings', href: '/savings', icon: PiggyBank },
   { name: 'Compliance & AML', href: '/compliance', icon: ShieldAlert },
