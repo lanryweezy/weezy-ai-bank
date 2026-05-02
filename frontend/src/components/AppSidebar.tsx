@@ -33,7 +33,10 @@ import {
   ShoppingBag,
   PiggyBank,
   ShieldCheck,
-  QrCode
+  QrCode,
+  Code2,
+  Hash,
+  MessageSquare
 } from 'lucide-react';
 import {
   Sidebar,
@@ -64,6 +67,7 @@ const navigation = [
 ];
 
 const bankingModules = [
+  { name: 'Cognitive Core', href: '/cognitive-core', icon: Brain },
   { name: 'Onboarding (Tier 3)', href: '/onboarding', icon: UserCheck },
   { name: 'Customer Base', href: '/customers', icon: Users },
   { name: 'Agent Banking', href: '/agent-banking', icon: Store },

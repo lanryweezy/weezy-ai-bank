@@ -102,6 +102,7 @@ const App = () => (
           <Route path="/bills" element={<ProtectedRoute><BillsPayment /></ProtectedRoute>} />
           <Route path="/savings" element={<ProtectedRoute><SavingsInvestments /></ProtectedRoute>} />
           <Route path="/fx-global" element={<ProtectedRoute><FXDomiciliary /></ProtectedRoute>} />
+          <Route path="/cognitive-core" element={<ProtectedRoute><CognitiveCore /></ProtectedRoute>} />
           <Route path="/fx-wire" element={<ProtectedRoute><InternationalWire /></ProtectedRoute>} />
           <Route path="/qr-payments" element={<ProtectedRoute><QRPayments /></ProtectedRoute>} />
           <Route path="/merchant-console" element={<ProtectedRoute><MerchantConsole /></ProtectedRoute>} />
