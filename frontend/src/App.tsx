@@ -73,6 +73,7 @@ import LoanRecoveryDashboard from "./pages/LoanRecoveryDashboard";
 import SavingsInvestments from "./pages/SavingsInvestments";
 import VirtualAccounts from "./pages/VirtualAccounts";
 import DeveloperHub from "./pages/DeveloperHub";
+import FraudShieldDashboard from "./pages/FraudShieldDashboard";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -104,6 +105,7 @@ const App = () => (
           <Route path="/merchant-console" element={<ProtectedRoute><MerchantConsole /></ProtectedRoute>} />
           <Route path="/virtual-accounts" element={<ProtectedRoute><VirtualAccounts /></ProtectedRoute>} />
           <Route path="/developer" element={<ProtectedRoute allowedRoles={['platform_admin']}><DeveloperHub /></ProtectedRoute>} />
+          <Route path="/fraud-shield" element={<ProtectedRoute allowedRoles={['platform_admin']}><FraudShieldDashboard /></ProtectedRoute>} />
           <Route path="/loan-recovery" element={<ProtectedRoute allowedRoles={['platform_admin']}><LoanRecoveryDashboard /></ProtectedRoute>} />
           <Route path="/compliance" element={<ProtectedRoute allowedRoles={['platform_admin']}><ComplianceDashboard /></ProtectedRoute>} />
           <Route path="/ai-templates" element={<ProtectedRoute><AIAgentTemplatesPage /></ProtectedRoute>} />

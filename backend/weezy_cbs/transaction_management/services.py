@@ -21,11 +21,23 @@ def _generate_transaction_id(prefix="WZYTXN"):
 from weezy_cbs.nigerian_market_utils import NigerianMarketUtils
 from weezy_cbs.fees_charges_commission_engine.services import calculate_nigerian_taxes
 
+from weezy_cbs.fraud_shield.services import fraud_shield_service
+
 # --- Core Transaction Processing ---
 async def initiate_transaction(db: Session, transaction_in: schemas.TransactionCreateRequest, initiated_by_customer_id: Optional[int] = None) -> models.FinancialTransaction:
     """
     Initiates and processes a new financial transaction (Internal or Inter-bank NIP).
+    Includes real-time AI Fraud Screening.
     """
+    # 1. AI Fraud Screening (Real-time)
+    # We use customer_id 1 as demo if not provided
+    cust_id = initiated_by_customer_id or 1
+    
+    fraud_decision = await fraud_shield_service.screen_transaction(db, cust_id, transaction_in.dict())
+    
+    if fraud_decision["decision"] == "BLOCK":
+        raise InvalidOperationException(f"Transaction Blocked by Fraud Shield: {fraud_decision['reasoning']}")
+
     txn_id = _generate_transaction_id()
     
     # Calculate Nigerian Taxes for transactions

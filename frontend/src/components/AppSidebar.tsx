@@ -31,7 +31,8 @@ import {
   FileText,
   Store,
   ShoppingBag,
-  PiggyBank
+  PiggyBank,
+  ShieldCheck
 } from 'lucide-react';
 import {
   Sidebar,
@@ -65,6 +66,7 @@ const bankingModules = [
   { name: 'Customer Base', href: '/customers', icon: UserCheck },
   { name: 'Agent Banking', href: '/agent-banking', icon: Store },
   { name: 'Merchant Ops', href: '/merchant-console', icon: ShoppingBag },
+  { name: 'AI Fraud Shield', href: '/fraud-shield', icon: ShieldCheck },
   { name: 'Virtual Accounts', href: '/virtual-accounts', icon: Hash },
   { name: 'Corporate Payroll', href: '/payroll', icon: Building2 },
   { name: 'FX & Global', href: '/fx-global', icon: Globe },
