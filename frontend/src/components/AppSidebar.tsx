@@ -29,7 +29,8 @@ import {
   Lock,
   History,
   FileText,
-  Store
+  Store,
+  ShoppingBag
 } from 'lucide-react';
 import {
   Sidebar,
@@ -61,6 +62,7 @@ const navigation = [
 const bankingModules = [
   { name: 'Customer Base', href: '/customers', icon: UserCheck },
   { name: 'Agent Banking', href: '/agent-banking', icon: Store },
+  { name: 'Merchant Ops', href: '/merchant-console', icon: ShoppingBag },
   { name: 'Corporate Payroll', href: '/payroll', icon: Building2 },
   { name: 'Bills & Airtime', href: '/bills', icon: Zap },
   { name: 'Compliance & AML', href: '/compliance', icon: ShieldAlert },

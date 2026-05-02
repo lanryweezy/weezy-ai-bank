@@ -68,6 +68,7 @@ import CardCenter from "./pages/CardCenter";
 import CorporatePayroll from "./pages/CorporatePayroll";
 import BillsPayment from "./pages/BillsPayment";
 import ComplianceDashboard from "./pages/ComplianceDashboard";
+import MerchantConsole from "./pages/MerchantConsole";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -94,6 +95,7 @@ const App = () => (
           <Route path="/card-center" element={<ProtectedRoute><CardCenter /></ProtectedRoute>} />
           <Route path="/payroll" element={<ProtectedRoute><CorporatePayroll /></ProtectedRoute>} />
           <Route path="/bills" element={<ProtectedRoute><BillsPayment /></ProtectedRoute>} />
+          <Route path="/merchant-console" element={<ProtectedRoute><MerchantConsole /></ProtectedRoute>} />
           <Route path="/compliance" element={<ProtectedRoute allowedRoles={['platform_admin']}><ComplianceDashboard /></ProtectedRoute>} />
           <Route path="/ai-templates" element={<ProtectedRoute><AIAgentTemplatesPage /></ProtectedRoute>} />
           <Route path="/configure-agent" element={<ProtectedRoute><ConfigureAgentPage /></ProtectedRoute>} />

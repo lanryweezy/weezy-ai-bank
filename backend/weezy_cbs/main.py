@@ -58,6 +58,7 @@ from weezy_cbs.cards_wallets_management import api as wallet_api
 from weezy_cbs.payroll_management import api as payroll_api
 from weezy_cbs.bills_payment import api as bills_api
 from weezy_cbs.customer_risk_profiling import api as risk_api
+from weezy_cbs.merchant_management import api as merchant_api
 
 # Core CBS Modules
 app.include_router(cim_api.router, prefix="/api/corebanking/cim", tags=["Customer Identity"])
@@ -70,6 +71,7 @@ app.include_router(wallet_api.router, prefix="/api/wallets", tags=["Wallets & Mo
 app.include_router(payroll_api.router, prefix="/api/payroll", tags=["Bulk Payments & Payroll"])
 app.include_router(bills_api.router, prefix="/api/bills", tags=["Utility & Bills Payment"])
 app.include_router(risk_api.router, prefix="/api/risk", tags=["Customer Risk & AML Profiling"])
+app.include_router(merchant_api.router, prefix="/api/merchant", tags=["Merchant Management & POS"])
 
 app.include_router(treasury_api.router, prefix="/api/corebanking/treasury", tags=["Treasury & Liquidity"])
 app.include_router(fee_api.router, prefix="/api/corebanking/fees", tags=["Fees & Charges"])
