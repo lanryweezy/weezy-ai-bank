@@ -53,6 +53,7 @@ app.include_router(ai_api.ai_api_router, prefix="/api", tags=["AI & Automation"]
 from weezy_cbs.interest_engine import api as interest_api
 from weezy_cbs.open_banking import api as open_banking_api
 from weezy_cbs.eod_processing import api as eod_api
+from weezy_cbs.cheque_clearing import api as cheque_api
 from weezy_cbs.cognitive_core import api as cognitive_api
 
 # Core CBS Modules
@@ -80,6 +81,7 @@ app.include_router(treasury_api.router, prefix="/api/corebanking/treasury", tags
 app.include_router(interest_api.router, prefix="/api/interest", tags=["Automated Interest Engine"])
 app.include_router(open_banking_api.router, prefix="/api/open-banking", tags=["Nigerian Open Banking"])
 app.include_router(eod_api.router, prefix="/api/corebanking/eod", tags=["EOD Processing & System Integrity"])
+app.include_router(cheque_api.router, prefix="/api/cheques", tags=["Cheque Clearing (NACS)"])
 app.include_router(cognitive_api.router, prefix="/api/cognitive", tags=["AI-Native Cognitive Core"])
 
 app.include_router(dev_api.router, prefix="/api/dev", tags=["Developer Portal"])
