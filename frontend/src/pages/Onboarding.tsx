@@ -68,161 +68,175 @@ const Onboarding = () => {
 
   return (
     <Layout>
-      <div className="p-6 space-y-8 animate-in fade-in duration-500 max-w-4xl mx-auto">
-        <div className="text-center space-y-2">
-            <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Tier 3 Identity Verification</h1>
-            <p className="text-gray-500">Securely verify your identity using AI-powered biometrics.</p>
+      <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-5xl mx-auto py-10">
+        <div className="text-center space-y-3">
+            <Badge className="bg-indigo-100 text-indigo-700 border-none px-4 py-1 uppercase tracking-widest font-black text-[9px]">Security Protocol</Badge>
+            <h1 className="text-5xl font-black text-slate-900 tracking-tighter">Digital Identity Vault</h1>
+            <p className="text-slate-500 font-medium max-w-lg mx-auto">Verify your biometric data using Weezy's proprietary AI Vision core to unlock Tier 3 banking privileges.</p>
         </div>
 
         {status?.verification_status === 'VERIFIED' ? (
-            <Card className="border-none shadow-2xl ring-1 ring-green-100 text-center py-16">
-                <div className="bg-green-100 text-green-600 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <ShieldCheck className="h-14 w-14" />
+            <Card className="border-none shadow-2xl ring-1 ring-slate-200/60 text-center py-20 bg-white rounded-[40px] relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-12 opacity-5">
+                    <ShieldCheck className="h-64 w-64 text-indigo-600" />
                 </div>
-                <CardHeader>
-                    <CardTitle className="text-3xl text-green-800">You are Fully Verified</CardTitle>
-                    <CardDescription>Your account has been upgraded to **Tier 3**.</CardDescription>
+                <div className="bg-emerald-50 text-emerald-600 w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl shadow-emerald-100 rotate-3">
+                    <ShieldCheck className="h-12 w-12" />
+                </div>
+                <CardHeader className="relative z-10">
+                    <CardTitle className="text-4xl font-black text-slate-900 tracking-tighter">Identity Authenticated</CardTitle>
+                    <CardDescription className="text-slate-500 font-bold mt-2 uppercase tracking-widest">Account Status: Tier 3 (Full Access)</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="max-w-xs mx-auto space-y-2">
-                        <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">Daily Limit</span>
-                            <span className="font-bold text-gray-900">₦5,000,000</span>
+                <CardContent className="relative z-10 space-y-6 pt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md mx-auto">
+                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <p className="text-[10px] text-slate-400 font-black uppercase mb-1">Daily Limit</p>
+                            <p className="text-xl font-black text-slate-900">₦5,000,000</p>
                         </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">Intl. Transfers</span>
-                            <span className="font-bold text-green-600">Enabled</span>
+                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <p className="text-[10px] text-slate-400 font-black uppercase mb-1">Global Access</p>
+                            <p className="text-xl font-black text-emerald-600 flex items-center justify-center gap-2">ENABLED <CheckCircle2 className="h-4 w-4" /></p>
                         </div>
                     </div>
-                    <Button variant="outline" className="mt-8" onClick={() => window.history.back()}>Return to Dashboard</Button>
+                    <Button variant="ghost" className="mt-8 font-bold text-indigo-600 hover:bg-indigo-50 px-8 h-12 rounded-2xl" onClick={() => window.location.href='/dashboard'}>
+                        Go to Control Center
+                    </Button>
                 </CardContent>
             </Card>
         ) : (
             <div className="flex justify-center">
                 {step === 1 && (
-                    <Card className="max-w-md border-none shadow-xl ring-1 ring-gray-200">
-                        <CardHeader className="text-center">
-                            <div className="bg-indigo-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <UserCheck className="h-8 w-8 text-indigo-600" />
+                    <Card className="max-w-md border-none shadow-2xl ring-1 ring-slate-200/60 bg-white rounded-[32px] p-2 overflow-hidden">
+                        <div className="bg-indigo-600 p-8 text-white rounded-[24px] text-center relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-20">
+                                <Sparkles className="h-20 w-20" />
                             </div>
-                            <CardTitle>Verify Your Identity</CardTitle>
-                            <CardDescription>Follow 2 simple steps to complete your Nigerian KYC.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="space-y-4">
-                                <div className="flex items-start gap-4">
-                                    <div className="bg-slate-100 p-2 rounded-lg text-slate-600">1</div>
+                            <div className="bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-md">
+                                <UserCheck className="h-8 w-8 text-white" />
+                            </div>
+                            <CardTitle className="text-2xl font-black tracking-tight">KYC Authentication</CardTitle>
+                            <CardDescription className="text-indigo-100 font-medium opacity-80 mt-2">Required for Tier 3 limits & FX banking.</CardDescription>
+                        </div>
+                        <div className="p-8 space-y-8">
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-5 group">
+                                    <div className="bg-slate-100 text-slate-400 font-black h-10 w-10 rounded-xl flex items-center justify-center group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">1</div>
                                     <div>
-                                        <p className="text-sm font-bold">Liveness Check</p>
-                                        <p className="text-xs text-gray-500">Take a quick selfie to confirm you are present.</p>
+                                        <p className="text-sm font-black text-slate-900">Liveness Biometrics</p>
+                                        <p className="text-xs text-slate-500">Real-time facial integrity check.</p>
                                     </div>
                                 </div>
-                                <div className="flex items-start gap-4">
-                                    <div className="bg-slate-100 p-2 rounded-lg text-slate-600">2</div>
+                                <div className="flex items-center gap-5 group">
+                                    <div className="bg-slate-100 text-slate-400 font-black h-10 w-10 rounded-xl flex items-center justify-center group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">2</div>
                                     <div>
-                                        <p className="text-sm font-bold">ID Matching</p>
-                                        <p className="text-xs text-gray-500">Upload your NIN, Driver's License or Passport.</p>
+                                        <p className="text-sm font-black text-slate-900">Credential Scan</p>
+                                        <p className="text-xs text-slate-500">NIN Slip, Driver's License or Passport.</p>
                                     </div>
                                 </div>
                             </div>
-                            <Button className="w-full bg-indigo-600 h-12 shadow-lg" onClick={() => setStep(2)}>
-                                Get Started
+                            <Button className="w-full bg-indigo-600 h-14 rounded-2xl font-black text-sm shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-95 transition-all text-white border-none" onClick={() => setStep(2)}>
+                                Begin Secure Session
                             </Button>
-                        </CardContent>
+                        </div>
                     </Card>
                 )}
 
                 {step === 2 && (
-                    <Card className="max-w-md border-none shadow-xl ring-1 ring-gray-200 w-full">
-                        <CardHeader className="text-center">
-                            <CardTitle>Step 1: Take a Selfie</CardTitle>
-                            <CardDescription>Position your face in the center of the frame.</CardDescription>
+                    <Card className="max-w-md border-none shadow-2xl ring-1 ring-slate-200/60 bg-white rounded-[32px] w-full overflow-hidden">
+                        <CardHeader className="text-center p-8 pb-4">
+                            <CardTitle className="text-2xl font-black">Biometric Capture</CardTitle>
+                            <CardDescription className="font-medium">Position your face within the frame.</CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="aspect-square bg-slate-100 rounded-3xl flex items-center justify-center border-4 border-dashed border-slate-200 relative overflow-hidden">
-                                <Camera className="h-16 w-16 text-slate-300" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                        <CardContent className="px-8 pb-10 space-y-8">
+                            <div className="aspect-square bg-slate-50 rounded-[40px] flex items-center justify-center border-4 border-dashed border-indigo-100 relative overflow-hidden group">
+                                <Camera className="h-16 w-16 text-slate-200 group-hover:scale-110 transition-transform" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/10 to-transparent" />
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-white/40 border-dashed rounded-full" />
                             </div>
-                            <Button className="w-full bg-indigo-600 h-12" onClick={handleCaptureSelfie}>
-                                <Camera className="mr-2 h-5 w-5" /> Capture Selfie
+                            <Button className="w-full bg-indigo-600 h-14 rounded-2xl font-black shadow-lg shadow-indigo-100" onClick={handleCaptureSelfie}>
+                                <Camera className="mr-3 h-5 w-5" /> Authenticate Liveness
                             </Button>
                         </CardContent>
                     </Card>
                 )}
 
                 {step === 3 && (
-                    <Card className="max-w-md border-none shadow-xl ring-1 ring-gray-200 w-full">
-                        <CardHeader className="text-center">
-                            <CardTitle>Step 2: Upload ID</CardTitle>
-                            <CardDescription>Upload a clear photo of your government-issued ID.</CardDescription>
+                    <Card className="max-w-md border-none shadow-2xl ring-1 ring-slate-200/60 bg-white rounded-[32px] w-full overflow-hidden">
+                        <CardHeader className="text-center p-8 pb-4">
+                            <CardTitle className="text-2xl font-black text-slate-900">ID Document Scan</CardTitle>
+                            <CardDescription className="font-medium">NIMC / FRSC Standard credentials.</CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-6">
+                        <CardContent className="px-8 pb-10 space-y-6">
                             <div className="space-y-2">
-                                <Label>Document Type</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Document Type</Label>
                                 <select 
-                                    className="w-full p-2 rounded-lg border bg-white text-sm outline-none focus:ring-2 focus:ring-indigo-600"
+                                    className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all"
                                     value={docType}
                                     onChange={(e) => setDocType(e.target.value)}
                                 >
-                                    <option value="NIN_SLIP">NIN Slip / Card</option>
-                                    <option value="DRIVERS_LICENSE">Driver's License</option>
-                                    <option value="INTERNATIONAL_PASSPORT">Passport</option>
+                                    <option value="NIN_SLIP">NIN Slip (Digital/Card)</option>
+                                    <option value="DRIVERS_LICENSE">Driver's License (FRSC)</option>
+                                    <option value="INTERNATIONAL_PASSPORT">E-Passport</option>
                                 </select>
                             </div>
                             <div 
-                                className="aspect-[3/2] bg-slate-50 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-indigo-200 cursor-pointer hover:bg-indigo-50/50 transition-all"
+                                className="aspect-[3/2] bg-slate-50 rounded-3xl flex flex-col items-center justify-center border-2 border-dashed border-indigo-200 cursor-pointer hover:bg-indigo-50/50 transition-all relative overflow-hidden"
                                 onClick={() => fileInputRef.current?.click()}
                             >
-                                <FileCheck className="h-10 w-10 text-indigo-300 mb-2" />
-                                <p className="text-xs text-indigo-600 font-bold uppercase tracking-widest">Tap to Upload</p>
+                                <FileCheck className="h-12 w-12 text-indigo-300 mb-3" />
+                                <p className="text-xs text-indigo-600 font-black uppercase tracking-widest">Click to Scan ID</p>
                                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleUploadID} />
                             </div>
-                            <p className="text-[10px] text-gray-400 text-center px-4">
-                                Ensure all text on the ID is clearly readable and no glare is present on the photo.
-                            </p>
                         </CardContent>
                     </Card>
                 )}
 
                 {step === 4 && (
-                    <Card className="max-w-md border-none shadow-2xl ring-1 ring-gray-200 w-full text-center py-12 bg-slate-900 text-white">
-                        <div className="relative inline-block mb-8">
-                             <div className="w-24 h-24 border-4 border-indigo-500/30 rounded-full animate-ping absolute inset-0" />
-                             <div className="w-24 h-24 border-4 border-indigo-500 rounded-full flex items-center justify-center">
-                                <Loader2 className="h-10 w-10 animate-spin text-indigo-400" />
+                    <Card className="max-w-md border-none shadow-2xl ring-1 ring-slate-900 bg-slate-950 text-white rounded-[40px] w-full text-center py-16 overflow-hidden relative">
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-30" />
+                        <div className="relative inline-block mb-12">
+                             <div className="w-32 h-32 border-4 border-indigo-500/20 rounded-full animate-ping absolute inset-0" />
+                             <div className="w-32 h-32 border-4 border-indigo-500 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(99,102,241,0.4)]">
+                                <RefreshCw className="h-12 w-12 animate-spin text-indigo-400" />
                              </div>
                         </div>
-                        <CardHeader>
-                            <CardTitle className="text-2xl flex items-center justify-center gap-2">
-                                <Sparkles className="h-6 w-6 text-yellow-400" /> AI Analyzing...
+                        <CardHeader className="relative z-10">
+                            <CardTitle className="text-3xl font-black flex items-center justify-center gap-3 italic">
+                                <Sparkles className="h-7 w-7 text-yellow-400" /> AI REASONING
                             </CardTitle>
-                            <CardDescription className="text-slate-400">
-                                Weezy AI is matching your selfie against the ID biometrics. This usually takes 5-10 seconds.
+                            <CardDescription className="text-slate-400 font-medium px-10">
+                                Weezy AI Vision core is matching facial nodes and verifying NIN integrity with NIMC servers...
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2 text-[10px] font-mono text-slate-500 uppercase tracking-widest">
-                                <p>Extracting NIN Data...</p>
-                                <p>Analyzing facial nodes...</p>
-                                <p>Verifying against NIMC database...</p>
+                        <CardContent className="relative z-10 mt-6">
+                            <div className="space-y-3 text-[10px] font-mono text-slate-500 uppercase tracking-[0.3em]">
+                                <div className="flex items-center justify-center gap-2">
+                                    <div className="w-1 h-1 bg-indigo-500 rounded-full animate-pulse" /> EXTRACTING DOCUMENT DATA
+                                </div>
+                                <div className="flex items-center justify-center gap-2">
+                                    <div className="w-1 h-1 bg-indigo-500 rounded-full animate-pulse delay-75" /> PERFORMING FACE MATCH
+                                </div>
+                                <div className="flex items-center justify-center gap-2">
+                                    <div className="w-1 h-1 bg-indigo-500 rounded-full animate-pulse delay-150" /> VERIFYING INTEGRITY
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
                 )}
 
                 {step === 5 && (
-                    <Card className="max-w-md border-none shadow-2xl ring-1 ring-green-100 text-center py-12">
-                        <div className="bg-green-100 text-green-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                    <Card className="max-w-md border-none shadow-2xl ring-1 ring-green-100 bg-white rounded-[40px] w-full text-center py-16">
+                        <div className="bg-green-100 text-green-600 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-green-50 animate-bounce">
                              <CheckCircle2 className="h-12 w-12" />
                         </div>
                         <CardHeader>
-                             <CardTitle className="text-2xl text-green-800">Verification Success!</CardTitle>
-                             <CardDescription>
-                                Weezy AI has confirmed your identity. Your account is now fully active.
+                             <CardTitle className="text-3xl font-black text-slate-900 tracking-tighter">Success!</CardTitle>
+                             <CardDescription className="text-slate-500 font-bold uppercase tracking-widest mt-2 px-10">
+                                Identity Confirmed. Welcome to Tier 3 Banking.
                              </CardDescription>
                         </CardHeader>
-                        <CardFooter>
-                            <Button className="w-full bg-indigo-600" onClick={() => window.location.href='/dashboard'}>Go to Dashboard</Button>
+                        <CardFooter className="pt-10">
+                            <Button className="w-full bg-indigo-600 h-14 rounded-2xl font-black shadow-xl shadow-indigo-100 text-white border-none" onClick={() => window.location.href='/dashboard'}>Launch Dashboard</Button>
                         </CardFooter>
                     </Card>
                 )}

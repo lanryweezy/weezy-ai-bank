@@ -53,65 +53,73 @@ const CorporatePayroll = () => {
 
   return (
     <Layout>
-      <div className="p-6 space-y-8 animate-in fade-in duration-500">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
-                Corporate Payroll & Bulk Payments <Building2 className="h-6 w-6 text-indigo-600" />
+      <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="space-y-1">
+            <h1 className="text-4xl font-black text-slate-900 tracking-tighter flex items-center gap-4 italic">
+                PAYROLL <div className="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-200"><Building2 className="h-6 w-6 text-white" /></div>
             </h1>
-            <p className="text-gray-600 mt-1">High-volume salary disbursement with AI-driven anomaly detection.</p>
+            <p className="text-slate-500 font-medium">Enterprise Disbursement Engine • AI Anomaly Auditing</p>
           </div>
-          <Button onClick={() => setIsUploading(true)} className="bg-indigo-600">
-            <Upload className="mr-2 h-4 w-4" /> Upload Payroll File
+          <Button onClick={() => setIsUploading(true)} className="rounded-2xl h-12 px-6 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-200 font-black text-xs uppercase tracking-widest transition-all active:scale-95 text-white border-none">
+            <Upload className="mr-2 h-4 w-4" /> Upload Salary Schedule
           </Button>
         </div>
 
         {isUploading ? (
-          <Card className="max-w-xl border-none shadow-xl ring-1 ring-gray-200">
-            <CardHeader>
-              <CardTitle>Payroll Instruction Upload</CardTitle>
-              <CardDescription>Support for JSON and CSV salary schedules.</CardDescription>
+          <Card className="max-w-2xl border-none shadow-2xl ring-1 ring-slate-200/60 bg-white rounded-[32px] overflow-hidden mx-auto">
+            <CardHeader className="p-10 text-center">
+              <div className="bg-indigo-50 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 rotate-3">
+                <FileJson className="h-10 w-10 text-indigo-600" />
+              </div>
+              <CardTitle className="text-2xl font-black text-slate-900 tracking-tight">Bulk Payment Initiation</CardTitle>
+              <CardDescription className="font-medium px-10">Upload your staff payroll file. Supported formats: .CSV, .XLSX, .JSON</CardDescription>
             </CardHeader>
-            <CardContent className="py-10 text-center border-2 border-dashed rounded-xl mx-6 mb-6">
-                <FileJson className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-sm text-gray-500 mb-6">Drag and drop your payroll file or use demo data</p>
-                <Button variant="outline" onClick={handleDemoUpload} disabled={uploadMutation.isPending}>
-                    {uploadMutation.isPending ? 'Processing...' : 'Upload Demo Payroll Data'}
-                </Button>
+            <CardContent className="px-10 pb-10">
+                <div className="py-16 text-center border-4 border-dashed border-slate-100 rounded-[32px] bg-slate-50/50 hover:bg-indigo-50/30 hover:border-indigo-100 transition-all cursor-pointer group">
+                    <Sparkles className="h-12 w-12 text-slate-200 mx-auto mb-4 group-hover:text-indigo-400 group-hover:scale-110 transition-all" />
+                    <p className="text-sm font-bold text-slate-400 group-hover:text-indigo-600 transition-colors">Drag and drop payroll file or click to browse</p>
+                    <Button variant="outline" className="mt-8 rounded-xl border-slate-200 font-black text-[10px] uppercase tracking-widest h-10 px-6 bg-white hover:bg-slate-900 hover:text-white transition-all shadow-sm" onClick={handleDemoUpload} disabled={uploadMutation.isPending}>
+                        {uploadMutation.isPending ? 'Processing Engine...' : 'Run Demo Simulation'}
+                    </Button>
+                </div>
             </CardContent>
           </Card>
         ) : activeBatch ? (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Batch Status */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="border-none shadow-sm ring-1 ring-gray-200">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold text-muted-foreground uppercase">Batch Reference</CardTitle>
+                <Card className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-3xl bg-white group hover:shadow-xl transition-all duration-500">
+                    <CardHeader className="pb-2 px-6 pt-6">
+                        <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Instruction Reference</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-xl font-bold font-mono">{activeBatch.batch_reference}</div>
-                        <Badge className="mt-2 bg-indigo-100 text-indigo-700 border-none">{activeBatch.status}</Badge>
+                    <CardContent className="px-6 pb-6">
+                        <div className="text-xl font-mono font-black text-slate-900 tracking-tighter">{activeBatch.batch_reference}</div>
+                        <Badge className="mt-3 bg-indigo-50 text-indigo-700 border-none text-[9px] font-black tracking-widest">{activeBatch.status}</Badge>
                     </CardContent>
                 </Card>
-                <Card className="border-none shadow-sm ring-1 ring-gray-200">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold text-muted-foreground uppercase">Total Amount</CardTitle>
+                <Card className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-3xl bg-white group hover:shadow-xl transition-all duration-500">
+                    <CardHeader className="pb-2 px-6 pt-6">
+                        <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Disbursement</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-xl font-bold">₦{parseFloat(activeBatch.total_amount).toLocaleString()}</div>
-                        <p className="text-xs text-gray-500 mt-1">{activeBatch.item_count} Employees</p>
+                    <CardContent className="px-6 pb-6">
+                        <div className="text-2xl font-black text-slate-900 tracking-tight">₦{parseFloat(activeBatch.total_amount).toLocaleString()}</div>
+                        <p className="text-[10px] text-slate-500 mt-2 font-bold uppercase flex items-center gap-2"><Users className="h-3 w-3" /> {activeBatch.item_count} RECIPIENTS</p>
                     </CardContent>
                 </Card>
-                <Card className={`border-none shadow-sm ring-1 ring-gray-200 ${activeBatch.ai_risk_score > 50 ? 'bg-red-50' : 'bg-green-50'}`}>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold text-muted-foreground uppercase">AI Risk Score</CardTitle>
+                <Card className={`border-none shadow-xl rounded-3xl relative overflow-hidden group transition-all duration-500 ${activeBatch.ai_risk_score > 50 ? 'bg-rose-600 text-white' : 'bg-slate-900 text-white'}`}>
+                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
+                        <ShieldCheck className="h-24 w-24" />
+                    </div>
+                    <CardHeader className="pb-2 px-6 pt-6 relative z-10">
+                        <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-widest">AI Audit Risk Score</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <div className={`text-xl font-bold ${activeBatch.ai_risk_score > 50 ? 'text-red-600' : 'text-green-600'}`}>
-                            {activeBatch.ai_risk_score || 'Scanning...'} / 100
+                    <CardContent className="px-6 pb-6 relative z-10">
+                        <div className="text-4xl font-black tracking-tighter">
+                            {activeBatch.ai_risk_score || '00'}<span className="text-lg opacity-40">/100</span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1 flex items-center">
-                            <ShieldCheck className="h-3 w-3 mr-1" /> Verified by Weezy AI
+                        <p className="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-widest flex items-center gap-2">
+                            <Activity className="h-3 w-3 text-indigo-400" /> SECURED BY WEEZY PRIME
                         </p>
                     </CardContent>
                 </Card>
@@ -119,53 +127,80 @@ const CorporatePayroll = () => {
 
             {/* AI Report */}
             {activeBatch.ai_anomaly_report && (
-              <Card className="border-none shadow-lg ring-1 ring-red-200 bg-white">
-                <CardHeader className="bg-red-50/50 border-b border-red-100">
-                    <CardTitle className="text-sm font-bold flex items-center gap-2 text-red-700">
-                        <AlertTriangle className="h-4 w-4" /> AI Audit Observations
+              <Card className={`border-none shadow-2xl rounded-[32px] overflow-hidden ring-2 ${activeBatch.ai_risk_score > 50 ? 'ring-rose-500/20' : 'ring-emerald-500/20'} bg-white animate-in zoom-in-95 duration-500`}>
+                <CardHeader className={`${activeBatch.ai_risk_score > 50 ? 'bg-rose-50' : 'bg-emerald-50'} border-b px-8 py-6`}>
+                    <CardTitle className={`text-sm font-black uppercase tracking-widest flex items-center gap-3 ${activeBatch.ai_risk_score > 50 ? 'text-rose-700' : 'text-emerald-700'}`}>
+                        {activeBatch.ai_risk_score > 50 ? <AlertTriangle className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+                        AI AUDIT OBSERVATIONS
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-4">
-                    <div className="space-y-2">
-                        {activeBatch.ai_anomaly_report.anomalies?.map((a: string, i: number) => (
-                            <div key={i} className="text-sm text-gray-700 flex items-start gap-2">
-                                <div className="h-1.5 w-1.5 rounded-full bg-red-400 mt-1.5" /> {a}
+                <CardContent className="p-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Detected Vectors</p>
+                            <div className="space-y-2">
+                                {activeBatch.ai_anomaly_report.anomalies?.map((a: string, i: number) => (
+                                    <div key={i} className="text-xs text-slate-700 flex items-start gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0 shadow-sm" /> 
+                                        <span className="font-medium leading-relaxed">{a}</span>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
+                        </div>
+                        <div className="p-6 bg-slate-900 rounded-[24px] text-white flex flex-col justify-center relative overflow-hidden">
+                            <Sparkles className="absolute top-0 right-0 h-24 w-24 -mr-6 -mt-6 opacity-10" />
+                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2">Automated Recommendation</p>
+                            <p className="text-lg font-black italic tracking-tight">"{activeBatch.ai_anomaly_report.recommendation}"</p>
+                            <p className="text-[10px] text-slate-400 mt-4 leading-relaxed">
+                                Proceed with caution. Flagged anomalies may represent ghost workers or duplicate account instructions.
+                            </p>
+                        </div>
                     </div>
                 </CardContent>
-                <CardFooter className="bg-gray-50/50 justify-between py-3">
-                    <p className="text-xs italic text-gray-500">Recommendation: {activeBatch.ai_anomaly_report.recommendation}</p>
+                <CardFooter className="bg-slate-50/50 justify-between py-6 px-8 border-t border-slate-100">
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">System ready for disbursement</p>
+                    </div>
                     {activeBatch.status === 'AWAITING_APPROVAL' && (
-                        <Button size="sm" className="bg-indigo-600" onClick={() => disburseMutation.mutate(activeBatch.id)}>
-                            Approve & Disburse
-                        </Button>
+                        <div className="flex gap-3">
+                            <Button variant="ghost" className="rounded-xl font-black text-[10px] uppercase tracking-widest text-rose-600 hover:bg-rose-50">Cancel Batch</Button>
+                            <Button className="rounded-xl px-8 bg-indigo-600 shadow-xl shadow-indigo-100 font-black text-[10px] uppercase tracking-widest text-white border-none" onClick={() => disburseMutation.mutate(activeBatch.id)} disabled={disburseMutation.isPending}>
+                                {disburseMutation.isPending ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />} Approve & Disburse
+                            </Button>
+                        </div>
                     )}
                 </CardFooter>
               </Card>
             )}
 
             {/* Item List */}
-            <Card className="border-none shadow-sm ring-1 ring-gray-200">
-                <CardHeader>
-                    <CardTitle>Payroll Schedule</CardTitle>
+            <Card className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-[32px] bg-white overflow-hidden">
+                <CardHeader className="px-8 pt-8 pb-4">
+                    <CardTitle className="text-lg font-black text-slate-900 uppercase tracking-tight">Salary Distribution Schedule</CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <div className="space-y-3">
+                <CardContent className="px-8 pb-8">
+                    <div className="space-y-2">
                         {activeBatch.items.map((item: any) => (
-                            <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50">
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-indigo-50 p-2 rounded-lg">
-                                        <Users className="h-4 w-4 text-indigo-600" />
+                            <div key={item.id} className="flex items-center justify-between p-4 rounded-2xl border border-slate-50 hover:bg-slate-50/50 transition-all group">
+                                <div className="flex items-center gap-4">
+                                    <div className="bg-indigo-50 p-3 rounded-2xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                        <Users className="h-5 w-5" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold">{item.recipient_name}</p>
-                                        <p className="text-[10px] text-gray-500 font-mono">{item.recipient_account}</p>
+                                        <p className="text-sm font-black text-slate-900 tracking-tight">{item.recipient_name}</p>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-none text-[8px] h-4 font-bold tracking-widest">NUBAN</Badge>
+                                            <p className="text-[10px] text-slate-400 font-mono font-bold tracking-widest">{item.recipient_account}</p>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-sm font-bold">₦{parseFloat(item.amount).toLocaleString()}</p>
-                                    <Badge variant="outline" className="text-[9px] h-4">{item.status}</Badge>
+                                    <p className="text-sm font-black text-slate-900 tracking-tight">₦{parseFloat(item.amount).toLocaleString()}</p>
+                                    <div className="flex items-center justify-end gap-2 mt-1">
+                                        <div className={`w-1.5 h-1.5 rounded-full ${item.status === 'SUCCESS' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{item.status}</span>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -174,9 +209,13 @@ const CorporatePayroll = () => {
             </Card>
           </div>
         ) : (
-           <div className="py-20 text-center border-2 border-dashed rounded-3xl bg-gray-50/50">
-                <Activity className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 italic">No payroll batches active. Start by uploading a salary schedule.</p>
+           <div className="py-32 text-center border-4 border-dashed border-slate-100 rounded-[40px] bg-slate-50/30">
+                <div className="bg-white p-8 rounded-[32px] shadow-sm inline-block mb-6 ring-1 ring-slate-100">
+                    <Activity className="h-12 w-12 text-slate-200" />
+                </div>
+                <h4 className="text-xl font-black text-slate-900">No Active Payroll Sessions</h4>
+                <p className="text-sm text-slate-400 font-medium mt-2 max-w-xs mx-auto">Start a corporate disbursement session by uploading a salary instruction file.</p>
+                <Button className="mt-10 bg-indigo-600 rounded-2xl px-10 h-12 text-white border-none shadow-xl shadow-indigo-100 font-bold" onClick={() => setIsUploading(true)}>Initiate Session</Button>
            </div>
         )}
       </div>
