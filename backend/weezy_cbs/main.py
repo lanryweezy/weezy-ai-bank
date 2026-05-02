@@ -54,8 +54,8 @@ async def startup_event():
 app.include_router(ai_api.ai_api_router, prefix="/api", tags=["AI & Automation"])
 
 from weezy_cbs.agent_banking import api as agent_api
-
 from weezy_cbs.cards_wallets_management import api as wallet_api
+from weezy_cbs.payroll_management import api as payroll_api
 
 # Core CBS Modules
 app.include_router(cim_api.router, prefix="/api/corebanking/cim", tags=["Customer Identity"])
@@ -65,6 +65,7 @@ app.include_router(txn_api.router, prefix="/api/transactions", tags=["Transactio
 app.include_router(comp_rep_api.router, prefix="/api/compliance", tags=["Compliance & Reporting"])
 app.include_router(agent_api.router, prefix="/api/agent-banking", tags=["Agent Banking (SANEF)"])
 app.include_router(wallet_api.router, prefix="/api/wallets", tags=["Wallets & Mobile Money"])
+app.include_router(payroll_api.router, prefix="/api/payroll", tags=["Bulk Payments & Payroll"])
 
 app.include_router(treasury_api.router, prefix="/api/corebanking/treasury", tags=["Treasury & Liquidity"])
 app.include_router(fee_api.router, prefix="/api/corebanking/fees", tags=["Fees & Charges"])

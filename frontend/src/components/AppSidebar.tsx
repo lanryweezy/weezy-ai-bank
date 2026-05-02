@@ -61,6 +61,7 @@ const navigation = [
 const bankingModules = [
   { name: 'Customer Base', href: '/customers', icon: UserCheck },
   { name: 'Agent Banking', href: '/agent-banking', icon: Store },
+  { name: 'Corporate Payroll', href: '/payroll', icon: Building2 },
   { name: 'Loans & Credit', href: '/loans', icon: CreditCard },
   { name: 'Financial Switch', href: '/transactions', icon: ArrowRightLeft },
   { name: 'Treasury & Liquidity', href: '/treasury', icon: Landmark },
