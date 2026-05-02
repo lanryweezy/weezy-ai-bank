@@ -53,19 +53,13 @@ async def startup_event():
 # AI & Automation Layer (Unified with bank-ai-orchestrator frontend)
 app.include_router(ai_api.ai_api_router, prefix="/api", tags=["AI & Automation"])
 
-from weezy_cbs.agent_banking import api as agent_api
-from weezy_cbs.cards_wallets_management import api as wallet_api
-from weezy_cbs.payroll_management import api as payroll_api
-from weezy_cbs.bills_payment import api as bills_api
 from weezy_cbs.customer_risk_profiling import api as risk_api
 from weezy_cbs.merchant_management import api as merchant_api
-from weezy_cbs.customer_risk_profiling import api as risk_api
 from weezy_cbs.savings_investments import api as savings_api
 from weezy_cbs.virtual_accounts import api as va_api
-from weezy_cbs.virtual_accounts import api as va_api
-from weezy_cbs.fx_domiciliary_management import api as fx_api
 from weezy_cbs.fx_domiciliary_management import api as fx_api
 from weezy_cbs.biometric_identity import api as biometric_api
+from weezy_cbs.treasury_liquidity_management import api as treasury_api
 
 # Core CBS Modules
 app.include_router(cim_api.router, prefix="/api/corebanking/cim", tags=["Customer Identity"])
@@ -84,14 +78,10 @@ app.include_router(savings_api.router, prefix="/api/savings", tags=["Savings & I
 app.include_router(va_api.router, prefix="/api/virtual-accounts", tags=["Virtual Accounts & Collections"])
 app.include_router(fx_api.router, prefix="/api/fx", tags=["International FX & Domiciliary"])
 app.include_router(biometric_api.router, prefix="/api/biometric", tags=["Biometric Identity & Face Match"])
-
-app.include_router(fx_api.router, prefix="/api/fx", tags=["International FX & Domiciliary"])
 app.include_router(fraud_api.router, prefix="/api/fraud", tags=["AI Fraud Shield"])
+app.include_router(treasury_api.router, prefix="/api/corebanking/treasury", tags=["Treasury & Liquidity"])
 
 app.include_router(dev_api.router, prefix="/api/dev", tags=["Developer Portal"])
-
-
-app.include_router(treasury_api.router, prefix="/api/corebanking/treasury", tags=["Treasury & Liquidity"])
 app.include_router(fee_api.router, prefix="/api/corebanking/fees", tags=["Fees & Charges"])
 
 # Auth & Channels

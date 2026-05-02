@@ -98,6 +98,18 @@ class CBNRepoOperation(Base):
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
     tenor_days = Column(Integer, nullable=False)
+
+class AILiquidityForecast(Base):
+    __tablename__ = "ai_liquidity_forecasts"
+    id = Column(Integer, primary_key=True, index=True)
+    forecast_date = Column(Date, nullable=False, index=True)
+    
+    predicted_outflow = Column(Numeric(precision=20, scale=2))
+    predicted_inflow = Column(Numeric(precision=20, scale=2))
+    confidence_score = Column(Float, default=0.0)
+    
+    ai_report_json = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
     status = Column(String(20), default="ACTIVE", index=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
