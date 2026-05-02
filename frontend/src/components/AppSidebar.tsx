@@ -68,6 +68,7 @@ const navigation = [
 
 const retailBanking = [
   { name: 'My Wallet', href: '/portal', icon: Wallet },
+  { name: 'Alerts Hub', href: '/comms-hub', icon: MessageSquare },
   { name: 'Branch & Teller', href: '/teller-ops', icon: Store },
   { name: 'Send Money', href: '/qr-payments', icon: QrCode },
   { name: 'Naira Cards', href: '/card-center', icon: CardIcon },

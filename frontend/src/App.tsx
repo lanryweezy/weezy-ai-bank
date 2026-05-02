@@ -64,7 +64,7 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: JSX.Element, all
 };
 
 import CardCenter from "./pages/CardCenter";
-
+import CommunicationsLog from "./pages/CommunicationsLog";
 import CorporatePayroll from "./pages/CorporatePayroll";
 import BillsPayment from "./pages/BillsPayment";
 import ComplianceDashboard from "./pages/ComplianceDashboard";
@@ -102,6 +102,7 @@ const App = () => (
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/agent-banking" element={<ProtectedRoute><AgentBankingPage /></ProtectedRoute>} />
           <Route path="/card-center" element={<ProtectedRoute><CardCenter /></ProtectedRoute>} />
+          <Route path="/comms-hub" element={<ProtectedRoute><CommunicationsLog /></ProtectedRoute>} />
           <Route path="/payroll" element={<ProtectedRoute><CorporatePayroll /></ProtectedRoute>} />
           <Route path="/bills" element={<ProtectedRoute><BillsPayment /></ProtectedRoute>} />
           <Route path="/savings" element={<ProtectedRoute><SavingsInvestments /></ProtectedRoute>} />

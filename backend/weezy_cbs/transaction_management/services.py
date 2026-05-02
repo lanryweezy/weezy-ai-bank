@@ -22,15 +22,16 @@ from weezy_cbs.nigerian_market_utils import NigerianMarketUtils
 from weezy_cbs.fees_charges_commission_engine.services import calculate_nigerian_taxes
 
 from weezy_cbs.fraud_shield.services import fraud_shield_service
+from weezy_cbs.messaging_notifications.services import notification_engine
+from weezy_cbs.accounts_ledger_management.models import Account
 
 # --- Core Transaction Processing ---
 async def initiate_transaction(db: Session, transaction_in: schemas.TransactionCreateRequest, initiated_by_customer_id: Optional[int] = None) -> models.FinancialTransaction:
     """
     Initiates and processes a new financial transaction (Internal or Inter-bank NIP).
-    Includes real-time AI Fraud Screening.
+    Includes real-time AI Fraud Screening and Communications Alerts.
     """
     # 1. AI Fraud Screening (Real-time)
-    # We use customer_id 1 as demo if not provided
     cust_id = initiated_by_customer_id or 1
     
     fraud_decision = await fraud_shield_service.screen_transaction(db, cust_id, transaction_in.dict())
@@ -84,6 +85,28 @@ async def initiate_transaction(db: Session, transaction_in: schemas.TransactionC
             db_transaction.processed_at = datetime.utcnow()
             db_transaction.system_remarks = f"Internal transfer posted. Tax: ₦{taxes['total_tax']}"
             db.commit()
+            
+            # --- REAL-TIME ALERTS ---
+            # 1. Alert Sender (Debit)
+            sender_acc = db.query(Account).filter(Account.account_number == transaction_in.debit_account_number).first()
+            if sender_acc:
+                await notification_engine.send_transaction_alert(db, sender_acc.customer_id, {
+                    "amount": transaction_in.amount,
+                    "account_number": transaction_in.debit_account_number,
+                    "narration": transaction_in.narration,
+                    "balance": sender_acc.ledger_balance
+                }, txn_type="DEBIT")
+                
+            # 2. Alert Recipient (Credit)
+            receiver_acc = db.query(Account).filter(Account.account_number == transaction_in.credit_account_number).first()
+            if receiver_acc:
+                await notification_engine.send_transaction_alert(db, receiver_acc.customer_id, {
+                    "amount": transaction_in.amount,
+                    "account_number": transaction_in.credit_account_number,
+                    "narration": transaction_in.narration,
+                    "balance": receiver_acc.ledger_balance
+                }, txn_type="CREDIT")
+
             db.refresh(db_transaction)
             return db_transaction
         except Exception as e:
@@ -109,6 +132,16 @@ async def initiate_transaction(db: Session, transaction_in: schemas.TransactionC
                 db_transaction.external_reference = nip_result["transaction_reference"]
                 db_transaction.system_remarks = f"Inter-bank NIP Transfer Successful. SessionID: {nip_result['session_id']}"
                 db.commit()
+                
+                # Alert Sender for NIP Debit
+                sender_acc = db.query(Account).filter(Account.account_number == transaction_in.debit_account_number).first()
+                if sender_acc:
+                    await notification_engine.send_transaction_alert(db, sender_acc.customer_id, {
+                        "amount": transaction_in.amount,
+                        "account_number": transaction_in.debit_account_number,
+                        "narration": f"NIP OUT: {transaction_in.narration}",
+                        "balance": sender_acc.ledger_balance
+                    }, txn_type="DEBIT")
             else:
                 db_transaction.status = TransactionStatusEnum.FAILED
                 db_transaction.response_message = nip_result["response_message"]
