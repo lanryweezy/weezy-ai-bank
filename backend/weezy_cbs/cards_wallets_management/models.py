@@ -87,26 +87,23 @@ class WalletAccount(Base):
     __tablename__ = "wallet_accounts"
 
     id = Column(Integer, primary_key=True, index=True)
-    wallet_id_external = Column(String(30), unique=True, index=True, nullable=False)
+    phone_number = Column(String(15), unique=True, index=True, nullable=False) # Primary Identifier (Mobile Money)
+    nuban_account_number = Column(String(10), unique=True, index=True, nullable=True) # Linked Bank Account for NIP
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, index=True)
-
-    # Option 1: Wallet has its own balance (simpler e-wallet model)
+    
+    # Wallet Balance (Synced with Ledger Account)
     balance = Column(Numeric(precision=18, scale=2), default=0.00, nullable=False)
     currency = Column(SQLAlchemyEnum(CurrencyEnum), default=CurrencyEnum.NGN, nullable=False)
-    # Option 2: Wallet is a view/proxy to a real ledger account (more integrated CBS model)
-    # linked_ledger_account_id = Column(Integer, ForeignKey("accounts.id"), unique=True, nullable=True)
-
+    
     status = Column(SQLAlchemyEnum(WalletAccountStatusEnum), default=WalletAccountStatusEnum.ACTIVE, index=True)
-
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    customer = relationship("Customer") # Add back_populates in Customer
-    # linked_ledger_account = relationship("Account") # If using Option 2
+    customer = relationship("Customer")
     transactions = relationship("WalletTransaction", back_populates="wallet_account", order_by="WalletTransaction.id")
 
     def __repr__(self):
-        return f"<WalletAccount(id_ext='{self.wallet_id_external}', balance='{self.balance} {self.currency.value}')>"
+        return f"<WalletAccount(phone='{self.phone_number}', balance='{self.balance} {self.currency.value}')>"
 
 class WalletTransactionTypeEnum(enum.Enum):
     TOP_UP = "TOP_UP"; WITHDRAWAL = "WITHDRAWAL"; P2P_SEND = "P2P_SEND"
