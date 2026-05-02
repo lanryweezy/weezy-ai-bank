@@ -8,7 +8,8 @@ import google.generativeai as genai
 
 from . import models, schemas
 from weezy_cbs.interest_engine.services import interest_engine
-from weezy_cbs.accounts_ledger_management.models import LedgerEntry
+from weezy_cbs.accounts_ledger_management.models import LedgerEntry, GeneralLedgerAccount
+from weezy_cbs.teller_operations.models import TellerTill, TillStatusEnum
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +28,16 @@ class EODOrchestrator:
 
     async def run_eod_batch(self, db: Session):
         """
-        Executes the mandatory EOD sequence.
+        Executes the mandatory EOD sequence with Pre-Check validation.
         """
-        # 0. Get Current Business Date
+        # 0. PRE-CHECK PHASE
+        # A real CBS cannot close the day if operational nodes are still active.
+        open_tills = db.query(TellerTill).filter(TellerTill.status == TillStatusEnum.OPEN).all()
+        if open_tills:
+            t_ids = [str(t.id) for t in open_tills]
+            raise Exception(f"EOD BLOCKED: The following teller tills are still OPEN: {', '.join(t_ids)}. Please close all tills first.")
+
+        # 1. Get Current Business Date
         sys_date = db.query(models.SystemDate).first()
         if not sys_date:
             raise Exception("System date not initialized")
@@ -42,33 +50,41 @@ class EODOrchestrator:
         db.commit()
 
         try:
-            # 1. Interest Accrual (Core Banking Requirement)
+            # 2. Interest Accrual (Core Banking Requirement)
             logger.info("EOD: Running Interest Accrual...")
             interest_engine.run_daily_accrual(db)
             job.interest_accrued = True
             db.commit()
 
-            # 2. Process Loan Maturities & Penalties
-            # (Logic from loan_management_module)
+            # 3. Process Loan Maturities & Penalties
+            # (In a full prod system, we would trigger loan_management.run_daily_batch here)
             job.loan_maturities_processed = True
             db.commit()
 
-            # 3. Generate Trial Balance Snapshot
-            # Sum up all debits/credits in the ledger for today
+            # 4. Generate Trial Balance Snapshot
+            # Sum up all GL balances to check integrity
             logger.info("EOD: Generating Trial Balance...")
-            summary = db.query(
-                func.sum(LedgerEntry.amount).label('total')
-            ).filter(func.date(LedgerEntry.created_at) == business_date).all()
+            gl_summary = db.query(
+                GeneralLedgerAccount.gl_type,
+                func.sum(GeneralLedgerAccount.current_balance).label('total')
+            ).group_by(GeneralLedgerAccount.gl_type).all()
             
-            # (Simplified imbalance check)
+            summary_dict = {str(row.gl_type.value if hasattr(row.gl_type, 'value') else row.gl_type): float(row.total) for row in gl_summary}
+            
+            # (Simplified imbalance check: Assets - Liabilities - Equity should be near zero)
+            assets = summary_dict.get('ASSET', 0)
+            liabilities = summary_dict.get('LIABILITY', 0)
+            equity = summary_dict.get('EQUITY', 0)
+            job.imbalance_amount = decimal.Decimal(str(assets - liabilities - equity))
+            
             job.trial_balance_generated = True
             db.commit()
 
-            # 4. AI Audit Verification
+            # 5. AI Audit Verification
             if self.ai_auditor:
-                job.ai_audit_summary = await self._run_ai_audit_verification(db, business_date)
+                job.ai_audit_summary = await self._run_ai_audit_verification(db, business_date, summary_dict)
             
-            # 5. Advance System Date
+            # 6. Advance System Date
             sys_date.current_business_date = business_date + timedelta(days=1)
             sys_date.last_eod_at = datetime.utcnow()
             
@@ -84,21 +100,22 @@ class EODOrchestrator:
             db.commit()
             raise e
 
-    async def _run_ai_audit_verification(self, db: Session, bus_date: date) -> str:
+    async def _run_ai_audit_verification(self, db: Session, bus_date: date, summary: Dict[str, float]) -> str:
         """
         Uses Gemini to review the day's trial balance and flag accounting anomalies.
         """
-        # (Fetch trial balance records for the prompt)
         prompt = f"""
-        You are 'Weezy Chief Auditor'. 
-        The bank just finished EOD for {bus_date}.
+        You are 'Weezy Chief Auditor'. The bank just finished EOD for {bus_date}.
+        
+        TRIAL BALANCE SUMMARY:
+        {json.dumps(summary, indent=2)}
         
         Verify the system integrity:
-        - Ledger Balances: Assets = Liabilities + Equity.
-        - Interest Accruals: Are they consistent with deposit growth?
-        - Unusual Adjustments: Flag any manual GL postings above ₦10M.
+        1. Does Assets = Liabilities + Equity? (Imbalance: {sum(summary.values())})
+        2. Are there any zero balances in critical types?
+        3. Give a 1-paragraph summary of the bank's financial health based on these figures.
         
-        Based on the system logs, give a 1-paragraph summary of the bank's health today.
+        Format your response as a professional audit summary.
         """
         try:
             response = await self.ai_auditor.generate_content_async(prompt)
@@ -108,3 +125,4 @@ class EODOrchestrator:
 
 eod_orchestrator = EODOrchestrator()
 import os
+import json

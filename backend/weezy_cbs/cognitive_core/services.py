@@ -92,21 +92,26 @@ class CognitiveOrchestrator:
         CURRENT CUSTOMER CONTEXT:
         {json.dumps(session.context_data)}
         
-        RULES:
-        1. Always perform a 'verify_beneficiary' before doing a 'perform_transfer' if it's an inter-bank request.
-        2. If you use 'perform_transfer', you must output the phrase [TRANSACTION EXECUTED] in your final reply.
-        3. Never promise to do something if the tool fails. Tell them the error.
+        GOVERNANCE RULES:
+        1. Always perform a 'verify_beneficiary' before doing a 'perform_transfer' for inter-bank.
+        2. If a transfer is > ₦1,000,000, tell the user it requires 'Dual Authorization' (Maker-Checker).
+        3. If you use 'perform_transfer', you must output [TRANSACTION EXECUTED] in your final reply.
+        4. Provide a brief 'Thought Log' at the start of your response formatted as [THOUGHT: step1, step2...].
         
         User Request: {request.message}
         """
 
         try:
-            # 1. Send to Gemini (This is where the magic happens)
-            # If the model decides to use a tool, the python SDK automatically executes the
-            # functions we passed in self.tools, gathers the results, and sends them back to the model
-            # to formulate the final answer.
+            # 1. Send to Gemini
             response = await chat.send_message_async(prompt)
             final_reply = response.text
+            
+            # Extract Thought Log for better UI feedback
+            thought_log = "Analyzing request..."
+            if "[THOUGHT:" in final_reply:
+                parts = final_reply.split("[THOUGHT:")
+                thought_log = parts[1].split("]")[0].strip()
+                final_reply = parts[0] + (parts[1].split("]")[1] if "]" in parts[1] else "")
             
             # 2. Determine Intent (Heuristic for logging)
             intent = models.CognitiveIntentEnum.UNKNOWN

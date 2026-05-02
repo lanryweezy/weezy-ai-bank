@@ -65,6 +65,12 @@ const Dashboard: React.FC = () => {
     refetchInterval: 15000,
   });
 
+  const { data: pendingApprovals } = useQuery({
+    queryKey: ['pendingApprovals'],
+    queryFn: () => apiClient('/admin/dual-control/requests/pending'),
+    refetchInterval: 30000,
+  });
+
   const { data: tasks, isLoading: loadingTasks } = useQuery({
     queryKey: ['taskSummary'],
     queryFn: () => apiClient('/tasks/me'),
@@ -220,6 +226,24 @@ const Dashboard: React.FC = () => {
 
           {/* AI Insights & Quick Links */}
           <div className="space-y-6">
+            {pendingApprovals?.length > 0 && (
+                <Card className="border-none shadow-2xl ring-2 ring-rose-500/20 bg-rose-50 rounded-3xl overflow-hidden animate-bounce">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xs font-black uppercase tracking-widest text-rose-700 flex items-center gap-2">
+                            <ShieldAlert className="h-4 w-4" /> Governance Alert
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm font-black text-rose-900">
+                            {pendingApprovals.length} Requests Awaiting Review
+                        </p>
+                        <Button variant="link" className="p-0 h-auto text-[10px] font-black uppercase text-rose-600 mt-2" onClick={() => navigate('/checker')}>
+                            Authorize Now →
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
+
             <Card className="border-none shadow-xl ring-1 ring-indigo-500/20 bg-gradient-to-br from-indigo-600 to-blue-800 text-white rounded-3xl overflow-hidden relative">
                 <div className="absolute top-0 right-0 p-8 opacity-10">
                     <Brain className="h-32 w-32" />

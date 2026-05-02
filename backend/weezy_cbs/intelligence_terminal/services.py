@@ -57,12 +57,25 @@ class IntelligenceTerminalOrchestrator:
             return {"type": "error", "content": "AI Core offline."}
 
         schema_context = """
-        TABLES:
+        CORE TABLES:
         - customers: id, first_name, last_name, email, account_tier (1, 2, 3), state
         - accounts: id, account_number, account_type (SAVINGS, CURRENT, DOMICILIARY), ledger_balance, available_balance, customer_id
-        - transactions: id, amount, transaction_type (TRANSFER, DEPOSIT, WITHDRAWAL), status (SUCCESSFUL, FAILED), channel, initiated_at
+        - transactions: id, amount, transaction_type, status, channel, initiated_at, tax_amount
         - gl_accounts: gl_code, name, gl_type (ASSET, LIABILITY, INCOME, EXPENSE), current_balance
+        
+        LOANS & ASSETS:
+        - loan_applications: id, requested_amount, loan_purpose, status (APPROVED, REJECTED, SUBMITTED)
+        - loan_accounts: id, principal_amount, outstanding_principal, status (ACTIVE, CLOSED)
+        - loan_collaterals: id, collateral_type (VEHICLE, LAND_PROPERTY), estimated_market_value, status
+        - fixed_assets: id, asset_tag, name, purchase_price, current_book_value
+        
+        INVESTMENTS & CARDS:
         - fd_accounts: id, principal_amount, interest_rate_applied, accrued_interest, status (ACTIVE, MATURED)
+        - cards: id, card_type (VIRTUAL, PHYSICAL), card_scheme (VERVE, MASTERCARD), status
+        
+        AGENCY & REVENUE:
+        - agents: id, business_name, state, terminal_id
+        - commission_logs: id, total_fee_collected, agent_amount, status
         """
 
         prompt = f"""
