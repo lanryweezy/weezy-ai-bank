@@ -66,6 +66,14 @@ async def run_workflow(
 ):
     return workflow_service.start_workflow_run(db, workflow_id, triggering_data, current_user.id, current_user.username)
 
+@ai_api_router.get("/task-logs", response_model=List[schemas.AITaskLogResponse])
+async def list_ai_task_logs(
+    db: Session = Depends(get_db),
+    current_user: CoreUser = Depends(get_current_active_superuser)
+):
+    """Admin tool to audit all AI autonomous decisions and processing logs."""
+    return db.query(models.AITaskLog).order_by(models.AITaskLog.created_at.desc()).limit(100).all()
+
 from .engine import WorkflowEngine
 
 from weezy_cbs.agentic_engine.core import weezy_agentic_core

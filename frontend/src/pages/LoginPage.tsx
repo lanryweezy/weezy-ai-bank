@@ -49,22 +49,25 @@ const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-slate-950 relative overflow-hidden">
       {/* Background Orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[120px]" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px]" />
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/30 rounded-full blur-[160px] animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/30 rounded-full blur-[160px] animate-pulse delay-1000" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-30 pointer-events-none" />
       
-      <div className="w-full max-w-[440px] px-6 relative z-10 animate-in fade-in zoom-in-95 duration-700">
-        <div className="flex flex-col items-center mb-10">
-            <div className="bg-indigo-600 p-4 rounded-3xl shadow-2xl shadow-indigo-500/20 mb-6">
-                <Building2 className="h-10 w-10 text-white" />
+      <div className="w-full max-w-[460px] px-8 relative z-10 animate-in fade-in zoom-in-95 duration-1000">
+        <div className="flex flex-col items-center mb-12">
+            <div className="bg-indigo-600 p-5 rounded-[32px] shadow-[0_20px_50px_rgba(99,102,241,0.4)] mb-8 relative overflow-hidden group">
+                <div className="absolute inset-0 shimmer opacity-20" />
+                <Building2 className="h-12 w-12 text-white relative z-10 group-hover:scale-110 transition-transform duration-500" />
             </div>
-            <h1 className="text-4xl font-black text-white tracking-tighter italic">WEEZY</h1>
-            <p className="text-xs font-bold text-indigo-400 uppercase tracking-[0.3em] mt-1">Cognitive Banking</p>
+            <h1 className="text-5xl font-black text-white tracking-tighter italic">WEEZY</h1>
+            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mt-2">The Cognitive Bank</p>
         </div>
 
-        <Card className="border-none shadow-2xl bg-white/10 backdrop-blur-xl ring-1 ring-white/10 rounded-[32px] overflow-hidden">
-          <CardHeader className="pt-10 px-10">
-            <CardTitle className="text-2xl font-bold text-white text-center">Welcome Back</CardTitle>
-            <CardDescription className="text-slate-400 text-center font-medium mt-2">Secure access to your AI-native vault.</CardDescription>
+        <Card className="border-none shadow-2xl glass-dark rounded-[48px] overflow-hidden relative group">
+          <div className="absolute inset-0 shimmer opacity-[0.03] pointer-events-none" />
+          <CardHeader className="pt-12 px-12">
+            <CardTitle className="text-3xl font-black text-white text-center tracking-tight">Access Vault</CardTitle>
+            <CardDescription className="text-slate-500 text-center font-bold uppercase text-[9px] tracking-[0.2em] mt-3">Identity Encryption Protocol Active</CardDescription>
           </CardHeader>
           
           <CardContent className="p-10 pt-6">

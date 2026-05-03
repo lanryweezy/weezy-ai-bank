@@ -123,6 +123,7 @@ app.include_router(cognitive_api.router, prefix="/api/cognitive", tags=["AI-Nati
 
 app.include_router(dev_api.router, prefix="/api/dev", tags=["Developer Portal"])
 app.include_router(fee_api.router, prefix="/api/corebanking/fees", tags=["Fees & Charges"])
+app.include_router(core_infra_api.audit_log_router, prefix="/api/admin/audit-logs", tags=["Audit Logs"])
 
 # Auth & Channels
 app.include_router(core_infra_api.auth_router, prefix="/api/auth", tags=["Authentication"])

@@ -133,6 +133,7 @@ export function AppSidebar() {
     { name: 'EOD Heartbeat', href: '/eod-center', icon: Activity },
     { name: 'Staff Management', href: '/admin/agent-templates', icon: SlidersHorizontal },
     { name: 'System Logs', href: '/admin/audit-trail', icon: History },
+    { name: 'Workflow Intelligence', href: '/admin/workflow-audit', icon: Brain },
   ];
 
   return (
@@ -158,11 +159,12 @@ export function AppSidebar() {
                 const isActive = location.pathname === item.href;
                 return (
                   <SidebarMenuItem key={item.name}>
-                    <SidebarMenuButton asChild isActive={isActive} className={`rounded-xl transition-all duration-300 ${item.highlight ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' : ''}`}>
+                    <SidebarMenuButton asChild isActive={isActive} className={`rounded-xl transition-all duration-300 ${item.highlight ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-200 hover:bg-indigo-700 relative overflow-hidden group' : ''}`}>
                       <Link to={item.href} className="flex items-center py-2 px-3">
-                        <item.icon className={`mr-3 h-5 w-5 ${isActive || item.highlight ? 'text-indigo-600' : 'text-slate-400'}`} />
-                        <span className="text-sm font-semibold">{item.name}</span>
-                        {item.highlight && <Sparkles className="ml-auto h-3 w-3 text-indigo-400" />}
+                        {item.highlight && <div className="absolute inset-0 shimmer opacity-20 pointer-events-none" />}
+                        <item.icon className={`mr-3 h-5 w-5 ${isActive || item.highlight ? 'text-white' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                        <span className={`text-sm font-semibold ${item.highlight ? 'text-white' : ''}`}>{item.name}</span>
+                        {item.highlight && <Sparkles className="ml-auto h-3 w-3 text-indigo-200 animate-pulse" />}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

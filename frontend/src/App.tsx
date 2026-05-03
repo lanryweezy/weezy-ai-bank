@@ -40,6 +40,7 @@ import WorkflowDefinitionsListPageAdmin from "./pages/Admin/WorkflowDefinitionsL
 import WorkflowDefinitionEditPage from "./pages/Admin/WorkflowDefinitionEditPage";
 import AgentMonitoringPage from "./pages/Admin/AgentMonitoringPage";
 import AuditTrail from "./pages/Admin/AuditTrail";
+import WorkflowAudit from "./pages/Admin/WorkflowAudit";
 import EODDashboard from "./pages/EODDashboard";
 
 
@@ -71,6 +72,7 @@ import StandingInstructions from "./pages/StandingInstructions";
 import BillsPayment from "./pages/BillsPayment";
 import ComplianceDashboard from "./pages/ComplianceDashboard";
 import RegulatoryReporting from "./pages/RegulatoryReporting";
+import AuditTrail from "./pages/Admin/AuditTrail";
 import MerchantConsole from "./pages/MerchantConsole";
 import LoanRecoveryDashboard from "./pages/LoanRecoveryDashboard";
 import SavingsInvestments from "./pages/SavingsInvestments";

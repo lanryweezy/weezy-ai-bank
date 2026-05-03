@@ -139,6 +139,17 @@ class TaskResponse(TaskBase):
     class Config:
         from_attributes = True
 
+class AITaskLogResponse(BaseModel):
+    id: UUID
+    task_name: str
+    status: AITaskStatusEnum
+    confidence_score: Optional[float] = None
+    processing_duration_ms: Optional[int] = None
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
 # --- Notification Schemas ---
 class NotificationResponse(BaseModel):
     id: UUID

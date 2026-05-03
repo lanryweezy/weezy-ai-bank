@@ -22,7 +22,8 @@ import {
   ChevronRight,
   ShieldCheck,
   Brain,
-  AlertCircle
+  AlertCircle,
+  ShieldAlert
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/services/apiClient';
@@ -43,6 +44,7 @@ const chartData = [
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState<string>('');
+  const [greeting, setGreeting] = useState<string>('Welcome');
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 
   useEffect(() => {
@@ -51,6 +53,11 @@ const Dashboard: React.FC = () => {
       const user = JSON.parse(storedUser);
       setUserName(user.full_name || user.username || 'User');
     }
+
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Good Morning');
+    else if (hour < 17) setGreeting('Good Afternoon');
+    else setGreeting('Good Evening');
   }, []);
 
   const { data: txnSummary, isLoading: loadingTxns, refetch: refetchSummary } = useQuery({
@@ -98,17 +105,21 @@ const Dashboard: React.FC = () => {
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-1">
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-                Hello, {userName.split(' ')[0]}! <Sparkles className="h-8 w-8 text-yellow-500 fill-yellow-500/10" />
+            <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">System Live • 0.4ms Latency</span>
+            </div>
+            <h1 className="text-5xl font-black text-slate-900 tracking-tighter flex items-center gap-4 italic">
+                {greeting.toUpperCase()}, {userName.split(' ')[0].toUpperCase()} <Sparkles className="h-8 w-8 text-yellow-500 fill-yellow-500/10 animate-pulse" />
             </h1>
-            <p className="text-slate-500 font-medium">Here's what's happening in your bank today.</p>
+            <p className="text-slate-500 font-medium text-lg">Your cognitive banking cockpit is ready for instructions.</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={() => setIsTransferModalOpen(true)} className="rounded-2xl h-12 px-6 border-slate-200 hover:bg-slate-50 font-bold transition-all active:scale-95">
-              <ArrowUpRight className="mr-2 h-4 w-4" /> Send Money
+          <div className="flex items-center gap-4">
+            <Button variant="outline" onClick={() => setIsTransferModalOpen(true)} className="rounded-2xl h-14 px-8 border-slate-200 hover:bg-slate-50 font-black text-xs uppercase tracking-widest transition-all active:scale-95 shadow-sm">
+              <ArrowUpRight className="mr-3 h-5 w-5" /> Send Money
             </Button>
-            <Button onClick={() => navigate('/cognitive-core')} className="rounded-2xl h-12 px-6 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-200 font-bold transition-all active:scale-95 text-white">
-              <Brain className="mr-2 h-4 w-4" /> Command AI
+            <Button onClick={() => navigate('/cognitive-core')} className="rounded-2xl h-14 px-8 bg-indigo-600 hover:bg-indigo-700 shadow-2xl shadow-indigo-200 font-black text-xs uppercase tracking-widest transition-all active:scale-95 text-white border-none">
+              <Brain className="mr-3 h-5 w-5" /> Command Prime
             </Button>
           </div>
         </div>
@@ -122,24 +133,24 @@ const Dashboard: React.FC = () => {
         {/* Main Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: 'System Balance', value: '₦4.2M', sub: 'Total Vault', icon: Wallet, color: 'indigo' },
-            { label: 'Transaction Vol.', value: txnSummary?.total_transactions || 0, sub: 'Last 24 hours', icon: Activity, color: 'orange' },
-            { label: 'AI Approval Rate', value: '98.2%', sub: 'Autonomous actions', icon: ShieldCheck, color: 'emerald' },
-            { label: 'Active Tasks', value: tasks?.length || 0, sub: 'Needs attention', icon: ListChecks, color: 'blue' },
+            { label: 'Total Liquidity', value: '₦4.2M', sub: 'Aggregated Vault', icon: Wallet, color: 'indigo' },
+            { label: 'Switch Throughput', value: txnSummary?.total_transactions || 0, sub: 'Daily Vol.', icon: Activity, color: 'orange' },
+            { label: 'Autonomous Rate', value: '98.2%', sub: 'AI Approval', icon: ShieldCheck, color: 'emerald' },
+            { label: 'Operational Tasks', value: tasks?.length || 0, sub: 'Needs Attention', icon: ListChecks, color: 'blue' },
           ].map((stat, i) => (
-            <Card key={i} className="group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border-none ring-1 ring-slate-200/60 overflow-hidden relative">
-                <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-                    <stat.icon className="h-24 w-24" />
+            <Card key={i} className="group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border-none ring-1 ring-slate-200/60 overflow-hidden relative rounded-[32px] bg-white">
+                <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity group-hover:scale-110 duration-700">
+                    <stat.icon className="h-28 w-28" />
                 </div>
-                <CardContent className="pt-8">
-                    <div className={`w-12 h-12 bg-${stat.color}-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                        <stat.icon className={`h-6 w-6 text-${stat.color}-600`} />
+                <CardContent className="pt-10">
+                    <div className={`w-14 h-14 bg-${stat.color}-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-${stat.color}-600 group-hover:text-white transition-all duration-500 shadow-inner`}>
+                        <stat.icon className="h-7 w-7" />
                     </div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{stat.label}</p>
-                    <h3 className="text-3xl font-black text-slate-900 mt-2">
+                    <h3 className="text-3xl font-black text-slate-900 mt-2 tracking-tighter italic">
                         {loadingTxns || loadingTasks ? <Skeleton className="h-9 w-20" /> : stat.value}
                     </h3>
-                    <p className="text-xs text-slate-500 mt-1 font-medium">{stat.sub}</p>
+                    <p className="text-[10px] text-slate-500 mt-2 font-bold uppercase tracking-widest">{stat.sub}</p>
                 </CardContent>
             </Card>
           ))}
@@ -148,14 +159,14 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Recent Activity */}
           <div className="lg:col-span-2 space-y-6">
-            <Card className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-3xl overflow-hidden bg-white">
+            <Card className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-[32px] overflow-hidden bg-white">
               <CardHeader className="px-8 pt-8 pb-4 flex flex-row items-center justify-between">
                 <div>
-                    <CardTitle className="text-xl font-black text-slate-900">Recent Transactions</CardTitle>
-                    <CardDescription className="text-slate-500 font-medium">Real-time ledger updates across all channels.</CardDescription>
+                    <CardTitle className="text-xl font-black text-slate-900 italic tracking-tighter">LEDGER ACTIVITY</CardTitle>
+                    <CardDescription className="text-slate-500 font-medium mt-1">Real-time throughput across all switch channels.</CardDescription>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/transactions')} className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-bold rounded-xl">
-                    View All <ChevronRight className="ml-1 h-4 w-4" />
+                <Button variant="ghost" size="sm" onClick={() => navigate('/transactions')} className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-black text-[10px] uppercase tracking-widest rounded-xl">
+                    Full History <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               </CardHeader>
               <CardContent className="px-8 pb-8">
@@ -164,19 +175,22 @@ const Dashboard: React.FC = () => {
                     [1, 2, 3, 4, 5].map(i => <div key={i} className="py-4 border-b border-slate-50"><Skeleton className="h-14 w-full rounded-2xl" /></div>)
                   ) : recentTransactions?.length > 0 ? (
                     recentTransactions.map((txn: any) => (
-                      <div key={txn.id} className="group flex items-center justify-between py-4 border-b border-slate-50 last:border-0 hover:bg-slate-50/50 -mx-4 px-4 rounded-2xl transition-colors cursor-pointer">
+                      <div key={txn.id} className="group flex items-center justify-between py-5 border-b border-slate-50 last:border-0 hover:bg-slate-50/50 -mx-4 px-4 rounded-2xl transition-colors cursor-pointer">
                         <div className="flex items-center gap-5">
-                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${txn.transaction_type === 'TRANSFER' ? 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white'}`}>
-                            {txn.transaction_type === 'TRANSFER' ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownLeft className="h-5 w-5" />}
+                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-inner ${txn.transaction_type === 'TRANSFER' ? 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white'}`}>
+                            {txn.transaction_type === 'TRANSFER' ? <ArrowUpRight className="h-6 w-6" /> : <ArrowDownLeft className="h-6 w-6" />}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900 text-sm">{txn.narration || 'Banking Transaction'}</p>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{format(new Date(txn.initiated_at), 'MMM dd • HH:mm')}</p>
+                            <p className="font-black text-slate-900 text-sm tracking-tight">{txn.narration || 'Switch Internal'}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="outline" className="text-[8px] font-black tracking-tighter border-slate-200 text-slate-400">{txn.channel || 'SYSTEM'}</Badge>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{format(new Date(txn.initiated_at), 'MMM dd • HH:mm')}</p>
+                            </div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-black text-slate-900">₦{parseFloat(txn.amount).toLocaleString()}</p>
-                          <Badge className={`mt-1 border shadow-none text-[9px] font-black uppercase tracking-widest ${getStatusColor(txn.status)}`}>
+                          <p className="font-black text-slate-900 text-lg tracking-tighter">₦{parseFloat(txn.amount).toLocaleString()}</p>
+                          <Badge className={`mt-1 border-none shadow-none text-[8px] font-black uppercase tracking-widest px-2 py-0.5 ${getStatusColor(txn.status)}`}>
                             {txn.status}
                           </Badge>
                         </div>
@@ -187,18 +201,17 @@ const Dashboard: React.FC = () => {
                         <div className="bg-slate-50 p-6 rounded-full mb-4">
                             <Activity className="h-10 w-10 text-slate-300" />
                         </div>
-                        <p className="text-slate-500 font-bold">No recent transactions</p>
-                        <p className="text-xs text-slate-400 mt-1">Start transacting to see activity here.</p>
+                        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No Stream Activity</p>
                     </div>
                   )}
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-none ring-1 ring-slate-200/60 shadow-sm overflow-hidden rounded-3xl bg-white">
+            <Card className="border-none ring-1 ring-slate-200/60 shadow-sm overflow-hidden rounded-[32px] bg-white">
                 <CardHeader className="px-8 pt-8">
-                  <CardTitle className="text-xl font-black text-slate-900 flex items-center gap-2"><TrendingUp className="h-6 w-6 text-indigo-600" /> Platform Throughput</CardTitle>
-                  <CardDescription className="text-slate-500 font-medium">Automated vs Manual task execution trend</CardDescription>
+                  <CardTitle className="text-xl font-black text-slate-900 italic tracking-tighter flex items-center gap-3"><TrendingUp className="h-6 w-6 text-indigo-600" /> THROUGHPUT TREND</CardTitle>
+                  <CardDescription className="text-slate-500 font-medium">Daily automated transaction volume velocity.</CardDescription>
                 </CardHeader>
                 <CardContent className="px-8 pb-8 pt-4">
                   <div className="h-[250px] w-full">
@@ -211,8 +224,8 @@ const Dashboard: React.FC = () => {
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#94a3b8'}} />
-                        <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#94a3b8'}} />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8', fontWeight: 'bold'}} />
+                        <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8', fontWeight: 'bold'}} />
                         <Tooltip
                             contentStyle={{ backgroundColor: '#fff', borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
                         />
@@ -244,36 +257,37 @@ const Dashboard: React.FC = () => {
                 </Card>
             )}
 
-            <Card className="border-none shadow-xl ring-1 ring-indigo-500/20 bg-gradient-to-br from-indigo-600 to-blue-800 text-white rounded-3xl overflow-hidden relative">
-                <div className="absolute top-0 right-0 p-8 opacity-10">
-                    <Brain className="h-32 w-32" />
+            <Card className="border-none shadow-xl ring-1 ring-indigo-500/20 bg-slate-950 text-white rounded-[32px] overflow-hidden relative group">
+                <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
+                    <Brain className="h-32 w-32 text-indigo-400" />
                 </div>
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
                 <CardHeader className="relative z-10 pt-8 px-8">
-                    <div className="bg-white/20 w-10 h-10 rounded-xl flex items-center justify-center mb-2">
-                        <Sparkles className="h-5 w-5 text-indigo-100" />
+                    <div className="bg-white/10 backdrop-blur-md w-12 h-12 rounded-2xl flex items-center justify-center mb-4">
+                        <Sparkles className="h-6 w-6 text-indigo-400" />
                     </div>
-                    <CardTitle className="text-xl font-black">AI Vault Guard</CardTitle>
-                    <CardDescription className="text-indigo-100 font-medium opacity-80">Real-time security analysis.</CardDescription>
+                    <CardTitle className="text-2xl font-black italic tracking-tighter">AI VAULT GUARD</CardTitle>
+                    <CardDescription className="text-slate-400 font-medium mt-1">Surveillance Core is Online.</CardDescription>
                 </CardHeader>
                 <CardContent className="relative z-10 px-8 pb-8">
                     <div className="space-y-4">
-                        <div className="p-4 bg-white/10 rounded-2xl border border-white/10 backdrop-blur-sm">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-200">System Status</p>
-                            <div className="flex items-center gap-2 mt-1">
-                                <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                                <p className="text-sm font-bold">Secure & Compliant</p>
+                        <div className="p-5 bg-white/5 rounded-2xl border border-white/5 backdrop-blur-md">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300 mb-2">Integrity Status</p>
+                            <div className="flex items-center gap-3">
+                                <ShieldCheck className="h-5 w-5 text-emerald-400" />
+                                <p className="text-sm font-black italic">Fully Compliant</p>
                             </div>
                         </div>
-                        <Button variant="outline" className="w-full bg-white text-indigo-900 border-none font-black rounded-2xl h-12 hover:bg-indigo-50 transition-all active:scale-95" onClick={() => navigate('/fraud-shield')}>
-                            Open Fraud Shield
+                        <Button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white border-none font-black text-[10px] uppercase tracking-widest h-14 rounded-2xl shadow-xl shadow-indigo-500/20 transition-all active:scale-95" onClick={() => navigate('/fraud-shield')}>
+                            Launch Risk Control
                         </Button>
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-3xl bg-white overflow-hidden">
+            <Card className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-[32px] bg-white overflow-hidden">
               <CardHeader className="px-8 pt-8">
-                <CardTitle className="text-lg font-black text-slate-900">Quick Actions</CardTitle>
+                <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400">Tactical Links</CardTitle>
               </CardHeader>
               <CardContent className="px-4 pb-8">
                 <div className="grid grid-cols-2 gap-2">
@@ -281,32 +295,32 @@ const Dashboard: React.FC = () => {
                         { label: 'Issue Card', icon: CreditCard, color: 'emerald', path: '/card-center' },
                         { label: 'Add Agent', icon: Users, color: 'blue', path: '/agent-banking' },
                         { label: 'FX Swap', icon: TrendingUp, color: 'orange', path: '/fx-global' },
-                        { label: 'Bills', icon: Zap, color: 'indigo', path: '/bills' },
+                        { label: 'Bills Hub', icon: Zap, color: 'indigo', path: '/bills' },
                     ].map((act, i) => (
-                        <button key={i} onClick={() => navigate(act.path)} className="flex flex-col items-center gap-3 p-4 rounded-2xl hover:bg-slate-50 transition-all group active:scale-95">
-                            <div className={`w-10 h-10 bg-${act.color}-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                <act.icon className={`h-5 w-5 text-${act.color}-600`} />
+                        <button key={i} onClick={() => navigate(act.path)} className="flex flex-col items-center gap-4 p-5 rounded-2xl hover:bg-slate-50 transition-all group active:scale-95">
+                            <div className={`w-12 h-12 bg-${act.color}-50 rounded-2xl flex items-center justify-center group-hover:bg-${act.color}-600 group-hover:text-white transition-all duration-300 shadow-inner`}>
+                                <act.icon className="h-6 w-6" />
                             </div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">{act.label}</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 group-hover:text-slate-900 transition-colors">{act.label}</span>
                         </button>
                     ))}
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-3xl bg-white overflow-hidden">
+            <Card className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-[32px] bg-white overflow-hidden">
                 <CardHeader className="px-8 pt-8">
-                    <CardTitle className="text-lg font-black text-slate-900">System Logs</CardTitle>
+                    <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400">System Trace</CardTitle>
                 </CardHeader>
                 <CardContent className="px-8 pb-8">
-                    <div className="space-y-4">
-                        <div className="flex gap-3">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                            <p className="text-[11px] text-slate-600 leading-relaxed font-medium">Interest accrual batch completed for 1,240 accounts at 12:00 AM.</p>
+                    <div className="space-y-6">
+                        <div className="flex gap-4">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0 shadow-sm" />
+                            <p className="text-[11px] text-slate-500 leading-relaxed font-medium">Interest accrual batch completed for 1,240 accounts at 12:00 AM.</p>
                         </div>
-                        <div className="flex gap-3">
-                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-                            <p className="text-[11px] text-slate-600 leading-relaxed font-medium">New Agent [WZY-AG-4592] verified and activated in Ikeja, Lagos.</p>
+                        <div className="flex gap-4">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0 shadow-sm" />
+                            <p className="text-[11px] text-slate-500 leading-relaxed font-medium">New Agent [WZY-AG-4592] verified and activated in Ikeja, Lagos.</p>
                         </div>
                     </div>
                 </CardContent>
