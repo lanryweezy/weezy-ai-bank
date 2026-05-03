@@ -45,6 +45,11 @@ const LoanManagement: React.FC = () => {
     queryFn: () => apiClient<LoanProduct[]>('/loans/products'),
   });
 
+  const { data: loanAccounts, isLoading: loadingLoans } = useQuery({
+    queryKey: ['loanAccounts'],
+    queryFn: () => apiClient<any[]>('/loans/accounts'),
+  });
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
@@ -99,15 +104,21 @@ const LoanManagement: React.FC = () => {
           ))}
         </TabsList>
 
-        <TabsContent value="portfolio" className="mt-0 space-y-8">
+        <TabsContent value="portfolio" className="mt-0 space-y-10">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-10">
+              {/* Concentration Risk */}
               <Card className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-[32px] bg-white overflow-hidden">
-                <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
-                  <CardTitle className="text-xl font-black text-slate-900 italic tracking-tighter flex items-center gap-3">
-                    <TrendingUp className="h-5 w-5 text-indigo-600" /> CONCENTRATION RISK
-                  </CardTitle>
-                  <CardDescription className="font-medium mt-1">Asset distribution by standardized credit sector.</CardDescription>
+                <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8 flex flex-row items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-indigo-50 p-3 rounded-2xl text-indigo-600">
+                      <TrendingUp className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-black text-slate-900 italic tracking-tighter uppercase">Concentration Risk</CardTitle>
+                      <CardDescription className="font-medium mt-1">Asset distribution by standardized credit sector.</CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-10 space-y-10">
                   {[
@@ -128,6 +139,55 @@ const LoanManagement: React.FC = () => {
                   ))}
                 </CardContent>
               </Card>
+
+              {/* Live Asset Roster */}
+              <div className="space-y-6">
+                <div className="flex justify-between items-center px-1">
+                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Live Asset Roster</h3>
+                    <Button variant="ghost" size="sm" className="text-indigo-600 font-black text-[10px] uppercase tracking-widest hover:bg-indigo-50">
+                        View Delinquency Map <ChevronRight className="ml-1 h-3 w-3" />
+                    </Button>
+                </div>
+                <div className="space-y-4">
+                    {loadingLoans ? (
+                        [1,2,3].map(i => <Skeleton key={i} className="h-24 w-full rounded-[28px]" />)
+                    ) : loanAccounts?.length > 0 ? (
+                        loanAccounts.map((loan, i) => (
+                            <Card key={loan.id} className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-[28px] bg-white hover:shadow-xl transition-all duration-500 group overflow-hidden">
+                                <div className="p-6 flex items-center justify-between">
+                                    <div className="flex items-center gap-6">
+                                        <div className="p-4 rounded-[20px] bg-slate-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                            <FileText className="h-6 w-6" />
+                                        </div>
+                                        <div>
+                                            <p className="font-black text-slate-900 text-sm tracking-tight">{loan.customer_name || 'Loan Client'}</p>
+                                            <div className="flex items-center gap-3 mt-1">
+                                                <Badge variant="outline" className="text-[8px] font-black tracking-widest border-slate-200 text-slate-400">{loan.loan_account_number}</Badge>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{loan.product_name}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-10">
+                                        <div className="text-right">
+                                            <p className="text-sm font-black text-slate-900 tracking-tighter italic">₦{parseFloat(loan.principal_outstanding).toLocaleString()}</p>
+                                            <Badge className={`mt-1 border-none text-[8px] font-black uppercase tracking-widest ${loan.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                                                {loan.status}
+                                            </Badge>
+                                        </div>
+                                        <Button variant="ghost" size="icon" className="h-10 w-10 text-slate-300 hover:text-indigo-600 rounded-xl">
+                                            <ChevronRight className="h-5 w-5" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </Card>
+                        ))
+                    ) : (
+                        <div className="py-20 text-center border-2 border-dashed border-slate-50 rounded-[32px] bg-slate-50/30">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No Active Loan Accounts</p>
+                        </div>
+                    )}
+                </div>
+              </div>
             </div>
 
             <div className="space-y-8">

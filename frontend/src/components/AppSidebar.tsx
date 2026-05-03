@@ -113,6 +113,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const userRole = getUserRole();
   const [user, setUser] = useState<any>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -137,34 +138,34 @@ export function AppSidebar() {
   ];
 
   return (
-    <Sidebar className="w-64 border-r border-slate-200 bg-white">
-      <SidebarHeader className="p-6">
-        <div className="flex items-center gap-3">
-          <div className="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-200">
-            <Building2 className="h-6 w-6 text-white" />
+    <Sidebar className="w-72 border-r border-slate-200 bg-white select-none">
+      <SidebarHeader className="p-8">
+        <div className="flex items-center gap-4">
+          <div className="bg-indigo-600 p-2.5 rounded-[18px] shadow-2xl shadow-indigo-200 rotate-3 group-hover:rotate-0 transition-transform duration-500">
+            <Building2 className="h-7 w-7 text-white" />
           </div>
           <div>
-            <span className="text-xl font-black text-slate-900 tracking-tighter italic">WEEZY</span>
-            <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest leading-none">AI BANKING</p>
+            <span className="text-2xl font-black text-slate-900 tracking-tighter italic">WEEZY</span>
+            <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em] leading-none mt-1">Cognitive Bank</p>
           </div>
         </div>
       </SidebarHeader>
       
-      <SidebarContent className="px-3">
+      <SidebarContent className="px-4 custom-scrollbar">
         <SidebarGroup>
-          <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Main</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-4 mt-2">Core Cockpit</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {navigation.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <SidebarMenuItem key={item.name}>
-                    <SidebarMenuButton asChild isActive={isActive} className={`rounded-xl transition-all duration-300 ${item.highlight ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-200 hover:bg-indigo-700 relative overflow-hidden group' : ''}`}>
-                      <Link to={item.href} className="flex items-center py-2 px-3">
+                    <SidebarMenuButton asChild isActive={isActive} className={`rounded-2xl transition-all duration-300 h-12 ${item.highlight ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100 hover:bg-indigo-700 relative overflow-hidden group' : 'hover:bg-slate-50'}`}>
+                      <Link to={item.href} className="flex items-center py-2 px-4">
                         {item.highlight && <div className="absolute inset-0 shimmer opacity-20 pointer-events-none" />}
-                        <item.icon className={`mr-3 h-5 w-5 ${isActive || item.highlight ? 'text-white' : 'text-slate-400 group-hover:text-indigo-600'}`} />
-                        <span className={`text-sm font-semibold ${item.highlight ? 'text-white' : ''}`}>{item.name}</span>
-                        {item.highlight && <Sparkles className="ml-auto h-3 w-3 text-indigo-200 animate-pulse" />}
+                        <item.icon className={`mr-4 h-5 w-5 ${isActive || item.highlight ? 'text-white' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                        <span className={`text-sm font-black uppercase tracking-widest ${item.highlight ? 'text-white' : 'text-slate-600'}`}>{item.name}</span>
+                        {item.highlight && <Sparkles className="ml-auto h-3.5 w-3.5 text-indigo-200 animate-pulse" />}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -175,15 +176,15 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-4 mb-2">Retail Banking</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mt-8 mb-4">Retail Corridor</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {retailBanking.map((item) => (
                 <SidebarMenuItem key={item.name}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.href} className="rounded-xl">
-                    <Link to={item.href} className="flex items-center py-2 px-3">
-                      <item.icon className="mr-3 h-5 w-5 text-slate-400 group-hover:text-indigo-600" />
-                      <span className="text-sm font-medium">{item.name}</span>
+                  <SidebarMenuButton asChild isActive={location.pathname === item.href} className="rounded-2xl h-11 hover:bg-slate-50 transition-all group">
+                    <Link to={item.href} className="flex items-center py-2 px-4">
+                      <item.icon className={`mr-4 h-4.5 w-4.5 transition-colors ${location.pathname === item.href ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                      <span className={`text-xs font-bold uppercase tracking-widest ${location.pathname === item.href ? 'text-slate-900' : 'text-slate-500'}`}>{item.name}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -191,17 +192,19 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        
+        {/* ... rest of groups ... */}
 
         <SidebarGroup>
-          <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-4 mb-2">Business</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mt-8 mb-4">Business Core</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {businessBanking.map((item) => (
                 <SidebarMenuItem key={item.name}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.href} className="rounded-xl">
-                    <Link to={item.href} className="flex items-center py-2 px-3">
-                      <item.icon className="mr-3 h-5 w-5 text-slate-400" />
-                      <span className="text-sm font-medium">{item.name}</span>
+                  <SidebarMenuButton asChild isActive={location.pathname === item.href} className="rounded-2xl h-11 hover:bg-slate-50 transition-all group">
+                    <Link to={item.href} className="flex items-center py-2 px-4">
+                      <item.icon className={`mr-4 h-4.5 w-4.5 transition-colors ${location.pathname === item.href ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                      <span className={`text-xs font-bold uppercase tracking-widest ${location.pathname === item.href ? 'text-slate-900' : 'text-slate-500'}`}>{item.name}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -211,15 +214,33 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-4 mb-2">Risk & Trust</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mt-8 mb-4">Trust & Safety</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {riskAndCompliance.map((item) => (
                 <SidebarMenuItem key={item.name}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.href} className="rounded-xl">
-                    <Link to={item.href} className="flex items-center py-2 px-3">
-                      <item.icon className="mr-3 h-5 w-5 text-slate-400" />
-                      <span className="text-sm font-medium">{item.name}</span>
+                  <SidebarMenuButton asChild isActive={location.pathname === item.href} className="rounded-2xl h-11 hover:bg-slate-50 transition-all group">
+                    <Link to={item.href} className="flex items-center py-2 px-4">
+                      <item.icon className={`mr-4 h-4.5 w-4.5 transition-colors ${location.pathname === item.href ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                      <span className={`text-xs font-bold uppercase tracking-widest ${location.pathname === item.href ? 'text-slate-900' : 'text-slate-500'}`}>{item.name}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mt-8 mb-4">Engineering</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-1">
+              {developerTools.map((item) => (
+                <SidebarMenuItem key={item.name}>
+                  <SidebarMenuButton asChild isActive={location.pathname === item.href} className="rounded-2xl h-11 hover:bg-slate-50 transition-all group">
+                    <Link to={item.href} className="flex items-center py-2 px-4">
+                      <item.icon className={`mr-4 h-4.5 w-4.5 transition-colors ${location.pathname === item.href ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                      <span className={`text-xs font-bold uppercase tracking-widest ${location.pathname === item.href ? 'text-slate-900' : 'text-slate-500'}`}>{item.name}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -230,15 +251,15 @@ export function AppSidebar() {
 
         {userRole === 'platform_admin' && (
           <SidebarGroup>
-            <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 mt-4 mb-2">Administration</SidebarGroupLabel>
+            <SidebarGroupLabel className="px-4 text-[10px] font-black uppercase tracking-[0.25em] text-indigo-400 mt-8 mb-4">Master Governance</SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="space-y-1">
                 {adminNavigation.map((item) => (
                   <SidebarMenuItem key={item.name}>
-                    <SidebarMenuButton asChild isActive={location.pathname === item.href} className="rounded-xl">
-                      <Link to={item.href} className="flex items-center py-2 px-3">
-                        <item.icon className="mr-3 h-5 w-5 text-indigo-400" />
-                        <span className="text-sm font-medium text-indigo-900">{item.name}</span>
+                    <SidebarMenuButton asChild isActive={location.pathname === item.href} className="rounded-2xl h-11 hover:bg-indigo-50/50 transition-all group">
+                      <Link to={item.href} className="flex items-center py-2 px-4">
+                        <item.icon className={`mr-4 h-4.5 w-4.5 transition-colors ${location.pathname === item.href ? 'text-indigo-600' : 'text-indigo-400/60 group-hover:text-indigo-600'}`} />
+                        <span className={`text-xs font-black uppercase tracking-widest ${location.pathname === item.href ? 'text-indigo-950' : 'text-indigo-400'}`}>{item.name}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -249,21 +270,31 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-slate-100">
+      <SidebarFooter className="p-6 border-t border-slate-50 bg-slate-50/30">
         {user && (
-          <div className="flex items-center gap-3 p-2 rounded-2xl hover:bg-slate-50 transition-colors group cursor-pointer">
-            <Avatar className="h-9 w-9 border-2 border-indigo-100">
-              <AvatarFallback className="bg-indigo-600 text-white font-bold text-xs">
-                {user.username?.[0].toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 overflow-hidden">
-              <p className="text-sm font-bold text-slate-900 truncate">{user.full_name || user.username}</p>
-              <p className="text-[10px] text-slate-500 uppercase tracking-tighter font-bold">{userRole?.replace('_', ' ') || 'User'}</p>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Core Synchronized</span>
+                </div>
+                <Badge variant="outline" className="text-[8px] h-4 border-slate-200 text-slate-400 font-black">v1.0.4</Badge>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg" onClick={handleLogout}>
-              <LogOut className="h-4 w-4" />
-            </Button>
+
+            <div className="flex items-center gap-4 p-3 rounded-[24px] bg-white ring-1 ring-slate-200/60 shadow-sm hover:shadow-xl transition-all duration-500 group cursor-pointer">
+                <Avatar className="h-10 w-10 border-2 border-indigo-50 shadow-inner">
+                <AvatarFallback className="bg-indigo-600 text-white font-black text-xs">
+                    {user.username?.[0].toUpperCase() || 'U'}
+                </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 overflow-hidden">
+                <p className="text-xs font-black text-slate-900 truncate tracking-tight">{user.full_name || user.username}</p>
+                <p className="text-[9px] text-slate-400 uppercase tracking-tighter font-black mt-0.5">{userRole?.replace('_', ' ') || 'User'}</p>
+                </div>
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all" onClick={handleLogout}>
+                <LogOut className="h-4.5 w-4.5" />
+                </Button>
+            </div>
           </div>
         )}
       </SidebarFooter>

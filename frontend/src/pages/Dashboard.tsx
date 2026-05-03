@@ -310,11 +310,11 @@ const Dashboard: React.FC = () => {
 
             <Card className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-[32px] bg-white overflow-hidden">
                 <CardHeader className="px-8 pt-8">
-                    <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400">System Trace</CardTitle>
+                    <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400">Intelligence Stream</CardTitle>
                 </CardHeader>
                 <CardContent className="px-8 pb-8">
                     <div className="space-y-6">
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 animate-in slide-in-from-right duration-1000">
                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0 shadow-sm" />
                             <p className="text-[11px] text-slate-500 leading-relaxed font-medium">Interest accrual batch completed for 1,240 accounts at 12:00 AM.</p>
                         </div>
@@ -322,9 +322,29 @@ const Dashboard: React.FC = () => {
                             <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0 shadow-sm" />
                             <p className="text-[11px] text-slate-500 leading-relaxed font-medium">New Agent [WZY-AG-4592] verified and activated in Ikeja, Lagos.</p>
                         </div>
+                        <div className="flex gap-4">
+                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0 shadow-sm" />
+                            <p className="text-[11px] text-slate-500 leading-relaxed font-medium">Elevated risk detected on Transaction [WZY-TX-882]. Sent to Risk Shield.</p>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
+
+            <div className="p-8 bg-indigo-50/50 border border-indigo-100 rounded-[40px] relative overflow-hidden group">
+                <RefreshCw className="absolute bottom-[-10px] right-[-10px] h-24 w-24 text-indigo-200/30 -rotate-12 group-hover:rotate-0 transition-transform duration-700" />
+                <h4 className="text-[10px] font-black text-indigo-700 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <Activity className="h-3 w-3" /> System Heartbeat
+                </h4>
+                <div className="space-y-2">
+                    <div className="flex justify-between items-center text-[10px]">
+                        <span className="text-slate-500 font-bold">Ledger Sync</span>
+                        <span className="text-emerald-600 font-black">99.9%</span>
+                    </div>
+                    <div className="w-full bg-white h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-emerald-500 h-full" style={{ width: '99.9%' }} />
+                    </div>
+                </div>
+            </div>
           </div>
         </div>
       </div>

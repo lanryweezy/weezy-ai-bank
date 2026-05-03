@@ -26,8 +26,14 @@ const TransferModal: React.FC<TransferModalProps> = ({ isOpen, onClose, onSucces
   const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
   const [amount, setAmount] = useState('');
-  const [narration, setNarration] = useState('');
+  const [debitAccount, setDebitAccount] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  const { data: myAccounts, isLoading: loadingAccounts } = useQuery<any[]>({
+    queryKey: ['myAccounts'],
+    queryFn: () => apiClient('/corebanking/alm/accounts/me'),
+    enabled: isOpen,
+  });
 
   const { data: banks } = useQuery<Bank[]>({
     queryKey: ['banks'],
@@ -65,8 +71,8 @@ const TransferModal: React.FC<TransferModalProps> = ({ isOpen, onClose, onSucces
   };
 
   const handleTransfer = () => {
-    if (!amount || parseFloat(amount) <= 0) {
-        setError('Please enter a valid amount.');
+    if (!amount || parseFloat(amount) <= 0 || !debitAccount) {
+        setError('Please select a source account and enter a valid amount.');
         return;
     }
     transferMutation.mutate({
@@ -74,11 +80,11 @@ const TransferModal: React.FC<TransferModalProps> = ({ isOpen, onClose, onSucces
       channel: 'MOBILE_APP',
       amount: parseFloat(amount),
       currency: 'NGN',
-      debit_account_number: '9990011223', // Hardcoded for now (User's primary account)
+      debit_account_number: debitAccount,
       credit_account_number: accountNumber,
       credit_account_name: accountName,
       credit_bank_code: bankCode,
-      narration: narration || `Transfer to ${accountName}`
+      narration: narration || `TRF to ${accountName}`
     });
   };
 
@@ -115,9 +121,24 @@ const TransferModal: React.FC<TransferModalProps> = ({ isOpen, onClose, onSucces
         {step === 1 && (
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Select Destination Bank</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Source Account</Label>
+              <Select onValueChange={setDebitAccount} value={debitAccount}>
+                <SelectTrigger className="h-12 rounded-xl">
+                  <SelectValue placeholder="Select account to debit" />
+                </SelectTrigger>
+                <SelectContent>
+                  {myAccounts?.map((acc) => (
+                    <SelectItem key={acc.account_number} value={acc.account_number}>
+                      {acc.account_number} (₦{parseFloat(acc.ledger_balance).toLocaleString()})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Destination Bank</Label>
               <Select onValueChange={setBankCode} value={bankCode}>
-                <SelectTrigger>
+                <SelectTrigger className="h-12 rounded-xl">
                   <SelectValue placeholder="Select a bank" />
                 </SelectTrigger>
                 <SelectContent>
@@ -128,11 +149,12 @@ const TransferModal: React.FC<TransferModalProps> = ({ isOpen, onClose, onSucces
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Account Number</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Beneficiary NUBAN</Label>
               <Input 
                 placeholder="0123456789" 
                 maxLength={10} 
                 value={accountNumber}
+                className="h-12 rounded-xl"
                 onChange={(e) => setAccountNumber(e.target.value)}
               />
             </div>

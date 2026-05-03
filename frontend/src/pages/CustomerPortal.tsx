@@ -32,9 +32,19 @@ import apiClient from '@/services/apiClient';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
+import TransactionDisputeModal from '@/components/TransactionDisputeModal';
+import StatementModal from '@/components/StatementModal';
+
 const WalletPortal = () => {
   const [isTransferring, setIsTransferring] = useState(false);
   const [transferData, setTransferData] = useState({ phone: '', amount: '', narration: '' });
+  const [disputeTxnId, setDisputeTxnId] = useState<string | null>(null);
+  const [showStatement, setShowStatement] = useState(false);
+
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => JSON.parse(localStorage.getItem('user') || '{}'),
+  });
 
   const { data: wallet, isLoading, refetch } = useQuery({
     queryKey: ['myWallet'],
@@ -242,7 +252,15 @@ const WalletPortal = () => {
                                                 </div>
                                                 <div>
                                                     <p className="font-black text-slate-900 text-sm tracking-tight">{t.narration || 'Wallet Movement'}</p>
-                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{format(new Date(t.initiated_at), 'MMM dd, HH:mm')}</p>
+                                                    <div className="flex items-center gap-3 mt-0.5">
+                                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{format(new Date(t.initiated_at), 'MMM dd, HH:mm')}</p>
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); setDisputeTxnId(t.id); }}
+                                                            className="text-[9px] font-black text-rose-400 uppercase tracking-tighter hover:text-rose-600 transition-colors"
+                                                        >
+                                                            Report Issue
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div className="text-right">
@@ -262,7 +280,7 @@ const WalletPortal = () => {
                             </div>
                         </CardContent>
                         <CardFooter className="bg-slate-50/50 p-6 border-t border-slate-100 justify-center">
-                             <Button variant="link" className="text-indigo-600 font-black text-[10px] uppercase tracking-[0.2em] hover:no-underline flex items-center gap-2">
+                             <Button variant="link" onClick={() => setShowStatement(true)} className="text-indigo-600 font-black text-[10px] uppercase tracking-[0.2em] hover:no-underline flex items-center gap-2">
                                 Download Statement <ExternalLink className="h-3 w-3" />
                              </Button>
                         </CardFooter>
@@ -270,6 +288,23 @@ const WalletPortal = () => {
                 )}
             </div>
           </div>
+        )}
+
+        {showStatement && wallet && (
+            <StatementModal 
+                customerName={user?.full_name || 'Valued Customer'} 
+                accountNumber={wallet.nuban_account_number}
+                transactions={recentTransactions || []}
+                balance={wallet.balance}
+                onClose={() => setShowStatement(false)}
+            />
+        )}
+
+        {disputeTxnId && (
+            <TransactionDisputeModal 
+                transactionId={disputeTxnId} 
+                onClose={() => setDisputeTxnId(null)} 
+            />
         )}
       </div>
     </Layout>
