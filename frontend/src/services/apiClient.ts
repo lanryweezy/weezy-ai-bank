@@ -43,16 +43,15 @@ async function apiClient<T = any>(
       
       // Handle specific HTTP status codes
       if (response.status === 401) {
-        // Unauthorized - clear token and redirect to login
         localStorage.removeItem('authToken');
         localStorage.removeItem('userRole');
         window.location.href = '/login';
         return Promise.reject(new Error('Session expired. Please login again.'));
       }
       
-      // Throw an error object that includes the status and the parsed message
       const error: any = new Error(errorData.message || 'API request failed');
       error.status = response.status;
+      error.error_code = errorData.error_code || 'BANKING_ERROR';
       error.data = errorData;
       throw error;
     }

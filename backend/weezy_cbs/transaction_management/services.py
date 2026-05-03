@@ -24,6 +24,7 @@ from weezy_cbs.fees_charges_commission_engine.services import calculate_nigerian
 from weezy_cbs.fraud_shield.services import fraud_shield_service
 from weezy_cbs.messaging_notifications.services import notification_engine
 from weezy_cbs.accounts_ledger_management.models import Account
+from weezy_cbs.core_infrastructure_config_engine.services import AuditLogService
 
 # --- Core Transaction Processing ---
 async def initiate_transaction(db: Session, transaction_in: schemas.TransactionCreateRequest, initiated_by_customer_id: Optional[int] = None) -> models.FinancialTransaction:
@@ -37,9 +38,27 @@ async def initiate_transaction(db: Session, transaction_in: schemas.TransactionC
     fraud_decision = await fraud_shield_service.screen_transaction(db, cust_id, transaction_in.dict())
     
     if fraud_decision["decision"] == "BLOCK":
+        AuditLogService.create_audit_log_entry(
+            db, 
+            action_type="FRAUD_BLOCK", 
+            entity_type="Transaction", 
+            summary=f"Transaction blocked by AI: {fraud_decision['reasoning']}",
+            details_after_json=json.dumps(transaction_in.dict())
+        )
         raise InvalidOperationException(f"Transaction Blocked by Fraud Shield: {fraud_decision['reasoning']}")
 
     txn_id = _generate_transaction_id()
+    
+    # ... rest of the logic ...
+    
+    # --- AUDIT LOG ---
+    AuditLogService.create_audit_log_entry(
+        db,
+        action_type="TRANSACTION_INITIATED",
+        entity_type="Transaction",
+        entity_id=txn_id,
+        summary=f"{transaction_in.transaction_type} of ₦{transaction_in.amount} initiated by customer {cust_id}."
+    )
     
     # Calculate Nigerian Taxes for transactions
     taxes = calculate_nigerian_taxes(transaction_in.amount, decimal.Decimal("0.00")) # Service fee is 0 for now
