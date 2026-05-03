@@ -19,7 +19,16 @@ const currencyIcons: any = {
 
 const FXDomiciliary = () => {
   const [isOpeningAccount, setIsOpeningAccount] = useState(false);
-  const [swapData, setSwapData] = useState({ source: 'NGN', target: 'USD', amount: '' });
+  const [swapData, setSwapData] = useState({ 
+      source_account: '', 
+      target_account: '', 
+      amount: '' 
+  });
+
+  const { data: myAccounts } = useQuery<any[]>({
+    queryKey: ['myAccounts'],
+    queryFn: () => apiClient('/corebanking/alm/accounts/me'),
+  });
 
   const { data: rates, isLoading: loadingRates } = useQuery({
     queryKey: ['fxRates'],
@@ -174,8 +183,37 @@ const FXDomiciliary = () => {
                     <CardDescription className="text-indigo-100 font-medium opacity-80 mt-1 uppercase text-[9px] tracking-widest">Instant Liquidity Bridge</CardDescription>
                 </div>
                 <CardContent className="p-8 space-y-6">
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Debit Account (NGN)</Label>
+                            <select 
+                                className="w-full h-12 px-4 rounded-xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all"
+                                value={swapData.source_account}
+                                onChange={e => setSwapData({...swapData, source_account: e.target.value})}
+                            >
+                                <option value="">Select account...</option>
+                                {myAccounts?.map((acc: any) => (
+                                    <option key={acc.account_number} value={acc.account_number}>{acc.account_number} (₦{parseFloat(acc.ledger_balance).toLocaleString()})</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Credit Account (DOM)</Label>
+                            <select 
+                                className="w-full h-12 px-4 rounded-xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all"
+                                value={swapData.target_account}
+                                onChange={e => setSwapData({...swapData, target_account: e.target.value})}
+                            >
+                                <option value="">Select account...</option>
+                                {domAccounts?.map((acc: any) => (
+                                    <option key={acc.account_number} value={acc.account_number}>{acc.account_number} ({acc.currency})</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
                     <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Source (Sell)</Label>
+                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Amount to Swap (₦)</Label>
                         <div className="relative">
                             <Input value={swapData.amount} onChange={e => setSwapData({...swapData, amount: e.target.value})} placeholder="0.00" className="h-16 rounded-2xl bg-slate-50 border-none px-6 text-xl font-black text-slate-900 shadow-inner" />
                             <Badge className="absolute right-4 top-4 h-8 px-4 bg-white text-slate-900 border border-slate-100 font-black text-[10px]">NGN</Badge>
@@ -189,7 +227,7 @@ const FXDomiciliary = () => {
                     </div>
 
                     <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Target (Receive)</Label>
+                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Target Value (Est.)</Label>
                         <div className="relative">
                             <Input value={swapData.amount ? (parseFloat(swapData.amount) / 1465).toFixed(2) : '0.00'} readOnly className="h-16 rounded-2xl bg-indigo-50/30 border-none px-6 text-xl font-black text-indigo-600 shadow-inner" />
                             <Badge className="absolute right-4 top-4 h-8 px-4 bg-indigo-600 text-white border-none font-black text-[10px]">USD</Badge>
@@ -201,7 +239,7 @@ const FXDomiciliary = () => {
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Exchange Rate</span>
                             <span className="text-xs font-bold text-slate-700 bg-slate-50 px-3 py-1 rounded-lg">1 USD = ₦1,465.00</span>
                         </div>
-                        <Button className="w-full bg-indigo-600 h-16 rounded-[24px] font-black text-sm uppercase tracking-widest shadow-2xl shadow-indigo-100 active:scale-95 transition-all text-white border-none" onClick={() => swapMutation.mutate(swapData)} disabled={swapMutation.isPending || !swapData.amount}>
+                        <Button className="w-full bg-indigo-600 h-16 rounded-[24px] font-black text-sm uppercase tracking-widest shadow-2xl shadow-indigo-100 active:scale-95 transition-all text-white border-none" onClick={() => swapMutation.mutate(swapData)} disabled={swapMutation.isPending || !swapData.amount || !swapData.source_account || !swapData.target_account}>
                             {swapMutation.isPending ? <RefreshCw className="h-5 w-5 animate-spin mr-3 text-white" /> : <ShieldCheck className="h-5 w-5 mr-3 text-white" />} 
                             Execute Swap
                         </Button>

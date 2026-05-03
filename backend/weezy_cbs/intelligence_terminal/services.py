@@ -76,6 +76,10 @@ class IntelligenceTerminalOrchestrator:
         AGENCY & REVENUE:
         - agents: id, business_name, state, terminal_id
         - commission_logs: id, total_fee_collected, agent_amount, status
+
+        FORENSICS & FEEDBACK:
+        - audit_logs: id, action_type, username_performing_action, summary, ip_address, timestamp
+        - transaction_disputes: id, financial_transaction_id, dispute_reason, status (OPEN, RESOLVED)
         """
 
         prompt = f"""

@@ -16,8 +16,13 @@ const FixedDeposits = () => {
   const [formData, setFormData] = useState({
       product_id: 0,
       principal_amount: '',
-      linked_savings_account: '9990011223', // Demo
+      linked_savings_account: '',
       rollover_instruction: 'LIQUIDATE'
+  });
+
+  const { data: myAccounts } = useQuery<any[]>({
+    queryKey: ['myAccounts'],
+    queryFn: () => apiClient('/corebanking/alm/accounts/me'),
   });
 
   const { data: products, isLoading: loadingProducts } = useQuery({
@@ -202,6 +207,21 @@ const FixedDeposits = () => {
                     <CardContent className="p-10 space-y-6">
                         <div className="space-y-4">
                             <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Source Account (Debit)</Label>
+                                <select 
+                                    className="w-full h-14 px-6 rounded-2xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all"
+                                    value={formData.linked_savings_account}
+                                    onChange={e => setFormData({...formData, linked_savings_account: e.target.value})}
+                                >
+                                    <option value="">Select account...</option>
+                                    {myAccounts?.map((acc: any) => (
+                                        <option key={acc.account_number} value={acc.account_number}>
+                                            {acc.account_number} (₦{parseFloat(acc.ledger_balance).toLocaleString()})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Investment Product</Label>
                                 <select 
                                     className="w-full h-14 px-6 rounded-2xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all"
@@ -212,21 +232,23 @@ const FixedDeposits = () => {
                                     {products?.map((p: any) => <option key={p.id} value={p.id}>{p.name} ({p.interest_rate_pa}%)</option>)}
                                 </select>
                             </div>
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Booking Amount (₦)</Label>
-                                <Input placeholder="Min 100,000" className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-black text-indigo-600 text-xl" value={formData.principal_amount} onChange={e => setFormData({...formData, principal_amount: e.target.value})} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Maturity Instruction</Label>
-                                <select 
-                                    className="w-full h-14 px-6 rounded-2xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all"
-                                    value={formData.rollover_instruction}
-                                    onChange={(e) => setFormData({...formData, rollover_instruction: e.target.value})}
-                                >
-                                    <option value="LIQUIDATE">Liquidate to Savings</option>
-                                    <option value="ROLLOVER_PRINCIPAL">Rollover Principal Only</option>
-                                    <option value="ROLLOVER_PRINCIPAL_INTEREST">Rollover Principal + Interest</option>
-                                </select>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Booking Amount (₦)</Label>
+                                    <Input placeholder="Min 100,000" className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-black text-indigo-600 text-xl" value={formData.principal_amount} onChange={e => setFormData({...formData, principal_amount: e.target.value})} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Maturity Instruction</Label>
+                                    <select 
+                                        className="w-full h-14 px-6 rounded-2xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all"
+                                        value={formData.rollover_instruction}
+                                        onChange={(e) => setFormData({...formData, rollover_instruction: e.target.value})}
+                                    >
+                                        <option value="LIQUIDATE">Liquidate to Savings</option>
+                                        <option value="ROLLOVER_PRINCIPAL">Rollover Principal Only</option>
+                                        <option value="ROLLOVER_PRINCIPAL_INTEREST">Rollover Principal + Interest</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </CardContent>

@@ -14,13 +14,18 @@ import { format } from 'date-fns';
 const StandingInstructions = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({
-      source_account_number: '9990011223',
+      source_account_number: '',
       destination_account_number: '',
       destination_bank_code: '999',
       amount: '',
       narration: '',
       frequency: 'MONTHLY',
       start_date: format(new Date(), 'yyyy-MM-dd')
+  });
+
+  const { data: myAccounts } = useQuery<any[]>({
+    queryKey: ['myAccounts'],
+    queryFn: () => apiClient('/corebanking/alm/accounts/me'),
   });
 
   const { data: instructions, isLoading, refetch } = useQuery({
@@ -173,6 +178,21 @@ const StandingInstructions = () => {
                     </CardHeader>
                     <CardContent className="p-10 space-y-6">
                         <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Source Account (Debit)</Label>
+                                <select 
+                                    className="w-full h-12 px-4 rounded-xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all"
+                                    value={formData.source_account_number}
+                                    onChange={e => setFormData({...formData, source_account_number: e.target.value})}
+                                >
+                                    <option value="">Select account...</option>
+                                    {myAccounts?.map((acc: any) => (
+                                        <option key={acc.account_number} value={acc.account_number}>
+                                            {acc.account_number} (₦{parseFloat(acc.ledger_balance).toLocaleString()})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Destination Bank</Label>

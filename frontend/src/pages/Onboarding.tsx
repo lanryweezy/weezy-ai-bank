@@ -18,6 +18,11 @@ const Onboarding = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => JSON.parse(localStorage.getItem('user') || '{}'),
+  });
+
   const { data: status, refetch: refetchStatus } = useQuery({
     queryKey: ['biometricStatus'],
     queryFn: () => apiClient('/biometric/me'),
@@ -56,7 +61,7 @@ const Onboarding = () => {
         setStep(4);
         // Trigger AI Verification
         verifyMutation.mutate({
-            customer_id: 1, // Demo
+            customer_id: user?.id || 1,
             selfie_b64: selfie,
             document_b64: reader.result as string,
             document_type: docType

@@ -10,6 +10,17 @@ import { toast } from 'sonner';
 
 const CardCenter = () => {
   const [showFullDetails, setShowFullDetails] = useState(false);
+  const [isIssuing, setIsIssuing] = useState(false);
+  const [formData, setFormData] = useState({
+      card_type: 'VIRTUAL',
+      card_scheme: 'VERVE',
+      account_id: ''
+  });
+
+  const { data: myAccounts } = useQuery<any[]>({
+    queryKey: ['myAccounts'],
+    queryFn: () => apiClient('/corebanking/alm/accounts/me'),
+  });
 
   const { data: cards, isLoading, refetch } = useQuery({
     queryKey: ['myCards'],
@@ -43,6 +54,18 @@ const CardCenter = () => {
     }
   };
 
+  const handleRequest = () => {
+    if (!formData.account_id) {
+        toast.error('Please select an account to link.');
+        return;
+    }
+    requestCardMutation.mutate({
+        ...formData,
+        account_id: parseInt(formData.account_id),
+        cardholder_name: 'WEEZY PREMIUM CLIENT'
+    });
+  };
+
   if (isLoading) return <Layout><div className="p-8 text-center font-bold text-slate-400">Syncing with Card Switch...</div></Layout>;
 
   return (
@@ -56,19 +79,79 @@ const CardCenter = () => {
             <p className="text-slate-500 font-medium">Provision and manage high-security Verve & Mastercard assets.</p>
           </div>
           <div className="flex gap-3">
-            <Button onClick={() => requestCardMutation.mutate({ 
-                card_type: 'VIRTUAL', 
-                card_scheme: 'VERVE', 
-                cardholder_name: 'WEEZY CUSTOMER',
-                account_id: 1
-              })} 
+            <Button onClick={() => setIsIssuing(true)} 
               className="rounded-2xl h-12 px-6 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-200 font-black text-xs uppercase tracking-widest transition-all active:scale-95 text-white border-none"
-              disabled={requestCardMutation.isPending}
             >
-              <Plus className="mr-2 h-4 w-4" /> Issue Virtual Card
+              <Plus className="mr-2 h-4 w-4" /> Issue New Card
             </Button>
           </div>
         </div>
+
+        {/* ... existing card display ... */}
+
+        {/* Issuance Modal */}
+        {isIssuing && (
+            <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xl z-50 flex items-center justify-center p-6 animate-in fade-in duration-300">
+                <Card className="w-full max-w-md border-none shadow-2xl bg-white rounded-[40px] overflow-hidden">
+                    <CardHeader className="bg-indigo-600 text-white p-10 text-center relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 opacity-20 rotate-12">
+                            <CreditCard className="h-20 w-20" />
+                        </div>
+                        <CardTitle className="text-3xl font-black italic tracking-tighter">CARD ISSUANCE</CardTitle>
+                        <CardDescription className="text-indigo-100 font-medium opacity-80 mt-2 italic uppercase text-[10px] tracking-widest">Secure Asset Provisioning Protocol</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-10 space-y-6">
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Asset Class</Label>
+                                <select 
+                                    className="w-full h-14 px-6 rounded-2xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all"
+                                    value={formData.card_type}
+                                    onChange={e => setFormData({...formData, card_type: e.target.value})}
+                                >
+                                    <option value="VIRTUAL">Virtual (Instant)</option>
+                                    <option value="PHYSICAL">Physical (Standard)</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Network Scheme</Label>
+                                <select 
+                                    className="w-full h-14 px-6 rounded-2xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all"
+                                    value={formData.card_scheme}
+                                    onChange={e => setFormData({...formData, card_scheme: e.target.value})}
+                                >
+                                    <option value="VERVE">Verve (Domestic)</option>
+                                    <option value="MASTERCARD">Mastercard (Global)</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Link to Account</Label>
+                                <select 
+                                    className="w-full h-14 px-6 rounded-2xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all"
+                                    value={formData.account_id}
+                                    onChange={e => setFormData({...formData, account_id: e.target.value})}
+                                >
+                                    <option value="">Select NUBAN...</option>
+                                    {myAccounts?.map((acc: any) => (
+                                        <option key={acc.id} value={acc.id}>{acc.account_number} (₦{parseFloat(acc.ledger_balance).toLocaleString()})</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </CardContent>
+                    <CardFooter className="p-10 pt-0 flex gap-3">
+                        <Button variant="ghost" className="flex-1 h-14 rounded-2xl font-black text-slate-400 uppercase tracking-widest text-[10px]" onClick={() => setIsIssuing(false)}>Abort</Button>
+                        <Button 
+                            className="flex-[2] bg-indigo-600 h-14 rounded-2xl font-black text-white uppercase tracking-widest text-[10px] shadow-xl shadow-indigo-100 border-none active:scale-95 transition-all" 
+                            onClick={handleRequest}
+                            disabled={requestCardMutation.isPending || !formData.account_id}
+                        >
+                            {requestCardMutation.isPending ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : 'Authorize Issuance'}
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
            {/* Card Display */}

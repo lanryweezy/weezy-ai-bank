@@ -23,8 +23,13 @@ const BillsPayment = () => {
   const [selectedBiller, setSelectedBiller] = useState<any>(null);
   const [identifier, setIdentifier] = useState('');
   const [amount, setAmount] = useState('');
-  const [step, setStep] = useState(1); // 1: Biller Select, 2: Details/Validate, 3: Confirm, 4: Success
-  const [validationResult, setValidationResult] = useState<any>(null);
+  const [debitAccount, setDebitAccount] = useState('');
+  const [step, setStep] = useState(1);
+
+  const { data: myAccounts } = useQuery<any[]>({
+    queryKey: ['myAccounts'],
+    queryFn: () => apiClient('/corebanking/alm/accounts/me'),
+  });
 
   const { data: billers, isLoading: loadingBillers } = useQuery({
     queryKey: ['billers', selectedCategory],
@@ -156,6 +161,21 @@ const BillsPayment = () => {
                   </CardHeader>
                   <CardContent className="p-10 space-y-6">
                     <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Debit Account</Label>
+                        <select 
+                            className="w-full h-14 px-6 rounded-2xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all"
+                            value={debitAccount}
+                            onChange={e => setDebitAccount(e.target.value)}
+                        >
+                            <option value="">Select account to debit</option>
+                            {myAccounts?.map((acc: any) => (
+                                <option key={acc.account_number} value={acc.account_number}>
+                                    {acc.account_number} (₦{parseFloat(acc.ledger_balance).toLocaleString()})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
                             {selectedBiller.requires_validation ? 'Smartcard / Meter Reference' : 'Recipient Phone Number'}
                         </Label>
@@ -176,7 +196,7 @@ const BillsPayment = () => {
                             onChange={e => setAmount(e.target.value)}
                         />
                     </div>
-                    <Button className="w-full bg-indigo-600 h-14 rounded-2xl font-black shadow-xl shadow-indigo-100 mt-4 text-white border-none" onClick={handleNext} disabled={validateMutation.isPending}>
+                    <Button className="w-full bg-indigo-600 h-14 rounded-2xl font-black shadow-xl shadow-indigo-100 mt-4 text-white border-none" onClick={handleNext} disabled={validateMutation.isPending || !debitAccount}>
                         {validateMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin mr-3 text-white" /> : null}
                         {selectedBiller.requires_validation ? 'Verify Credential' : 'Continue to Payment'}
                     </Button>
