@@ -135,6 +135,7 @@ export function AppSidebar() {
     { name: 'Staff Management', href: '/admin/agent-templates', icon: SlidersHorizontal },
     { name: 'System Logs', href: '/admin/audit-trail', icon: History },
     { name: 'Workflow Intelligence', href: '/admin/workflow-audit', icon: Brain },
+    { name: 'System Pulse', href: '/admin/health', icon: Activity },
   ];
 
   return (

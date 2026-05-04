@@ -41,6 +41,7 @@ import WorkflowDefinitionEditPage from "./pages/Admin/WorkflowDefinitionEditPage
 import AgentMonitoringPage from "./pages/Admin/AgentMonitoringPage";
 import AuditTrail from "./pages/Admin/AuditTrail";
 import WorkflowAudit from "./pages/Admin/WorkflowAudit";
+import SystemHealth from "./pages/Admin/SystemHealth";
 import EODDashboard from "./pages/EODDashboard";
 
 
@@ -171,6 +172,14 @@ const App = () => (
             element={
               <ProtectedRoute allowedRoles={['platform_admin']}>
                 <AuditTrail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/health"
+            element={
+              <ProtectedRoute allowedRoles={['platform_admin']}>
+                <SystemHealth />
               </ProtectedRoute>
             }
           />

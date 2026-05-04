@@ -37,6 +37,26 @@ const RegulatoryReporting = () => {
       });
   };
 
+  const handleDownload = async (logId: number, fileName: string) => {
+    try {
+        const response = await fetch(`/api/compliance/reports/logs/${logId}/download`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+        });
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${fileName}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+    } catch (err) {
+        toast.error('Download failed');
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
         case 'GENERATED': return <Badge className="bg-emerald-100 text-emerald-700 border-none">GENERATED</Badge>;
@@ -139,7 +159,11 @@ const RegulatoryReporting = () => {
                                     </div>
                                 </div>
                                 {log.status === 'GENERATED' && (
-                                    <Button variant="outline" className="rounded-xl h-11 px-6 border-slate-200 hover:bg-slate-900 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest shadow-sm">
+                                    <Button 
+                                        variant="outline" 
+                                        className="rounded-xl h-11 px-6 border-slate-200 hover:bg-slate-900 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest shadow-sm"
+                                        onClick={() => handleDownload(log.id, `${log.report_name}_${log.reporting_period_end_date}`)}
+                                    >
                                         <Download className="mr-2 h-4 w-4" /> Download
                                     </Button>
                                 )}

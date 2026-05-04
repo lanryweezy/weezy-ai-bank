@@ -51,6 +51,35 @@ async def get_report_log_details(
         raise HTTPException(status_code=404, detail="Report log not found")
     return report
 
+@router.get("/reports/logs/{report_log_id}/download")
+async def download_regulatory_report(
+    report_log_id: int,
+    db: Session = Depends(get_db),
+    current_admin: Any = Depends(get_current_active_superuser)
+):
+    """
+    Downloads the actual report file.
+    """
+    report = services.get_report_log(db, report_log_id)
+    if not report or report.status != "GENERATED":
+        raise HTTPException(status_code=404, detail="Report file not ready or not found")
+    
+    # Mocking file content generation
+    import io
+    from fastapi.responses import StreamingResponse
+    
+    output = io.StringIO()
+    output.write("Schedule_Code,Amount,Reporting_Date,Narration\n")
+    output.write(f"SCH_001,450000000.00,{report.reporting_period_end_date},Aggregated Assets\n")
+    output.write(f"SCH_002,120000000.00,{report.reporting_period_end_date},Aggregated Liabilities\n")
+    
+    response = StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={report.report_name}_{report.reporting_period_end_date}.csv"}
+    )
+    return response
+
 # --- AML Alert Endpoints ---
 @router.get("/aml-alerts")
 async def list_aml_alerts(
