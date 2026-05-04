@@ -5,13 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BookOpen, Plus, ArrowUpRight, ArrowDownLeft, Network, Activity, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { BookOpen, Plus, ArrowUpRight, ArrowDownLeft, Network, Activity, AlertTriangle, ShieldCheck, X, Download, Calendar } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import apiClient from '@/services/apiClient';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 const ChartOfAccounts = () => {
   const [isCreating, setIsCreating] = useState(false);
+  const [selectedGL, setSelectedGL] = useState<any>(null);
+  const [isViewingLedger, setIsViewingLedger] = useState(false);
+  
   const [formData, setFormData] = useState({
       gl_code: '',
       name: '',
@@ -24,6 +28,12 @@ const ChartOfAccounts = () => {
   const { data: coa, isLoading, refetch } = useQuery({
     queryKey: ['chartOfAccounts'],
     queryFn: () => apiClient('/corebanking/gl/coa'),
+  });
+
+  const { data: glHistory, isLoading: loadingHistory } = useQuery({
+    queryKey: ['glHistory', selectedGL?.gl_code],
+    queryFn: () => apiClient(`/corebanking/gl/accounts/${selectedGL?.gl_code}/history`),
+    enabled: !!selectedGL && isViewingLedger,
   });
 
   const createGLMutation = useMutation({
@@ -61,7 +71,11 @@ const ChartOfAccounts = () => {
              {items?.length > 0 ? (
                  <div className="divide-y divide-slate-50">
                     {items.map(item => (
-                        <div key={item.id} className="flex items-center justify-between p-6 hover:bg-slate-50/50 transition-colors group cursor-pointer">
+                        <div 
+                            key={item.id} 
+                            className="flex items-center justify-between p-6 hover:bg-slate-50/50 transition-colors group cursor-pointer"
+                            onClick={() => { setSelectedGL(item); setIsViewingLedger(true); }}
+                        >
                             <div>
                                 <div className="flex items-center gap-3 mb-1">
                                     <p className="font-black text-slate-900 text-sm tracking-tight">{item.name}</p>
@@ -72,8 +86,11 @@ const ChartOfAccounts = () => {
                                     {item.parent_gl_code && <span className="text-[9px] text-slate-400 font-medium">Sub of {item.parent_gl_code}</span>}
                                 </div>
                             </div>
-                            <div className="text-right">
-                                <p className="text-sm font-black text-slate-900 font-mono tracking-widest">₦{parseFloat(item.current_balance).toLocaleString()}</p>
+                            <div className="flex items-center gap-6">
+                                <div className="text-right">
+                                    <p className="text-sm font-black text-slate-900 font-mono tracking-widest">₦{parseFloat(item.current_balance).toLocaleString()}</p>
+                                </div>
+                                <ArrowUpRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-600 transition-colors" />
                             </div>
                         </div>
                     ))}
@@ -195,6 +212,82 @@ const ChartOfAccounts = () => {
                     </CardFooter>
                 </Card>
              </div>
+        {/* GL Ledger Modal */}
+        {isViewingLedger && selectedGL && (
+            <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xl z-50 flex items-center justify-center p-6 animate-in fade-in duration-500">
+                <Card className="w-full max-w-4xl border-none shadow-2xl bg-white rounded-[40px] overflow-hidden flex flex-col max-h-[85vh]">
+                    <div className="bg-white border-b border-slate-100 p-8 flex justify-between items-center sticky top-0 z-10">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-indigo-600 p-2 rounded-xl">
+                                <Activity className="h-6 w-6 text-white" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black text-slate-900 tracking-tighter italic uppercase">{selectedGL.name} LEDGER</h3>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Forensic Activity Log • {selectedGL.gl_code}</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-3">
+                            <Button variant="outline" className="rounded-xl h-10 px-4 border-slate-200 font-black text-[10px] uppercase tracking-widest">
+                                <Download className="mr-2 h-4 w-4" /> Export CSV
+                            </Button>
+                            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-indigo-600 rounded-xl" onClick={() => setIsViewingLedger(false)}>
+                                <X className="h-6 w-6" />
+                            </Button>
+                        </div>
+                    </div>
+
+                    <CardContent className="p-0 overflow-y-auto flex-1 custom-scrollbar">
+                        {loadingHistory ? (
+                            <div className="p-20 text-center text-slate-400 font-bold animate-pulse">Syncing GL movements...</div>
+                        ) : glHistory && glHistory.length > 0 ? (
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 border-b border-slate-100 sticky top-0">
+                                    <tr>
+                                        <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Value Date</th>
+                                        <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Narration</th>
+                                        <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Reference</th>
+                                        <th className="px-8 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Amount (₦)</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50">
+                                    {glHistory.map((entry: any, i: number) => (
+                                        <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                                            <td className="px-8 py-5 text-xs font-bold text-slate-600">
+                                                {format(new Date(entry.transaction_date), 'dd MMM yyyy, HH:mm')}
+                                            </td>
+                                            <td className="px-8 py-5 text-xs font-black text-slate-900 tracking-tight">
+                                                {entry.narration}
+                                            </td>
+                                            <td className="px-8 py-5 text-[10px] font-mono font-bold text-slate-400 uppercase tracking-tighter">
+                                                {entry.financial_transaction_id.slice(-12)}
+                                            </td>
+                                            <td className={`px-8 py-5 text-right text-xs font-black ${entry.entry_type === 'DEBIT' ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                                {entry.entry_type === 'DEBIT' ? '-' : '+'}
+                                                {parseFloat(entry.amount).toLocaleString()}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <div className="py-32 text-center text-slate-400">
+                                <ShieldCheck className="h-12 w-12 text-slate-100 mx-auto mb-4" />
+                                <p className="text-sm font-bold uppercase tracking-widest">No movements recorded for this GL node.</p>
+                            </div>
+                        )}
+                    </CardContent>
+                    
+                    <CardFooter className="bg-slate-50/50 p-8 border-t border-slate-100 flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Ledger synchronized with Core Switch</p>
+                        </div>
+                        <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
+                            Closing Balance: <span className="font-mono ml-2">₦{parseFloat(selectedGL.current_balance).toLocaleString()}</span>
+                        </p>
+                    </CardFooter>
+                </Card>
+            </div>
         )}
       </div>
     </Layout>

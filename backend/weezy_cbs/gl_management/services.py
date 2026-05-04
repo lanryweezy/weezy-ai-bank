@@ -1,7 +1,7 @@
 import logging
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from weezy_cbs.accounts_ledger_management.models import GeneralLedgerAccount, GLTypeEnum, CurrencyEnum
+from weezy_cbs.accounts_ledger_management.models import GeneralLedgerAccount, GLLedgerEntry, GLTypeEnum, CurrencyEnum
 from . import schemas
 
 logger = logging.getLogger(__name__)
@@ -50,5 +50,13 @@ class GLManagementService:
             total_assets=total_assets,
             total_liabilities=total_liabilities
         )
+
+    def get_gl_history(self, db: Session, gl_code: str):
+        gl = db.query(GeneralLedgerAccount).filter(GeneralLedgerAccount.gl_code == gl_code).first()
+        if not gl:
+            raise Exception("GL Account not found")
+        return db.query(GLLedgerEntry).filter(GLLedgerEntry.gl_account_id == gl.id).order_by(GLLedgerEntry.transaction_date.desc()).limit(100).all()
+
+gl_service = GLManagementService()
 
 gl_service = GLManagementService()

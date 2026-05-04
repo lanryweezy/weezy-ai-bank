@@ -28,9 +28,15 @@ async def create_new_gl_account(
     """Creates a new General Ledger account."""
     try:
         gl = gl_service.create_gl_account(db, acc_in)
-        # Ensure enum values are returned as strings if necessary
-        # SQLA Enum often returns the enum member. We might need a small patch depending on Pydantic config.
-        # For safety, pydantic ORM mode usually handles it, but let's test if it crashes.
         return gl
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/accounts/{gl_code}/history")
+async def get_gl_account_history(
+    gl_code: str,
+    db: Session = Depends(get_db),
+    current_admin: Any = Depends(get_current_active_superuser)
+):
+    """Retrieves the transaction history for a specific GL account."""
+    return gl_service.get_gl_history(db, gl_code)

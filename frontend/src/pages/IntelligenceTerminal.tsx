@@ -11,6 +11,8 @@ const IntelligenceTerminal = () => {
     { type: 'text', content: "WEEZY COGNITIVE TERMINAL [Version 1.0.4]\n(c) 2026 Weezy AI Banking Group. All rights reserved.\n\nType 'help' for available commands or ask a data question directly." }
   ]);
   const [input, setInput] = useState('');
+  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,6 +35,8 @@ const IntelligenceTerminal = () => {
       
       const cmd = input.trim();
       setHistory(prev => [...prev, { type: 'command', content: cmd }]);
+      setCommandHistory(prev => [cmd, ...prev]);
+      setHistoryIndex(-1);
       
       if (cmd.toLowerCase() === 'clear') {
           setHistory([]);
@@ -44,6 +48,32 @@ const IntelligenceTerminal = () => {
       setInput('');
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+      if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (historyIndex < commandHistory.length - 1) {
+              const nextIndex = historyIndex + 1;
+              setHistoryIndex(nextIndex);
+              setInput(commandHistory[nextIndex]);
+          }
+      } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (historyIndex > 0) {
+              const nextIndex = historyIndex - 1;
+              setHistoryIndex(nextIndex);
+              setInput(commandHistory[nextIndex]);
+          } else if (historyIndex === 0) {
+              setHistoryIndex(-1);
+              setInput('');
+          }
+      }
+  };
+
+  const copyToClipboard = (text: string) => {
+      navigator.clipboard.writeText(text);
+      toast.success('Copied to clipboard');
+  };
+
   const renderContent = (item: any) => {
       if (item.type === 'command') return <div className="flex gap-2 text-indigo-400 font-mono text-sm"><span className="opacity-50">root@weezy:~$</span> {item.content}</div>;
       if (item.type === 'error') return <div className="text-rose-500 font-mono text-sm flex gap-2"><AlertCircle className="h-4 w-4" /> [FATAL] {item.content}</div>;
@@ -52,11 +82,19 @@ const IntelligenceTerminal = () => {
       if (item.type === 'data') {
           return (
               <div className="space-y-4 py-4 animate-in fade-in zoom-in-95 duration-500">
-                  <div className="bg-slate-900 border border-indigo-500/30 p-4 rounded-xl">
+                  <div className="bg-slate-900 border border-indigo-500/30 p-4 rounded-xl relative group/sql">
                       <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2 flex items-center gap-2">
                           <Cpu className="h-3 w-3" /> AI Generated SQL
                       </p>
                       <code className="text-xs text-slate-400 block break-all">{item.sql}</code>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover/sql:opacity-100 transition-opacity text-indigo-400 hover:bg-indigo-500/10"
+                        onClick={() => copyToClipboard(item.sql)}
+                      >
+                        <Zap className="h-3.5 w-3.5" />
+                      </Button>
                   </div>
                   
                   {item.data?.length > 0 ? (
@@ -152,6 +190,7 @@ const IntelligenceTerminal = () => {
                             placeholder="Type command or question..."
                             value={input}
                             onChange={e => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
                             disabled={executeMutation.isPending}
                         />
                         <div className="flex gap-6 opacity-30">

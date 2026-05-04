@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 
 const TellerOperations = () => {
   const [activeTab, setActiveTab] = useState('DEPOSIT'); // DEPOSIT, WITHDRAWAL, VAULT
+  const [validatedAccount, setValidatedAccount] = useState<any>(null);
   const [formData, setFormData] = useState({
     customer_account_number: '',
     amount: '',
@@ -24,6 +25,22 @@ const TellerOperations = () => {
     queryKey: ['tillStatus'],
     queryFn: () => apiClient('/corebanking/teller/till/status'),
   });
+
+  const validateAccountMutation = useMutation({
+    mutationFn: (nuban: string) => apiClient(`/corebanking/alm/accounts/verify?account_number=${nuban}`),
+    onSuccess: (data) => {
+        setValidatedAccount(data);
+    },
+    onError: () => {
+        setValidatedAccount(null);
+    }
+  });
+
+  const handleAccountBlur = () => {
+    if (formData.customer_account_number.length === 10) {
+        validateAccountMutation.mutate(formData.customer_account_number);
+    }
+  };
 
   const openTillMutation = useMutation({
     mutationFn: () => apiClient('/corebanking/teller/till/open', { method: 'POST' }),
@@ -161,12 +178,34 @@ const TellerOperations = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-3">
                                             <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Customer NUBAN</Label>
-                                            <Input 
-                                                value={formData.customer_account_number}
-                                                onChange={e => setFormData({...formData, customer_account_number: e.target.value})}
-                                                placeholder="e.g. 0011223344" 
-                                                className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-lg" 
-                                            />
+                                            <div className="relative">
+                                                <Input 
+                                                    value={formData.customer_account_number}
+                                                    onChange={e => setFormData({...formData, customer_account_number: e.target.value})}
+                                                    onBlur={handleAccountBlur}
+                                                    placeholder="e.g. 0011223344" 
+                                                    className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-lg" 
+                                                />
+                                                {validateAccountMutation.isPending && (
+                                                    <div className="absolute right-4 top-4 h-6 w-6">
+                                                        <RefreshCw className="h-5 w-5 animate-spin text-indigo-400" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {validatedAccount && (
+                                                <div className="flex items-center gap-3 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                    <div className="bg-indigo-600 p-1.5 rounded-lg">
+                                                        <User className="h-3 w-3 text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-indigo-950 uppercase tracking-tight">{validatedAccount.account_name}</p>
+                                                        <p className="text-[9px] text-indigo-600 font-bold">BAL: ₦{parseFloat(validatedAccount.ledger_balance).toLocaleString()}</p>
+                                                    </div>
+                                                    <div className="ml-auto">
+                                                        <Badge className="bg-emerald-500 text-white border-none text-[8px] font-black uppercase">Verified</Badge>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="space-y-3">
                                             <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Amount (₦)</Label>

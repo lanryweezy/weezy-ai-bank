@@ -146,6 +146,27 @@ class GeneralLedgerAccount(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    gl_entries = relationship("GLLedgerEntry", back_populates="gl_account")
+
+class GLLedgerEntry(Base):
+    __tablename__ = "gl_ledger_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    gl_account_id = Column(Integer, ForeignKey("gl_accounts.id"), nullable=False, index=True)
+    financial_transaction_id = Column(String, index=True, nullable=False)
+    
+    entry_type = Column(SQLAlchemyEnum(TransactionTypeEnum), nullable=False)
+    amount = Column(Numeric(precision=20, scale=2), nullable=False)
+    currency = Column(SQLAlchemyEnum(CurrencyEnum), nullable=False)
+    
+    narration = Column(String(255), nullable=False)
+    transaction_date = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    
+    balance_before = Column(Numeric(precision=20, scale=2), nullable=False)
+    balance_after = Column(Numeric(precision=20, scale=2), nullable=False)
+    
+    gl_account = relationship("GeneralLedgerAccount", back_populates="gl_entries")
+
 # Removed FinancialTransaction model from here, it belongs in transaction_management.
 
 class InterestAccrualLog(Base): # Tracking daily accruals before posting
