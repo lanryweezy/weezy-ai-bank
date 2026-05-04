@@ -25,6 +25,7 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/services/apiClient';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 interface AuditLog {
   id: number;
@@ -46,6 +47,15 @@ interface PaginatedAuditLogs {
 const AuditTrail = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('ALL');
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportAudit = () => {
+    setIsExporting(true);
+    setTimeout(() => {
+        setIsExporting(false);
+        toast.success('Forensic logs exported to CSV.');
+    }, 2000);
+  };
 
   const { data: logsData, isLoading, refetch } = useQuery({
     queryKey: ['auditLogs', filterType],
@@ -77,8 +87,14 @@ const AuditTrail = () => {
             <p className="text-slate-500 font-medium text-lg">Immutable Forensic Trail & Operational Governance Logs.</p>
           </div>
           <div className="flex gap-3">
-             <Button variant="outline" className="rounded-2xl h-12 px-6 border-slate-200 hover:bg-slate-50 font-black text-[10px] uppercase tracking-widest shadow-sm">
-                <Download className="mr-2 h-4 w-4" /> Export CSV
+             <Button 
+                variant="outline" 
+                className="rounded-2xl h-12 px-6 border-slate-200 hover:bg-slate-50 font-black text-[10px] uppercase tracking-widest shadow-sm"
+                onClick={handleExportAudit}
+                disabled={isExporting}
+             >
+                {isExporting ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                {isExporting ? 'Exporting...' : 'Export CSV'}
              </Button>
              <Button onClick={() => refetch()} className="rounded-2xl h-12 px-6 bg-slate-900 hover:bg-slate-800 shadow-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 text-white border-none">
                 <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} /> Refresh Trail

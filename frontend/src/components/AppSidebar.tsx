@@ -41,7 +41,17 @@ import {
   Plane,
   ArrowUpRight,
   TrendingUp,
-  CreditCard as CardIcon
+  CreditCard as CardIcon,
+  User,
+  BookOpen,
+  Briefcase,
+  Gavel,
+  Award,
+  Terminal,
+  ChevronUp,
+  ChevronDown,
+  Scissors,
+  Undo
 } from 'lucide-react';
 import {
   Sidebar,
@@ -57,6 +67,8 @@ import {
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Sparkles } from 'lucide-react';
 
 const navigation = [
   { name: 'Overview', href: '/dashboard', icon: Activity },
@@ -68,6 +80,7 @@ const navigation = [
 
 const retailBanking = [
   { name: 'My Wallet', href: '/portal', icon: Wallet },
+  { name: 'Document Vault', href: '/portal/vault', icon: FileText },
   { name: 'Alerts Hub', href: '/comms-hub', icon: MessageSquare },
   { name: 'Branch & Teller', href: '/teller-ops', icon: Store },
   { name: 'Send Money', href: '/qr-payments', icon: QrCode },
@@ -113,7 +126,6 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const userRole = getUserRole();
   const [user, setUser] = useState<any>(null);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -193,8 +205,6 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        
-        {/* ... rest of groups ... */}
 
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mt-8 mb-4">Business Core</SidebarGroupLabel>

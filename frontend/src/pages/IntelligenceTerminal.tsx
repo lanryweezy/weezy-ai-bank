@@ -2,9 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Terminal, ShieldCheck, Cpu, Database, Activity, Clock, Zap, AlertCircle } from 'lucide-react';
+import { Terminal, ShieldCheck, Cpu, Database, Activity, Clock, Zap, AlertCircle, TrendingUp, ShieldAlert, Globe } from 'lucide-react';
 import apiClient from '@/services/apiClient';
 import { useMutation } from '@tanstack/react-query';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const IntelligenceTerminal = () => {
   const [history, setHistory] = useState<any[]>([
@@ -73,6 +76,13 @@ const IntelligenceTerminal = () => {
       navigator.clipboard.writeText(text);
       toast.success('Copied to clipboard');
   };
+
+  const commandPresets = [
+    { label: "Loan distribution by LGA", icon: TrendingUp },
+    { label: "Recent critical fraud alerts", icon: ShieldAlert },
+    { label: "Chart of Accounts trial balance", icon: Database },
+    { label: "Active agent nodes in Lagos", icon: Globe }
+  ];
 
   const renderContent = (item: any) => {
       if (item.type === 'command') return <div className="flex gap-2 text-indigo-400 font-mono text-sm"><span className="opacity-50">root@weezy:~$</span> {item.content}</div>;
@@ -179,6 +189,20 @@ const IntelligenceTerminal = () => {
                         )}
                         <div ref={scrollRef} />
                     </div>
+                </div>
+
+                <div className="px-8 py-4 bg-slate-900/30 border-t border-slate-900/50 flex flex-wrap gap-3">
+                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest self-center mr-2">Suggestions:</span>
+                    {commandPresets.map((preset, i) => (
+                        <button 
+                            key={i} 
+                            onClick={() => setInput(preset.label)}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-indigo-500/50 text-[10px] font-bold text-slate-400 hover:text-indigo-400 transition-all group"
+                        >
+                            <preset.icon className="h-3 w-3 opacity-50 group-hover:opacity-100" />
+                            {preset.label}
+                        </button>
+                    ))}
                 </div>
 
                 <div className="p-6 bg-slate-900/50 border-t border-slate-800">

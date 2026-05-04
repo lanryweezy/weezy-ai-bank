@@ -18,9 +18,13 @@ At the heart of Weezy is **Weezy Prime**, an autonomous agent powered by Gemini 
 ### 💳 Digital Assets & Switch
 - **NIP Financial Switch**: High-velocity monitoring of inter-bank transfer packets.
 - **Card Vault**: Instant provisioning of Verve (Domestic) and Mastercard (Global) assets.
+- **Merchant QR Protocol**: Dynamic NQR-compliant collection nodes for instant P2B settlement.
 - **FX Domiciliary**: Real-time account-to-account currency swaps with automated mid-market rate fetching.
 
-### 🇳🇬 Nigerian Localization
+### 🏆 Wealth & Document Governance
+- **Fixed Vault**: High-yield term deposits with automated daily accrual and digital maturity instructions.
+- **Certificate Vault**: Immutable storage for bank-issued digital instruments, cryptographically signed by the Prime Core.
+- **Official Forensics**: High-fidelity, printable account statements and transaction receipts with ledger-proof badges.
 - **NUBAN Standards**: Full compliance with CBN account numbering checksums.
 - **Tax Engine**: Automated multi-leg postings for 7.5% VAT and ₦50 Stamp Duty.
 - **SANEF Ready**: Built-in support for agent banking network expansion and commission splits.

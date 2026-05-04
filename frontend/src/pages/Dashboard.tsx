@@ -25,7 +25,11 @@ import {
   ShieldCheck,
   Brain,
   AlertCircle,
-  ShieldAlert
+  ShieldAlert,
+  Command,
+  Zap,
+  Lock,
+  Smartphone
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/services/apiClient';
@@ -98,12 +102,6 @@ const Dashboard: React.FC = () => {
     refetchInterval: 30000,
   });
 
-  const { data: tasks, isLoading: loadingTasks } = useQuery({
-    queryKey: ['taskSummary'],
-    queryFn: () => apiClient('/tasks/me'),
-    refetchInterval: 30000,
-  });
-
   const handleTransferSuccess = () => {
     refetchSummary();
     refetchHistory();
@@ -150,7 +148,7 @@ const Dashboard: React.FC = () => {
           onSuccess={handleTransferSuccess}
         />
 
-        {/* Multi-Currency Account Vault */}
+        {/* Multi-Currency Account Vault Swiper */}
         <div className="space-y-6">
             <div className="flex justify-between items-center px-1">
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -224,6 +222,65 @@ const Dashboard: React.FC = () => {
                     </Card>
                 ))}
             </div>
+        </div>
+
+        {/* Quick Operational Cockpit */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card 
+                className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-[32px] bg-white overflow-hidden group cursor-pointer hover:shadow-2xl transition-all duration-500"
+                onClick={() => {
+                    const event = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, metaKey: true });
+                    window.dispatchEvent(event);
+                }}
+            >
+                <CardContent className="p-8 flex items-center gap-6">
+                    <div className="bg-indigo-50 p-4 rounded-[20px] text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-inner">
+                        <Command className="h-6 w-6" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-black text-slate-900 tracking-tight uppercase italic">Command Center</p>
+                        <div className="flex items-center gap-2 mt-1">
+                             <Badge variant="outline" className="h-5 px-1.5 font-mono text-[9px] border-slate-200 text-slate-400">⌘K</Badge>
+                             <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">To search nodes</span>
+                        </div>
+                    </div>
+                    <Zap className="ml-auto h-5 w-5 text-indigo-200 group-hover:text-indigo-500 transition-colors animate-pulse" />
+                </CardContent>
+            </Card>
+
+            <Card 
+                className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-[32px] bg-white overflow-hidden group cursor-pointer hover:shadow-2xl transition-all duration-500"
+                onClick={() => navigate('/cognitive-core')}
+            >
+                <CardContent className="p-8 flex items-center gap-6">
+                    <div className="bg-purple-50 p-4 rounded-[20px] text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-inner">
+                        <Brain className="h-6 w-6" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-black text-slate-900 tracking-tight uppercase italic">Weezy Prime</p>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">"The AI knows your ledger."</p>
+                    </div>
+                    <Sparkles className="ml-auto h-5 w-5 text-purple-200 group-hover:text-purple-500 transition-colors" />
+                </CardContent>
+            </Card>
+
+            <Card 
+                className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-[32px] bg-white overflow-hidden group cursor-pointer hover:shadow-2xl transition-all duration-500"
+                onClick={() => navigate('/fraud-shield')}
+            >
+                <CardContent className="p-8 flex items-center gap-6">
+                    <div className="bg-rose-50 p-4 rounded-[20px] text-rose-600 group-hover:bg-rose-600 group-hover:text-white transition-all shadow-inner">
+                        <ShieldCheck className="h-6 w-6" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-black text-slate-900 tracking-tight uppercase italic">Fraud Shield</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 flex items-center gap-2">
+                             <Activity className="h-3 w-3 text-emerald-500" /> Perimeter Active
+                        </p>
+                    </div>
+                    <Lock className="ml-auto h-5 w-5 text-rose-200 group-hover:text-rose-500 transition-colors" />
+                </CardContent>
+            </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

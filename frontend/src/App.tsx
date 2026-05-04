@@ -19,6 +19,7 @@ import Security from "./pages/Security";
 import Integrations from "./pages/Integrations";
 import CustomerManagementPage from "./pages/CustomerManagement";
 import CustomerPortal from "./pages/CustomerPortal";
+import DocumentVault from "./pages/DocumentVault";
 import LoanManagementPage from "./pages/LoanManagement";
 import TransactionManagementPage from "./pages/TransactionManagement";
 import AIAgentTemplatesPage from "./pages/AIAgentTemplates";
@@ -149,6 +150,7 @@ const App = () => (
           <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
           <Route path="/customers" element={<ProtectedRoute><CustomerManagementPage /></ProtectedRoute>} />
           <Route path="/portal" element={<ProtectedRoute><CustomerPortal /></ProtectedRoute>} />
+          <Route path="/portal/vault" element={<ProtectedRoute><DocumentVault /></ProtectedRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
           <Route path="/treasury" element={<ProtectedRoute><TreasuryPage /></ProtectedRoute>} />
           <Route path="/open-banking" element={<ProtectedRoute><OpenBankingPage /></ProtectedRoute>} />

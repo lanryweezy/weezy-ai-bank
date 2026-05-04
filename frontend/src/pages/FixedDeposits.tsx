@@ -5,19 +5,26 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PiggyBank, Plus, ArrowUpRight, TrendingUp, Clock, ShieldCheck, RefreshCw, AlertTriangle, Wallet } from 'lucide-react';
+import { PiggyBank, Plus, ArrowUpRight, TrendingUp, Clock, ShieldCheck, RefreshCw, AlertTriangle, Wallet, FileText, Eye } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import apiClient from '@/services/apiClient';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import InvestmentCertificateModal from '@/components/InvestmentCertificateModal';
 
 const FixedDeposits = () => {
   const [isBooking, setIsCreating] = useState(false);
+  const [selectedCertFd, setSelectedCertFd] = useState<any>(null);
   const [formData, setFormData] = useState({
       product_id: 0,
       principal_amount: '',
       linked_savings_account: '',
       rollover_instruction: 'LIQUIDATE'
+  });
+
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => JSON.parse(localStorage.getItem('user') || '{}'),
   });
 
   const { data: myAccounts } = useQuery<any[]>({
@@ -126,11 +133,16 @@ const FixedDeposits = () => {
                                     <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100/60">
                                         <div className="flex items-center gap-3">
                                             <Clock className="h-4 w-4 text-slate-400" />
-                                            <p className="text-[10px] text-slate-500 font-medium">Automatic {fd.rollover_instruction.replace('_', ' ')} on maturity.</p>
+                                            <p className="text-[10px] text-slate-500 font-medium italic">Automatic {fd.rollover_instruction.replace('_', ' ')}</p>
                                         </div>
-                                        <Button variant="ghost" className="h-9 px-4 rounded-xl text-rose-600 font-black text-[9px] uppercase tracking-widest hover:bg-rose-50" onClick={() => liquidateMutation.mutate(fd.id)} disabled={liquidateMutation.isPending}>
-                                            Terminate Early
-                                        </Button>
+                                        <div className="flex gap-2">
+                                            <Button variant="ghost" className="h-9 px-4 rounded-xl text-indigo-600 font-black text-[9px] uppercase tracking-widest hover:bg-indigo-50" onClick={() => setSelectedCertFd(fd)}>
+                                                <Eye className="mr-2 h-3.5 w-3.5" /> Certificate
+                                            </Button>
+                                            <Button variant="ghost" className="h-9 px-4 rounded-xl text-rose-600 font-black text-[9px] uppercase tracking-widest hover:bg-rose-50" onClick={() => liquidateMutation.mutate(fd.id)} disabled={liquidateMutation.isPending}>
+                                                Liquidate
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="bg-indigo-600 md:w-3 flex flex-shrink-0" />
@@ -260,6 +272,14 @@ const FixedDeposits = () => {
                     </CardFooter>
                 </Card>
              </div>
+        )}
+
+        {selectedCertFd && (
+            <InvestmentCertificateModal 
+                fd={selectedCertFd} 
+                customerName={user?.full_name || 'Valued Client'} 
+                onClose={() => setSelectedCertFd(null)} 
+            />
         )}
       </div>
     </Layout>
