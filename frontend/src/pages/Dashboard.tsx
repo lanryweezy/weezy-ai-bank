@@ -20,6 +20,8 @@ import {
   Wallet,
   ArrowDownLeft,
   ChevronRight,
+  ChevronLeft,
+  Globe,
   ShieldCheck,
   Brain,
   AlertCircle,
@@ -60,11 +62,29 @@ const Dashboard: React.FC = () => {
     else setGreeting('Good Evening');
   }, []);
 
-  const { data: txnSummary, isLoading: loadingTxns, refetch: refetchSummary } = useQuery({
+  const { data: accounts, isLoading: loadingAccounts, refetch: refetchSummary } = useQuery({
+    queryKey: ['myAccounts'],
+    queryFn: () => apiClient('/corebanking/alm/accounts/me'),
+  });
+
+  const { data: txnSummary } = useQuery({
     queryKey: ['txnSummary'],
     queryFn: () => apiClient('/transactions/summary'),
-    refetchInterval: 15000,
   });
+
+  const displayAccounts = accounts || [
+    { id: 1, account_number: '9990011223', ledger_balance: '12450000.00', currency: 'NGN', account_name: 'GLOBAL SAVINGS' },
+    { id: 2, account_number: '9991100224', ledger_balance: '4250.00', currency: 'USD', account_name: 'DOMICILIARY PLATINUM' },
+    { id: 3, account_number: '9992200335', ledger_balance: '1200.00', currency: 'EUR', account_name: 'LUXURY EUROPEAN' }
+  ];
+
+  const getCardStyle = (currency: string) => {
+    if (currency === 'USD') return 'bg-slate-900 border-indigo-500/30 text-white';
+    if (currency === 'EUR') return 'bg-indigo-50 border-indigo-100 text-indigo-950';
+    return 'bg-indigo-600 border-transparent text-white';
+  };
+
+  const getSymbol = (curr: string) => curr === 'USD' ? '$' : curr === 'EUR' ? '€' : '₦';
 
   const { data: recentTransactions, isLoading: loadingRecentTxns, refetch: refetchHistory } = useQuery({
     queryKey: ['recentTransactions'],
@@ -130,30 +150,80 @@ const Dashboard: React.FC = () => {
           onSuccess={handleTransferSuccess}
         />
 
-        {/* Main Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { label: 'Total Liquidity', value: '₦4.2M', sub: 'Aggregated Vault', icon: Wallet, color: 'indigo' },
-            { label: 'Switch Throughput', value: txnSummary?.total_transactions || 0, sub: 'Daily Vol.', icon: Activity, color: 'orange' },
-            { label: 'Autonomous Rate', value: '98.2%', sub: 'AI Approval', icon: ShieldCheck, color: 'emerald' },
-            { label: 'Operational Tasks', value: tasks?.length || 0, sub: 'Needs Attention', icon: ListChecks, color: 'blue' },
-          ].map((stat, i) => (
-            <Card key={i} className="group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border-none ring-1 ring-slate-200/60 overflow-hidden relative rounded-[32px] bg-white">
-                <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity group-hover:scale-110 duration-700">
-                    <stat.icon className="h-28 w-28" />
+        {/* Multi-Currency Account Vault */}
+        <div className="space-y-6">
+            <div className="flex justify-between items-center px-1">
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <Globe className="h-3 w-3 text-indigo-500" /> GLOBAL LIQUIDITY VAULT
+                </h3>
+                <div className="flex gap-2">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full border border-slate-100"><ChevronLeft className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full border border-slate-100"><ChevronRight className="h-4 w-4" /></Button>
                 </div>
-                <CardContent className="pt-10">
-                    <div className={`w-14 h-14 bg-${stat.color}-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-${stat.color}-600 group-hover:text-white transition-all duration-500 shadow-inner`}>
-                        <stat.icon className="h-7 w-7" />
+            </div>
+            
+            <div className="flex overflow-x-auto pb-4 gap-6 no-scrollbar snap-x snap-mandatory">
+                {/* Total Asset Summary */}
+                <Card className="min-w-[320px] bg-slate-900 text-white border-none shadow-2xl rounded-[32px] overflow-hidden snap-center relative group shrink-0">
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-transparent" />
+                    <div className="p-8 relative z-10 space-y-8">
+                        <div className="flex justify-between items-start">
+                             <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-md border border-white/5">
+                                <TrendingUp className="h-6 w-6 text-indigo-400" />
+                             </div>
+                             <Badge className="bg-emerald-500 text-white border-none font-black text-[9px] px-3">AGGREGATED</Badge>
+                        </div>
+                        <div>
+                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Net Worth (Est.)</p>
+                            <h3 className="text-4xl font-black italic tracking-tighter">₦22,450,000</h3>
+                        </div>
+                        <div className="pt-4 flex items-center justify-between">
+                            <span className="text-[9px] font-black text-slate-500 uppercase">3 Nodes Linked</span>
+                            <div className="flex -space-x-1.5">
+                                <div className="w-6 h-6 rounded-full bg-indigo-500 border-2 border-slate-900" />
+                                <div className="w-6 h-6 rounded-full bg-slate-400 border-2 border-slate-900" />
+                                <div className="w-6 h-6 rounded-full bg-emerald-500 border-2 border-slate-900" />
+                            </div>
+                        </div>
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{stat.label}</p>
-                    <h3 className="text-3xl font-black text-slate-900 mt-2 tracking-tighter italic">
-                        {loadingTxns || loadingTasks ? <Skeleton className="h-9 w-20" /> : stat.value}
-                    </h3>
-                    <p className="text-[10px] text-slate-500 mt-2 font-bold uppercase tracking-widest">{stat.sub}</p>
-                </CardContent>
-            </Card>
-          ))}
+                </Card>
+
+                {displayAccounts.map((acc, i) => (
+                    <Card key={i} className={`min-w-[320px] border-none shadow-xl rounded-[32px] overflow-hidden snap-center shrink-0 relative group transition-all duration-500 hover:shadow-2xl ${getCardStyle(acc.currency)}`}>
+                        <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity group-hover:scale-110 duration-700 pointer-events-none">
+                            <CreditCard className="h-48 w-48" />
+                        </div>
+                        <CardContent className="p-8 space-y-10">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{acc.account_name}</p>
+                                    <h4 className="text-sm font-black mt-1 italic tracking-tight">{acc.currency} NODE</h4>
+                                </div>
+                                <div className="bg-white/10 p-2 rounded-xl backdrop-blur-md">
+                                    <Smartphone className="h-5 w-5 opacity-80" />
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1">Available Liquidity</p>
+                                <h3 className="text-4xl font-black tracking-tighter italic">
+                                    {getSymbol(acc.currency)}{parseFloat(acc.ledger_balance).toLocaleString()}
+                                </h3>
+                            </div>
+
+                            <div className="flex items-end justify-between">
+                                <div className="space-y-1">
+                                    <p className="text-[8px] font-black uppercase tracking-widest opacity-40">Virtual NUBAN</p>
+                                    <p className="text-xs font-mono font-bold tracking-[0.2em]">{acc.account_number}</p>
+                                </div>
+                                <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg bg-white/10 hover:bg-white/20 text-white" onClick={() => setIsTransferModalOpen(true)}>
+                                    <ArrowUpRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

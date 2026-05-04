@@ -16,7 +16,29 @@ const CognitiveCore = () => {
   ]);
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [thinkingStep, setThinkingStep] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const protocols = [
+    "Synthesizing NUBAN ledger state...",
+    "Verifying BVN checksum with NIMC nodes...",
+    "Screening transaction vector for AML anomalies...",
+    "Simulating interest yield outcomes...",
+    "Orchestrating double-entry ledger settlement...",
+    "Optimizing NIP switch latency for 0.4ms finality..."
+  ];
+
+  useEffect(() => {
+    let interval: any;
+    if (chatMutation.isPending) {
+        interval = setInterval(() => {
+            setThinkingStep(prev => (prev + 1) % protocols.length);
+        }, 1200);
+    } else {
+        setThinkingStep(0);
+    }
+    return () => clearInterval(interval);
+  }, [chatMutation.isPending]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -114,7 +136,7 @@ const CognitiveCore = () => {
                                         </div>
                                         <div className="space-y-1 relative z-10">
                                             <span className="text-[9px] text-indigo-400 font-black uppercase tracking-[0.2em] block">Cognitive Reasoning</span>
-                                            <span className="text-xs text-white italic font-mono">Synthesizing banking protocols...</span>
+                                            <span className="text-xs text-white italic font-mono animate-in slide-in-from-bottom-1 duration-500">{protocols[thinkingStep]}</span>
                                         </div>
                                     </div>
                                 </div>

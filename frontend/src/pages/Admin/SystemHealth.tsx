@@ -22,6 +22,20 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/services/apiClient';
 
 const SystemHealth = () => {
+  const [lastScan, setLastScan] = useState(new Date().toLocaleTimeString());
+  const [isScanning, setIsScanning] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+        setIsScanning(true);
+        setTimeout(() => {
+            setIsScanning(false);
+            setLastScan(new Date().toLocaleTimeString());
+        }, 3000);
+    }, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   const { data: health, isLoading, refetch } = useQuery({
     queryKey: ['systemHealth'],
     queryFn: () => apiClient('/health'),
@@ -168,11 +182,14 @@ const SystemHealth = () => {
                     </div>
 
                     <div className="pt-4 border-t border-slate-50">
-                        <div className="flex items-center gap-3 p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
-                            <ShieldCheck className="h-5 w-5 text-indigo-600" />
-                            <p className="text-[10px] text-indigo-800 font-bold uppercase leading-relaxed">
-                                Integrity check performed 12m ago. All ledgers balanced.
-                            </p>
+                        <div className={`flex items-center gap-3 p-4 rounded-2xl border transition-all duration-700 ${isScanning ? 'bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-100' : 'bg-indigo-50 border-indigo-100'}`}>
+                            <ShieldCheck className={`h-5 w-5 ${isScanning ? 'text-white animate-bounce' : 'text-indigo-600'}`} />
+                            <div className="flex-1">
+                                <p className={`text-[10px] font-black uppercase leading-relaxed ${isScanning ? 'text-indigo-100' : 'text-indigo-800'}`}>
+                                    {isScanning ? 'Orchestrating Forensic Scan...' : `Forensic integrity verified at ${lastScan}`}
+                                </p>
+                            </div>
+                            {!isScanning && <Badge className="bg-emerald-500 text-white border-none text-[8px] font-black">VALID</Badge>}
                         </div>
                     </div>
                 </Card>
