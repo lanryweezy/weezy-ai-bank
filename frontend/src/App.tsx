@@ -74,6 +74,7 @@ import StandingInstructions from "./pages/StandingInstructions";
 import BillsPayment from "./pages/BillsPayment";
 import ComplianceDashboard from "./pages/ComplianceDashboard";
 import RegulatoryReporting from "./pages/RegulatoryReporting";
+import LoanRecovery from "./pages/LoanRecovery";
 import AuditTrail from "./pages/Admin/AuditTrail";
 import MerchantConsole from "./pages/MerchantConsole";
 import LoanRecoveryDashboard from "./pages/LoanRecoveryDashboard";
@@ -128,7 +129,7 @@ const App = () => (
           <Route path="/assets" element={<ProtectedRoute allowedRoles={['platform_admin']}><FixedAssets /></ProtectedRoute>} />
           <Route path="/eod-center" element={<ProtectedRoute allowedRoles={['platform_admin']}><EODDashboard /></ProtectedRoute>} />
           <Route path="/fraud-shield" element={<ProtectedRoute allowedRoles={['platform_admin']}><FraudShieldDashboard /></ProtectedRoute>} />
-          <Route path="/loan-recovery" element={<ProtectedRoute allowedRoles={['platform_admin']}><LoanRecoveryDashboard /></ProtectedRoute>} />
+          <Route path="/loan-recovery" element={<ProtectedRoute allowedRoles={['platform_admin']}><LoanRecovery /></ProtectedRoute>} />
           <Route path="/compliance" element={<ProtectedRoute allowedRoles={['platform_admin']}><ComplianceDashboard /></ProtectedRoute>} />
           <Route path="/regulatory-reporting" element={<ProtectedRoute allowedRoles={['platform_admin']}><RegulatoryReporting /></ProtectedRoute>} />
           <Route path="/ai-templates" element={<ProtectedRoute><AIAgentTemplatesPage /></ProtectedRoute>} />

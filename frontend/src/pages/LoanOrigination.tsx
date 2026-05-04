@@ -17,7 +17,13 @@ const LoanOrigination = () => {
       amount: '',
       tenor_months: '12',
       purpose: '',
-      monthly_income: ''
+      monthly_income: '',
+      disbursement_account_number: ''
+  });
+
+  const { data: myAccounts } = useQuery<any[]>({
+    queryKey: ['myAccounts'],
+    queryFn: () => apiClient('/corebanking/alm/accounts/me'),
   });
 
   const { data: products } = useQuery({
@@ -113,7 +119,24 @@ const LoanOrigination = () => {
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Purpose of Loan</Label>
                                 <Input placeholder="e.g. SME Expansion / Medical Bills" className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-medium" value={formData.purpose} onChange={e => setFormData({...formData, purpose: e.target.value})} />
                             </div>
-                            <Button className="w-full bg-indigo-600 h-16 rounded-[24px] font-black text-sm uppercase tracking-widest shadow-2xl shadow-indigo-100 mt-4 text-white border-none" onClick={() => setStep(2)}>
+                            <div className="space-y-3">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Disbursement NUBAN (Target)</Label>
+                                <select 
+                                    className="w-full h-14 px-6 rounded-2xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all shadow-inner"
+                                    value={formData.disbursement_account_number}
+                                    onChange={e => setFormData({...formData, disbursement_account_number: e.target.value})}
+                                >
+                                    <option value="">Select account for funds...</option>
+                                    {myAccounts?.map((acc: any) => (
+                                        <option key={acc.account_number} value={acc.account_number}>{acc.account_number} (₦{parseFloat(acc.ledger_balance).toLocaleString()})</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <Button 
+                                className="w-full bg-indigo-600 h-16 rounded-[24px] font-black text-sm uppercase tracking-widest shadow-2xl shadow-indigo-100 mt-4 text-white border-none" 
+                                onClick={() => setStep(2)}
+                                disabled={!formData.disbursement_account_number || !formData.amount}
+                            >
                                 Continue to Documentation <ArrowRight className="ml-3 h-5 w-5" />
                             </Button>
                         </CardContent>

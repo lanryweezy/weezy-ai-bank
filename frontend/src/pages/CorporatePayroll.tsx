@@ -12,7 +12,18 @@ import { toast } from 'sonner';
 
 const CorporatePayroll = () => {
   const [isUploading, setIsUploading] = useState(false);
+  const [fundingAccount, setFundingAccount] = useState('');
   const [activeBatchId, setActiveBatchId] = useState<number | null>(null);
+
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => JSON.parse(localStorage.getItem('user') || '{}'),
+  });
+
+  const { data: myAccounts } = useQuery<any[]>({
+    queryKey: ['myAccounts'],
+    queryFn: () => apiClient('/corebanking/alm/accounts/me'),
+  });
 
   const { data: activeBatch, refetch: refetchBatch } = useQuery({
     queryKey: ['payrollBatch', activeBatchId],
@@ -31,17 +42,14 @@ const CorporatePayroll = () => {
     onError: (err: any) => toast.error(err.message || 'Upload failed'),
   });
 
-  const disburseMutation = useMutation({
-    mutationFn: (id: number) => apiClient(`/payroll/${id}/approve`, { method: 'POST' }),
-    onSuccess: () => {
-      toast.success('Disbursement started!');
-      refetchBatch();
-    },
-  });
-
   const handleDemoUpload = () => {
+    if (!fundingAccount) {
+        toast.error('Please select a funding account.');
+        return;
+    }
     const demoData = {
-        corporate_customer_id: 1,
+        corporate_customer_id: user?.id || 1,
+        source_account_number: fundingAccount,
         items: [
             { recipient_name: "John Doe", recipient_account: "0011223344", recipient_bank_code: "058", amount: 150000 },
             { recipient_name: "Jane Smith", recipient_account: "9988776655", recipient_bank_code: "044", amount: 200000 },
@@ -68,18 +76,32 @@ const CorporatePayroll = () => {
 
         {isUploading ? (
           <Card className="max-w-2xl border-none shadow-2xl ring-1 ring-slate-200/60 bg-white rounded-[32px] overflow-hidden mx-auto">
-            <CardHeader className="p-10 text-center">
+            <CardHeader className="p-10 text-center pb-4">
               <div className="bg-indigo-50 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 rotate-3">
                 <FileJson className="h-10 w-10 text-indigo-600" />
               </div>
               <CardTitle className="text-2xl font-black text-slate-900 tracking-tight">Bulk Payment Initiation</CardTitle>
-              <CardDescription className="font-medium px-10">Upload your staff payroll file. Supported formats: .CSV, .XLSX, .JSON</CardDescription>
+              <CardDescription className="font-medium px-10">Select funding account and upload salary instruction file.</CardDescription>
             </CardHeader>
-            <CardContent className="px-10 pb-10">
+            <CardContent className="px-10 pb-10 space-y-8">
+                <div className="space-y-2 max-w-sm mx-auto">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Corporate Funding Account</Label>
+                    <select 
+                        className="w-full h-14 px-6 rounded-2xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all shadow-inner"
+                        value={fundingAccount}
+                        onChange={e => setFundingAccount(e.target.value)}
+                    >
+                        <option value="">Select account...</option>
+                        {myAccounts?.map((acc: any) => (
+                            <option key={acc.account_number} value={acc.account_number}>{acc.account_number} (₦{parseFloat(acc.ledger_balance).toLocaleString()})</option>
+                        ))}
+                    </select>
+                </div>
+                
                 <div className="py-16 text-center border-4 border-dashed border-slate-100 rounded-[32px] bg-slate-50/50 hover:bg-indigo-50/30 hover:border-indigo-100 transition-all cursor-pointer group">
                     <Sparkles className="h-12 w-12 text-slate-200 mx-auto mb-4 group-hover:text-indigo-400 group-hover:scale-110 transition-all" />
                     <p className="text-sm font-bold text-slate-400 group-hover:text-indigo-600 transition-colors">Drag and drop payroll file or click to browse</p>
-                    <Button variant="outline" className="mt-8 rounded-xl border-slate-200 font-black text-[10px] uppercase tracking-widest h-10 px-6 bg-white hover:bg-slate-900 hover:text-white transition-all shadow-sm" onClick={handleDemoUpload} disabled={uploadMutation.isPending}>
+                    <Button variant="outline" className="mt-8 rounded-xl border-slate-200 font-black text-[10px] uppercase tracking-widest h-10 px-6 bg-white hover:bg-slate-900 hover:text-white transition-all shadow-sm" onClick={handleDemoUpload} disabled={uploadMutation.isPending || !fundingAccount}>
                         {uploadMutation.isPending ? 'Processing Engine...' : 'Run Demo Simulation'}
                     </Button>
                 </div>

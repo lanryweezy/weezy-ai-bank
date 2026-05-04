@@ -13,6 +13,7 @@ class PayrollItemCreate(BaseModel):
 
 class PayrollBatchCreate(BaseModel):
     corporate_customer_id: int
+    source_account_number: str
     items: List[PayrollItemCreate]
     currency: str = "NGN"
 
@@ -30,6 +31,7 @@ class PayrollItemResponse(BaseModel):
 class PayrollBatchResponse(BaseModel):
     id: int
     batch_reference: str
+    source_account_number: Optional[str]
     total_amount: decimal.Decimal
     item_count: int
     status: PayrollStatusEnum

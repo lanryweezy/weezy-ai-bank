@@ -5,14 +5,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Hash, Copy, Plus, ArrowDownLeft, Activity, Info, Landmark, ExternalLink, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Hash, Copy, Plus, ArrowDownLeft, Activity, Info, Landmark, ExternalLink, RefreshCw, ShieldCheck, User } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import apiClient from '@/services/apiClient';
 import { toast } from 'sonner';
 
 const VirtualAccounts = () => {
   const [isCreating, setIsCreating] = useState(false);
-  const [vaData, setVaData] = useState({ account_name: '', label: '', parent_account_id: 1 });
+  const [vaData, setVaData] = useState({ account_name: '', label: '', parent_account_id: '' });
+
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => JSON.parse(localStorage.getItem('user') || '{}'),
+  });
+
+  const { data: myAccounts } = useQuery<any[]>({
+    queryKey: ['myAccounts'],
+    queryFn: () => apiClient('/corebanking/alm/accounts/me'),
+  });
 
   const { data: dashboard, isLoading, refetch } = useQuery({
     queryKey: ['vaDashboard'],
@@ -97,11 +107,14 @@ const VirtualAccounts = () => {
                     <ShieldCheck className="h-24 w-24" />
                 </div>
                 <CardHeader className="pb-2 relative z-10">
-                    <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Settlement Vault</CardTitle>
+                    <CardTitle className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Settlement Vault</CardTitle>
                 </CardHeader>
                 <CardContent className="relative z-10">
-                    <div className="text-xl font-mono font-black text-indigo-400 tracking-[0.1em]">9990011223</div>
-                    <p className="text-[10px] text-slate-500 mt-2 font-bold uppercase tracking-tighter">Primary Corporate Float</p>
+                    <div className="flex items-center gap-3">
+                        <User className="h-4 w-4 text-indigo-400" />
+                        <div className="text-xl font-mono font-black text-white tracking-[0.1em]">{myAccounts?.[0]?.account_number || '9990011223'}</div>
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-2 font-bold uppercase tracking-tighter italic">Primary Settlement Node</p>
                 </CardContent>
             </Card>
         </div>
@@ -209,17 +222,26 @@ const VirtualAccounts = () => {
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Merchant Display Name</Label>
-                                <Input placeholder="e.g. ADE'S FASHION STORE" className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold" value={vaData.account_name} onChange={e => setVaData({...vaData, account_name: e.target.value})} />
+                                <Input placeholder="e.g. ADE'S FASHION STORE" className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-lg" value={vaData.account_name} onChange={e => setVaData({...vaData, account_name: e.target.value})} />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Internal Reference Label</Label>
-                                <Input placeholder="e.g. Website Collections" className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold" value={vaData.label} onChange={e => setVaData({...vaData, label: e.target.value})} />
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Settlement Account (Vault)</Label>
+                                <select 
+                                    className="w-full h-14 px-6 rounded-2xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all shadow-inner"
+                                    value={vaData.parent_account_id}
+                                    onChange={e => setVaData({...vaData, parent_account_id: e.target.value})}
+                                >
+                                    <option value="">Select account...</option>
+                                    {myAccounts?.map((acc: any) => (
+                                        <option key={acc.id} value={acc.id}>{acc.account_number} (₦{parseFloat(acc.ledger_balance).toLocaleString()})</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
                         <div className="p-5 bg-indigo-50 rounded-3xl border border-indigo-100 flex gap-4">
                             <Info className="h-6 w-6 text-indigo-600 shrink-0" />
                             <p className="text-[10px] text-indigo-800 leading-relaxed font-medium italic">
-                                Virtual NUBANs are collection-only. All received funds settle to account **9990011223** in real-time.
+                                Virtual NUBANs are collection-only. All received funds settle to your selected vault in real-time.
                             </p>
                         </div>
                     </CardContent>

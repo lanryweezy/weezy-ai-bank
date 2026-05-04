@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Store, UserPlus, MapPin, Wallet, Activity, Search, ShieldCheck, RefreshCw, TrendingUp, Network, Smartphone, Building2 } from 'lucide-react';
+import { Store, UserPlus, MapPin, Wallet, Activity, Search, ShieldCheck, RefreshCw, TrendingUp, Network, Smartphone, Building2, User, CheckCircle2 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import apiClient from '@/services/apiClient';
 import { toast } from 'sonner';
@@ -14,6 +14,9 @@ import { useNavigate } from 'react-router-dom';
 const AgentBankingPage = () => {
   const navigate = useNavigate();
   const [isRegistering, setIsRegistering] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  
   const [formData, setFormData] = useState({
     customer_id: '',
     business_name: '',
@@ -21,6 +24,12 @@ const AgentBankingPage = () => {
     lga: '',
     address: '',
     tier: 'RETAIL_AGENT'
+  });
+
+  const { data: searchResults, isLoading: searching } = useQuery({
+    queryKey: ['customerSearch', customerSearch],
+    queryFn: () => apiClient(`/customer-identity/customers?phone_number=${customerSearch}`),
+    enabled: customerSearch.length >= 10,
   });
 
   const { data: agents, isLoading, refetch } = useQuery({
@@ -66,17 +75,80 @@ const AgentBankingPage = () => {
               </CardTitle>
               <CardDescription className="font-medium mt-2">Register a verified customer as an active bank agent point.</CardDescription>
             </CardHeader>
-            <CardContent className="p-10 space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Customer Profile ID</Label>
-                  <Input placeholder="e.g. 101" className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold" value={formData.customer_id} onChange={e => setFormData({...formData, customer_id: e.target.value})} />
+            <CardContent className="p-10 space-y-8">
+              <div className="space-y-6">
+                <div className="space-y-2 relative group">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Search Verified Customer (Phone)</Label>
+                  <div className="relative">
+                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                    <Input 
+                        placeholder="0813..." 
+                        className="h-16 pl-14 rounded-2xl bg-slate-50 border-none font-bold text-lg shadow-inner" 
+                        value={customerSearch}
+                        onChange={e => setCustomerSearch(e.target.value)}
+                    />
+                  </div>
+                  
+                  {/* Search Results Dropdown */}
+                  {searchResults?.items?.length > 0 && !selectedCustomer && (
+                    <div className="absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-top-2 duration-300">
+                        {searchResults.items.map((c: any) => (
+                            <button 
+                                key={c.id} 
+                                className="w-full p-4 flex items-center justify-between hover:bg-indigo-50 transition-colors border-b border-slate-50 last:border-0"
+                                onClick={() => {
+                                    setSelectedCustomer(c);
+                                    setFormData({...formData, customer_id: c.id.toString(), business_name: `${c.first_name} ${c.last_name} Agency`});
+                                    setCustomerSearch('');
+                                }}
+                            >
+                                <div className="flex items-center gap-4 text-left">
+                                    <div className="bg-indigo-100 p-2 rounded-xl"><User className="h-4 w-4 text-indigo-600" /></div>
+                                    <div>
+                                        <p className="text-sm font-black text-slate-900">{c.first_name} {c.last_name}</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase">{c.phone_number}</p>
+                                    </div>
+                                </div>
+                                <Badge className="bg-emerald-50 text-emerald-600 border-none text-[8px] font-black uppercase">Tier {c.kyc_tier}</Badge>
+                            </button>
+                        ))}
+                    </div>
+                  )}
                 </div>
+
+                {selectedCustomer && (
+                    <div className="p-6 bg-indigo-50 rounded-[28px] border border-indigo-100 flex items-center justify-between animate-in zoom-in-95 duration-500">
+                        <div className="flex items-center gap-6">
+                            <div className="bg-white p-4 rounded-[20px] shadow-sm"><CheckCircle2 className="h-6 w-6 text-emerald-500" /></div>
+                            <div>
+                                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Selected Merchant</p>
+                                <h4 className="text-xl font-black text-indigo-950 italic tracking-tight">{selectedCustomer.first_name} {selectedCustomer.last_name}</h4>
+                            </div>
+                        </div>
+                        <Button variant="ghost" className="text-rose-500 font-black text-[10px] uppercase tracking-widest" onClick={() => setSelectedCustomer(null)}>Change</Button>
+                    </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Trading Name</Label>
                   <Input placeholder="e.g. Ade Ventures" className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold" value={formData.business_name} onChange={e => setFormData({...formData, business_name: e.target.value})} />
                 </div>
+                <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Agency Tier</Label>
+                    <select 
+                        className="w-full h-14 px-6 rounded-2xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all shadow-inner"
+                        value={formData.tier}
+                        onChange={e => setFormData({...formData, tier: e.target.value})}
+                    >
+                        <option value="RETAIL_AGENT">Retail Agent</option>
+                        <option value="SUPER_AGENT">Super Agent</option>
+                        <option value="SOLE_DISTRIBUTOR">Sole Distributor</option>
+                    </select>
+                </div>
               </div>
+
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Operations State</Label>

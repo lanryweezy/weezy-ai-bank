@@ -19,6 +19,7 @@ class PayrollBatch(Base):
     id = Column(Integer, primary_key=True, index=True)
     batch_reference = Column(String(50), unique=True, index=True, nullable=False)
     corporate_customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    source_account_number = Column(String(10), nullable=True) # The account funding this payroll
     
     total_amount = Column(Numeric(precision=18, scale=2), nullable=False)
     item_count = Column(Integer, nullable=False)

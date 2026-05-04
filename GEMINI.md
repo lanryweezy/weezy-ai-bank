@@ -44,11 +44,18 @@ Weezy AI is a fully agentic, AI-orchestrated Core Banking System (CBS) localized
 21. **System Heartbeat (EOD)**: Unified batch lifecycle (Interest, Recurring, Reminders).
 22. **Alerts Hub**: Real-time SMS/Email notification engine with automated fee collection.
 
-## 🇳🇬 Nigerian Localization Standards
+### 🇳🇬 Nigerian Localization Standards
 - **NUBAN**: Official CBN checksum algorithm implemented.
 - **NIP/NQR**: Standardized protocols for instant payments and QR.
 - **SANEF**: Agency banking standards for location and tiering.
 - **Taxes**: Automated ₦50 Stamp Duty & 7.5% VAT multi-leg ledger postings.
 
+### 💎 Masterpiece Features (V1.0.4)
+- **Thinking Stream**: Real-time visualization of AI neural handshaking with system nodes.
+- **ISO-8583 Scanner**: High-velocity screening of message packets for security anomalies.
+- **Global Command Palette**: Instant navigation and node search via ⌘K industrial interface.
+- **Integrity Pulse**: Automated forensic deep-scans of double-entry consistency every 15s.
+
 ---
 **Status**: Industrial Strength • Production Ready • AI Native
+

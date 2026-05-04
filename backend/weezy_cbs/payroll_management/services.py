@@ -32,6 +32,7 @@ class PayrollManagementService:
         db_batch = models.PayrollBatch(
             batch_reference=batch_ref,
             corporate_customer_id=batch_in.corporate_customer_id,
+            source_account_number=batch_in.source_account_number,
             total_amount=total_amt,
             item_count=len(batch_in.items),
             status=models.PayrollStatusEnum.AI_SCANNING
@@ -119,7 +120,7 @@ class PayrollManagementService:
                     channel="CORPORATE_PORTAL",
                     amount=item.amount,
                     currency="NGN",
-                    debit_account_number="0000000000", 
+                    debit_account_number=batch.source_account_number or "0000000000", 
                     credit_account_number=item.recipient_account,
                     credit_bank_code=item.recipient_bank_code,
                     narration=f"Salary - {batch.batch_reference}"
