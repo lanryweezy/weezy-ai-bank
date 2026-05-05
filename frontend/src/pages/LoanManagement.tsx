@@ -1,15 +1,11 @@
-
 import React from 'react';
-import Layout from '@/components/Layout';
-import LoanManagement from '@/components/LoanManagement';
+import AICreditConsole from '@/components/AICreditConsole';
 
 const LoanManagementPage = () => {
   return (
-    <Layout>
-      <div className="p-6">
-        <LoanManagement />
-      </div>
-    </Layout>
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <AICreditConsole />
+    </div>
   );
 };
 

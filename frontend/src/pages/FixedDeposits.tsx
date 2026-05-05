@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PiggyBank, Plus, ArrowUpRight, TrendingUp, Clock, ShieldCheck, RefreshCw, AlertTriangle, Wallet, FileText, Eye } from 'lucide-react';
+import { PiggyBank, Plus, ArrowUpRight, TrendingUp, Clock, ShieldCheck, RefreshCw, AlertTriangle, Wallet, FileText, Eye, Cpu, Zap, Activity, Globe, X } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import apiClient from '@/services/apiClient';
 import { toast } from 'sonner';
@@ -45,7 +44,7 @@ const FixedDeposits = () => {
   const bookFdMutation = useMutation({
     mutationFn: (data: any) => apiClient('/corebanking/investments/fd/book', { method: 'POST', body: JSON.stringify(data) }),
     onSuccess: () => {
-      toast.success('Fixed Deposit booked successfully!');
+      toast.success('Capital secured in Fixed Vault.');
       setIsCreating(false);
       refetchMyFds();
     },
@@ -55,7 +54,7 @@ const FixedDeposits = () => {
   const liquidateMutation = useMutation({
     mutationFn: (id: number) => apiClient(`/corebanking/investments/fd/${id}/liquidate`, { method: 'POST' }),
     onSuccess: () => {
-      toast.success('Early liquidation processed. Funds sent to savings.');
+      toast.success('Early liquidation synchronized.');
       refetchMyFds();
     },
   });
@@ -71,205 +70,209 @@ const FixedDeposits = () => {
       });
   };
 
-  if (loadingProducts) return <Layout><div className="p-10 text-center font-bold text-slate-400">Syncing Investment Core...</div></Layout>;
+  if (loadingProducts) return <div className="p-20 text-center font-black text-slate-500 uppercase tracking-widest animate-pulse">Scanning Yield Protocols...</div>;
 
   return (
-    <Layout>
-      <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="space-y-1">
-            <h1 className="text-4xl font-black text-slate-900 tracking-tighter flex items-center gap-4 italic">
-                FIXED VAULT <div className="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-200"><PiggyBank className="h-6 w-6 text-white" /></div>
+    <div className="space-y-12 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+          <div className="space-y-2">
+            <h1 className="text-5xl font-black text-white tracking-tighter flex items-center gap-4 italic uppercase">
+                Fixed Vault <div className="bg-indigo-600 p-2 rounded-2xl shadow-2xl shadow-indigo-500/20"><PiggyBank className="h-8 w-8 text-white" /></div>
             </h1>
-            <p className="text-slate-500 font-medium">High-Yield Term Deposits & Automated Wealth Accumulation.</p>
+            <p className="text-slate-500 font-medium text-lg uppercase tracking-widest italic flex items-center gap-3">
+                <ShieldCheck className="h-4 w-4 text-emerald-500" /> Authorized High-Yield Provisioning
+            </p>
           </div>
-          <Button onClick={() => setIsCreating(true)} className="rounded-2xl h-12 px-6 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-200 font-black text-xs uppercase tracking-widest transition-all active:scale-95 text-white border-none">
-            <Plus className="mr-2 h-4 w-4" /> Book New Investment
+          <Button onClick={() => setIsCreating(true)} className="rounded-2xl h-14 px-8 bg-indigo-600 hover:bg-indigo-500 shadow-2xl shadow-indigo-500/20 font-black text-xs uppercase tracking-[0.2em] transition-all active:scale-95 text-white border-none">
+            <Plus className="mr-3 h-5 w-5" /> Secure Capital
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
            {/* Active Investments */}
-           <div className="lg:col-span-2 space-y-8">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Current Portfolio</h3>
-              <div className="space-y-6">
+           <div className="lg:col-span-2 space-y-10">
+              <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1 text-white">Asset Portfolio</h3>
+              <div className="space-y-8">
                 {myFds?.length > 0 ? (
                     myFds.map((fd: any) => (
-                        <Card key={fd.id} className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-[32px] bg-white hover:shadow-2xl transition-all duration-500 overflow-hidden group">
+                        <Card key={fd.id} className="obsidian-card border-none hover:-translate-y-1 transition-all duration-700 group overflow-hidden">
                             <div className="flex flex-col md:flex-row">
-                                <div className="p-8 flex-1">
-                                    <div className="flex justify-between items-start mb-8">
-                                        <div>
-                                            <Badge className="bg-indigo-50 text-indigo-700 border-none text-[9px] font-black tracking-widest uppercase mb-2">ACTIVE INVESTMENT</Badge>
-                                            <h4 className="text-2xl font-black text-slate-900 tracking-tight">{fd.fd_account_number}</h4>
+                                <div className="p-10 flex-1">
+                                    <div className="flex justify-between items-start mb-10">
+                                        <div className="space-y-1">
+                                            <Badge className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-4 py-1 font-black text-[9px] uppercase tracking-widest rounded-lg">ACTIVE NODE</Badge>
+                                            <h4 className="text-3xl font-black text-white tracking-tighter italic uppercase">{fd.fd_account_number}</h4>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">Yield Rate</p>
-                                            <div className="bg-emerald-50 px-3 py-1 rounded-lg">
-                                                <p className="text-sm font-black text-emerald-600">{fd.interest_rate_applied}% P.A.</p>
+                                            <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1 italic">Sovereign Yield</p>
+                                            <div className="bg-emerald-500/10 px-4 py-1.5 rounded-xl border border-emerald-500/20">
+                                                <p className="text-lg font-black text-emerald-400 tracking-tighter">{fd.interest_rate_applied}% P.A.</p>
                                             </div>
                                         </div>
                                     </div>
                                     
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-                                        <div>
-                                            <p className="text-[8px] text-slate-400 uppercase font-black tracking-widest mb-1">Principal</p>
-                                            <p className="text-lg font-black text-slate-900">₦{parseFloat(fd.principal_amount).toLocaleString()}</p>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+                                        <div className="space-y-1">
+                                            <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest italic opacity-60">Principal</p>
+                                            <p className="text-xl font-black text-white tracking-tighter">₦{parseFloat(fd.principal_amount).toLocaleString()}</p>
                                         </div>
-                                        <div>
-                                            <p className="text-[8px] text-slate-400 uppercase font-black tracking-widest mb-1">Accrued</p>
-                                            <p className="text-lg font-black text-indigo-600">+₦{parseFloat(fd.accrued_interest).toLocaleString()}</p>
+                                        <div className="space-y-1">
+                                            <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest italic opacity-60">Accrued</p>
+                                            <p className="text-xl font-black text-indigo-400 tracking-tighter">+₦{parseFloat(fd.accrued_interest).toLocaleString()}</p>
                                         </div>
-                                        <div>
-                                            <p className="text-[8px] text-slate-400 uppercase font-black tracking-widest mb-1">Booked</p>
-                                            <p className="text-sm font-bold text-slate-700">{format(new Date(fd.booking_date), 'MMM dd, yyyy')}</p>
+                                        <div className="space-y-1">
+                                            <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest italic opacity-60">Booked</p>
+                                            <p className="text-sm font-black text-slate-300 uppercase tracking-tight">{format(new Date(fd.booking_date), 'MMM dd, yyyy')}</p>
                                         </div>
-                                        <div>
-                                            <p className="text-[8px] text-slate-400 uppercase font-black tracking-widest mb-1">Maturity</p>
-                                            <p className="text-sm font-bold text-slate-700">{format(new Date(fd.maturity_date), 'MMM dd, yyyy')}</p>
+                                        <div className="space-y-1">
+                                            <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest italic opacity-60">Maturity</p>
+                                            <p className="text-sm font-black text-slate-300 uppercase tracking-tight">{format(new Date(fd.maturity_date), 'MMM dd, yyyy')}</p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100/60">
-                                        <div className="flex items-center gap-3">
-                                            <Clock className="h-4 w-4 text-slate-400" />
-                                            <p className="text-[10px] text-slate-500 font-medium italic">Automatic {fd.rollover_instruction.replace('_', ' ')}</p>
+                                    <div className="flex items-center justify-between p-6 glass-dark rounded-[32px] border border-white/5 shadow-2xl">
+                                        <div className="flex items-center gap-4">
+                                            <Clock className="h-5 w-5 text-slate-600" />
+                                            <p className="text-[11px] text-slate-500 font-black uppercase tracking-widest italic">Instruction: {fd.rollover_instruction.replace('_', ' ')}</p>
                                         </div>
-                                        <div className="flex gap-2">
-                                            <Button variant="ghost" className="h-9 px-4 rounded-xl text-indigo-600 font-black text-[9px] uppercase tracking-widest hover:bg-indigo-50" onClick={() => setSelectedCertFd(fd)}>
-                                                <Eye className="mr-2 h-3.5 w-3.5" /> Certificate
+                                        <div className="flex gap-4">
+                                            <Button variant="ghost" className="h-10 px-6 rounded-xl text-indigo-400 font-black text-[10px] uppercase tracking-widest border border-white/5 hover:bg-white/5 transition-all" onClick={() => setSelectedCertFd(fd)}>
+                                                <Eye className="mr-3 h-4 w-4" /> Certificate
                                             </Button>
-                                            <Button variant="ghost" className="h-9 px-4 rounded-xl text-rose-600 font-black text-[9px] uppercase tracking-widest hover:bg-rose-50" onClick={() => liquidateMutation.mutate(fd.id)} disabled={liquidateMutation.isPending}>
+                                            <Button variant="ghost" className="h-10 px-6 rounded-xl text-red-400 font-black text-[10px] uppercase tracking-widest border border-white/5 hover:bg-red-500/10 transition-all" onClick={() => liquidateMutation.mutate(fd.id)} disabled={liquidateMutation.isPending}>
                                                 Liquidate
                                             </Button>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="bg-indigo-600 md:w-3 flex flex-shrink-0" />
+                                <div className="bg-indigo-600 md:w-4 flex flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity" />
                             </div>
                         </Card>
                     ))
                 ) : (
-                    <div className="py-32 text-center border-4 border-dashed border-slate-100 rounded-[40px] bg-slate-50/30">
-                        <div className="bg-white p-8 rounded-[32px] shadow-sm inline-block mb-6 ring-1 ring-slate-100">
-                            <TrendingUp className="h-12 w-12 text-slate-200" />
-                        </div>
-                        <h4 className="text-xl font-black text-slate-900 tracking-tight">No Active Investments</h4>
-                        <p className="text-sm text-slate-400 font-medium mt-2 max-w-xs mx-auto">Lock your idle funds into high-interest fixed deposits to outpace inflation.</p>
+                    <div className="py-48 text-center border-4 border-dashed border-white/5 rounded-[60px] bg-white/[0.01]">
+                        <Activity className="h-20 w-20 text-slate-900 mx-auto mb-8 animate-pulse" />
+                        <h4 className="text-2xl font-black text-slate-700 italic uppercase tracking-tighter">Vault Empty</h4>
+                        <p className="text-sm text-slate-500 font-bold mt-3 uppercase tracking-widest opacity-60 max-w-sm mx-auto">Authorize new capital nodes to outpace inflation.</p>
                     </div>
                 )}
               </div>
            </div>
 
-           {/* Products & Booking Sidebar */}
-           <div className="space-y-8">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Market Opportunities</h3>
-              <div className="space-y-4">
+           {/* Market Sidebar */}
+           <div className="space-y-12">
+              <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1 text-white">Yield Protocols</h3>
+              <div className="space-y-6">
                   {products?.map((prod: any) => (
-                      <Card key={prod.id} className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-[32px] bg-white overflow-hidden group hover:ring-indigo-600/30 transition-all">
-                          <CardContent className="p-6">
-                              <div className="flex justify-between items-center mb-4">
-                                  <div className="bg-indigo-50 p-3 rounded-2xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                                      <TrendingUp className="h-5 w-5" />
+                      <Card key={prod.id} className="obsidian-card border-white/5 overflow-hidden group hover:border-indigo-500/30 transition-all cursor-pointer shadow-2xl">
+                          <CardContent className="p-8">
+                              <div className="flex justify-between items-center mb-6">
+                                  <div className="bg-indigo-500/10 p-4 rounded-2xl border border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-xl">
+                                      <TrendingUp className="h-6 w-6" />
                                   </div>
-                                  <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[10px]">{prod.interest_rate_pa}% P.A.</Badge>
+                                  <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black text-[10px] px-3 tracking-widest rounded-lg">{prod.interest_rate_pa}% P.A.</Badge>
                               </div>
-                              <h5 className="font-black text-slate-900 tracking-tight">{prod.name}</h5>
-                              <div className="flex items-center gap-2 mt-2">
-                                  <Clock className="h-3 w-3 text-slate-400" />
-                                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{prod.tenor_days} DAYS TENOR</p>
+                              <h5 className="text-xl font-black text-white tracking-tighter uppercase italic">{prod.name}</h5>
+                              <div className="flex items-center gap-3 mt-3">
+                                  <Clock className="h-4 w-4 text-slate-600" />
+                                  <p className="text-[11px] text-slate-500 font-black uppercase tracking-widest italic">{prod.tenor_days} DAYS LOCK</p>
                               </div>
-                              <Button variant="ghost" className="w-full mt-6 h-11 rounded-xl border border-slate-100 font-black text-[10px] uppercase tracking-widest group-hover:bg-indigo-600 group-hover:text-white group-hover:border-none transition-all" onClick={() => { setFormData({...formData, product_id: prod.id}); setIsCreating(true); }}>
-                                Invest Now
+                              <Button variant="ghost" className="w-full mt-8 h-14 rounded-2xl border border-white/5 font-black text-[10px] uppercase tracking-widest text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-none transition-all shadow-2xl" onClick={() => { setFormData({...formData, product_id: prod.id}); setIsCreating(true); }}>
+                                Initiate Investment
                               </Button>
                           </CardContent>
                       </Card>
                   ))}
               </div>
 
-              <Card className="bg-slate-950 text-white border-none shadow-2xl rounded-[32px] overflow-hidden relative group">
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
-                <CardHeader className="p-8 pb-4 relative z-10">
-                    <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">Vault Security</CardTitle>
+              <Card className="bg-slate-900 border-none shadow-2xl rounded-[40px] overflow-hidden relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 to-transparent" />
+                <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:scale-110 transition-transform duration-1000">
+                    <ShieldCheck className="h-32 w-32" />
+                </div>
+                <CardHeader className="p-10 pb-4 relative z-10 text-white">
+                    <CardTitle className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 italic">Sovereign Protection</CardTitle>
                 </CardHeader>
-                <CardContent className="px-8 pb-8 relative z-10">
-                    <p className="text-[11px] text-slate-400 leading-relaxed italic font-medium">
-                        "Fixed deposits are NDIC insured. Early liquidation attracts a 50% penalty on the accrued interest. All principal is always guaranteed."
+                <CardContent className="px-10 pb-12 relative z-10 text-white">
+                    <p className="text-[13px] text-slate-400 leading-relaxed font-medium italic">
+                        "Term deposits are NDIC insured. Early liquidation triggers a 50% yield penalty. Principal value remains atomic and guaranteed."
                     </p>
-                    <div className="mt-6 flex items-center justify-center p-3 bg-white/5 rounded-2xl border border-white/5">
-                        <ShieldCheck className="h-4 w-4 text-emerald-500 mr-2" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">NDIC PROTECTED</span>
+                    <div className="mt-8 flex items-center justify-between p-5 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-md">
+                        <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981] animate-pulse" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white italic">NDIC SECURED</span>
                     </div>
                 </CardContent>
               </Card>
            </div>
         </div>
 
-        {/* Booking Modal */}
+        {/* Booking Modal (Luxury Overlay) */}
         {isBooking && (
-             <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-50 flex items-center justify-center p-6 animate-in fade-in duration-300">
-                <Card className="w-full max-w-md border-none shadow-2xl bg-white rounded-[40px] overflow-hidden">
-                    <CardHeader className="bg-indigo-600 text-white p-10 text-center relative">
-                        <div className="absolute top-0 right-0 p-8 opacity-20 rotate-12">
-                            <PiggyBank className="h-20 w-20" />
+             <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-2xl z-50 flex items-center justify-center p-8 animate-in fade-in duration-500">
+                <Card className="w-full max-w-xl border-indigo-500/20 obsidian-card overflow-hidden shadow-[0_0_100px_rgba(99,102,241,0.1)] rounded-[60px]">
+                    <CardHeader className="p-14 border-b border-white/5 bg-indigo-600 text-white text-center relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-12 opacity-20 rotate-12">
+                            <PiggyBank className="h-24 w-24" />
                         </div>
-                        <CardTitle className="text-3xl font-black italic tracking-tighter">Invest Capital</CardTitle>
-                        <CardDescription className="text-indigo-100 font-medium opacity-80 mt-2 italic uppercase text-[10px] tracking-widest">Provisioning Term Deposit</CardDescription>
+                        <div className="absolute inset-0 shimmer opacity-20 pointer-events-none" />
+                        <CardTitle className="text-4xl font-black italic tracking-tighter uppercase leading-none">Vault Capital</CardTitle>
+                        <CardDescription className="text-indigo-100 font-bold uppercase text-[9px] tracking-[0.5em] mt-4 italic opacity-80">Authorized Provisioning Sequence</CardDescription>
                     </CardHeader>
-                    <CardContent className="p-10 space-y-6">
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Source Account (Debit)</Label>
+                    <CardContent className="p-14 space-y-10">
+                        <div className="space-y-8">
+                            <div className="space-y-3 text-left">
+                                <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Liquidity Source (NUBAN)</Label>
                                 <select 
-                                    className="w-full h-14 px-6 rounded-2xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all"
+                                    className="w-full h-16 px-8 rounded-3xl bg-white/5 border border-white/5 font-black text-white outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all uppercase text-xs shadow-2xl"
                                     value={formData.linked_savings_account}
                                     onChange={e => setFormData({...formData, linked_savings_account: e.target.value})}
                                 >
-                                    <option value="">Select account...</option>
+                                    <option value="" className="bg-slate-900">Select Liquidity Node...</option>
                                     {myAccounts?.map((acc: any) => (
-                                        <option key={acc.account_number} value={acc.account_number}>
+                                        <option key={acc.account_number} value={acc.account_number} className="bg-slate-900">
                                             {acc.account_number} (₦{parseFloat(acc.ledger_balance).toLocaleString()})
                                         </option>
                                     ))}
                                 </select>
                             </div>
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Investment Product</Label>
+                            <div className="space-y-3 text-left">
+                                <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Capital Protocol</Label>
                                 <select 
-                                    className="w-full h-14 px-6 rounded-2xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all"
+                                    className="w-full h-16 px-8 rounded-3xl bg-white/5 border border-white/5 font-black text-white outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all uppercase text-xs shadow-2xl"
                                     value={formData.product_id}
                                     onChange={(e) => setFormData({...formData, product_id: parseInt(e.target.value)})}
                                 >
-                                    <option value={0}>Select a plan...</option>
-                                    {products?.map((p: any) => <option key={p.id} value={p.id}>{p.name} ({p.interest_rate_pa}%)</option>)}
+                                    <option value={0} className="bg-slate-900">Select Plan...</option>
+                                    {products?.map((p: any) => <option key={p.id} value={p.id} className="bg-slate-900">{p.name} ({p.interest_rate_pa}%)</option>)}
                                 </select>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Booking Amount (₦)</Label>
-                                    <Input placeholder="Min 100,000" className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-black text-indigo-600 text-xl" value={formData.principal_amount} onChange={e => setFormData({...formData, principal_amount: e.target.value})} />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div className="space-y-3 text-left">
+                                    <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Payload (₦)</Label>
+                                    <Input placeholder="Min 100,000" className="h-16 rounded-3xl bg-white/5 border-white/5 px-8 font-black text-indigo-400 text-2xl shadow-2xl focus-visible:ring-1 focus-visible:ring-indigo-500/50" value={formData.principal_amount} onChange={e => setFormData({...formData, principal_amount: e.target.value})} />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Maturity Instruction</Label>
+                                <div className="space-y-3 text-left">
+                                    <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Maturity Instructions</Label>
                                     <select 
-                                        className="w-full h-14 px-6 rounded-2xl bg-slate-50 border-none font-bold outline-none focus:ring-2 focus:ring-indigo-600/20 transition-all"
+                                        className="w-full h-16 px-8 rounded-3xl bg-white/5 border border-white/5 font-black text-white outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all uppercase text-xs shadow-2xl shadow-indigo-500/5"
                                         value={formData.rollover_instruction}
                                         onChange={(e) => setFormData({...formData, rollover_instruction: e.target.value})}
                                     >
-                                        <option value="LIQUIDATE">Liquidate to Savings</option>
-                                        <option value="ROLLOVER_PRINCIPAL">Rollover Principal Only</option>
-                                        <option value="ROLLOVER_PRINCIPAL_INTEREST">Rollover Principal + Interest</option>
+                                        <option value="LIQUIDATE" className="bg-slate-900">Liquidate Node</option>
+                                        <option value="ROLLOVER_PRINCIPAL" className="bg-slate-900">Rollover Base</option>
+                                        <option value="ROLLOVER_PRINCIPAL_INTEREST" className="bg-slate-900">Compound Total</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
+                        <div className="pt-8 flex gap-6">
+                            <Button variant="ghost" className="flex-1 h-20 rounded-[32px] font-black text-[11px] uppercase tracking-widest text-slate-600 hover:text-white" onClick={() => setIsCreating(false)}>Abort</Button>
+                            <Button className="flex-[2] bg-indigo-600 h-20 rounded-[32px] font-black text-xl italic tracking-tighter shadow-2xl shadow-indigo-500/30 active:scale-95 transition-all text-white border-none" onClick={handleBook} disabled={bookFdMutation.isPending}>
+                                {bookFdMutation.isPending ? <RefreshCw className="h-8 w-8 animate-spin mr-4" /> : <ShieldCheck className="h-8 w-8 mr-4" />}
+                                SECURE ASSET
+                            </Button>
+                        </div>
                     </CardContent>
-                    <CardFooter className="p-10 pt-0 flex gap-3">
-                        <Button variant="ghost" className="flex-1 h-14 rounded-2xl font-black text-slate-400 uppercase tracking-widest text-[10px]" onClick={() => setIsCreating(false)}>Cancel</Button>
-                        <Button className="flex-[2] bg-indigo-600 h-14 rounded-2xl font-black text-white uppercase tracking-widest text-[10px] shadow-xl shadow-indigo-100 border-none" onClick={handleBook} disabled={bookFdMutation.isPending}>
-                            {bookFdMutation.isPending ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : 'Confirm Booking'}
-                        </Button>
-                    </CardFooter>
                 </Card>
              </div>
         )}
@@ -281,8 +284,7 @@ const FixedDeposits = () => {
                 onClose={() => setSelectedCertFd(null)} 
             />
         )}
-      </div>
-    </Layout>
+    </div>
   );
 };
 

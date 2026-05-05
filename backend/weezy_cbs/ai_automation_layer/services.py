@@ -166,9 +166,90 @@ class NotificationService(BaseAIService):
         db.refresh(db_notif)
         return db_notif
 
+import google.generativeai as genai
+import os
+
+class PersonalWealthManagerService(BaseAIService):
+    """
+    Generates hyper-personalized weekly financial health summaries for customers.
+    """
+    def __init__(self):
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if api_key:
+            genai.configure(api_key=api_key)
+            self.model = genai.GenerativeModel('gemini-1.5-flash')
+        else:
+            self.model = None
+
+    async def generate_weekly_insight(self, db: Session, customer_id: int) -> str:
+        if not self.model: return "Insight generation unavailable."
+
+        from weezy_cbs.customer_identity_management.models import Customer
+        from weezy_cbs.accounts_ledger_management.services import get_accounts_for_customer
+        from weezy_cbs.mcp_gateway.tools import banking_tools
+
+        customer = db.query(Customer).filter(Customer.id == customer_id).first()
+        accounts = get_accounts_for_customer(db, customer_id)
+        
+        if not accounts: return "No account activity found."
+        
+        # 1. Gather Data (Transactions + Forecast)
+        primary_acc = accounts[0].account_number
+        txns = banking_tools.list_recent_transactions(primary_acc, limit=10)
+        forecast = await banking_tools.predictive_cash_flow_forecast(primary_acc)
+        
+        # 2. Construct Prompt
+        prompt = f"""
+        You are 'Weezy Wealth Manager', a senior financial advisor in Nigeria.
+        Write a hyper-personalized, encouraging, and professional letter to {customer.first_name}.
+        
+        FINANCIAL DATA:
+        - Recent Transactions: {json.dumps(txns)}
+        - 30-Day Forecast: {json.dumps(forecast)}
+        - Current Balance: {accounts[0].available_balance} NGN
+        
+        CONTEXT:
+        - Inflation in Nigeria is high (mention subtly).
+        - Suggest one saving tip based on their recurring spend.
+        - The tone should be 'Luxury Fintech' - sophisticated yet accessible.
+        
+        Keep it to 2-3 short paragraphs.
+        """
+        
+        try:
+            response = await self.model.generate_content_async(prompt)
+            return response.text
+        except Exception as e:
+            return f"Error generating insight: {str(e)}"
+
 # Instances
 ai_model_metadata_service = AIModelMetadataService()
 ai_agent_config_service = AIAgentConfigService()
 workflow_service = WorkflowService()
 task_service = TaskService()
 notification_service = NotificationService()
+wealth_manager_service = PersonalWealthManagerService()
+
+# Domain 6: Self-Operating Business Engine Agents
+from .competitor_pricing_agent import pricing_agent
+from .partner_onboarding_agent import partner_onboarding_agent
+from .realtime_pnl_agent import realtime_pnl_agent
+from .automated_procurement_agent import procurement_agent
+
+# Domain 2 & 5: Wealth & Security Agents
+from .wealth_optimization_agent import wealth_optimization_agent
+from .cyber_sentinel_agent import cyber_sentinel_agent
+
+# Domain 3: Empathy Engine Agents
+from .empathy_engine import proactive_refund_agent, sentiment_loyalty_agent
+
+# Domain 10: The Sentient Bank Agents
+from .ethics_engine_agent import ethics_engine
+from .recursive_improvement_agent import evolution_agent
+
+# The Global Bank Killers
+from .contextual_auth_sentinel import contextual_auth_sentinel
+from .nip_reconciliation_agent import nip_negotiator
+
+# The Trojan Horse: Legacy Data & Workflow Orchestrator
+from .legacy_orchestrator import legacy_orchestrator

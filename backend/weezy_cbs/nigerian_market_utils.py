@@ -2,6 +2,9 @@ import decimal
 import random
 import string
 import logging
+import asyncio
+import uuid
+from datetime import datetime
 from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
@@ -64,44 +67,77 @@ class NigerianMarketUtils:
     @staticmethod
     async def nip_name_enquiry(bank_code: str, account_number: str) -> Dict[str, Any]:
         """
-        Simulates NIBSS NIP Name Enquiry.
+        Executes a NIP Name Enquiry using ISO-20022 XML standards.
         """
+        from .nip_protocol_handler import NIPMessageFormatter
+        
         if len(account_number) != 10:
             return {"status": "error", "message": "Invalid Account Number"}
         
-        # Mock logic: return a name based on the account number
-        # In a real app, this calls NIBSS NIP Soap/REST service
-        return {
-            "status": "success",
-            "account_name": "SULAIMAN OLANREWAJU ADEBAYO",
-            "account_number": account_number,
-            "bank_code": bank_code,
-            "bank_name": NigerianMarketUtils.get_bank_name(bank_code),
-            "session_id": f"NIP-ENQ-{uuid.uuid4().hex[:12].upper()}"
-        }
+        # 1. Format Request XML
+        request_xml = NIPMessageFormatter.format_name_enquiry_request(bank_code, account_number)
+        logger.info(f"NIP: Outgoing Name Enquiry XML: {request_xml}")
+        
+        # 2. Simulate External Call & Response XML
+        # In production, this would be an HTTP POST to NIBSS
+        response_xml = f"""
+        <NameEnquiryResponse>
+            <SessionID>999{datetime.now().strftime('%y%m%d%H%M%S')}MOCK</SessionID>
+            <AccountName>SULAIMAN OLANREWAJU ADEBAYO</AccountName>
+            <AccountNumber>{account_number}</AccountNumber>
+            <DestinationInstitutionCode>{bank_code}</DestinationInstitutionCode>
+            <ResponseCode>00</ResponseCode>
+        </NameEnquiryResponse>
+        """
+        
+        # 3. Parse Response
+        return NIPMessageFormatter.parse_name_enquiry_response(response_xml)
 
     @staticmethod
     async def nip_outbound_transfer(
-        source_account: str, 
+        source_account: str,
+        source_name: str,
         dest_bank_code: str, 
         dest_account: str, 
+        dest_name: str,
         amount: decimal.Decimal,
-        narration: str
+        narration: str,
+        name_enquiry_ref: str
     ) -> Dict[str, Any]:
         """
-        Simulates NIBSS NIP Outbound Transfer.
+        Executes a NIP Funds Transfer using ISO-20022 XML standards.
         """
-        # Simulated delay for inter-bank communication
+        from .nip_protocol_handler import NIPMessageFormatter
+        
+        # 1. Format Request XML
+        session_id = f"999{datetime.now().strftime('%y%m%d%H%M%S')}{uuid.uuid4().hex[:12].upper()}"
+        request_xml = NIPMessageFormatter.format_funds_transfer_request(
+            session_id=session_id,
+            name_enquiry_ref=name_enquiry_ref,
+            source_account=source_account,
+            source_name=source_name,
+            dest_account=dest_account,
+            dest_name=dest_name,
+            bank_code=dest_bank_code,
+            amount=float(amount),
+            narration=narration
+        )
+        logger.info(f"NIP: Outgoing Funds Transfer XML: {request_xml}")
+        
+        # 2. Simulate NIBSS Processing Delay
         await asyncio.sleep(1)
         
-        return {
-            "status": "success",
-            "response_code": "00", # Approved
-            "response_message": "Transaction Approved",
-            "transaction_reference": f"NIP-TXN-{uuid.uuid4().hex[:16].upper()}",
-            "amount": amount,
-            "session_id": f"NIP-SESS-{uuid.uuid4().hex[:12].upper()}"
-        }
+        # 3. Simulate Response XML
+        response_xml = f"""
+        <FTResponse>
+            <SessionID>{session_id}</SessionID>
+            <ResponseCode>00</ResponseCode>
+            <PaymentReference>WZY-{uuid.uuid4().hex[:12].upper()}</PaymentReference>
+        </FTResponse>
+        """
+        
+        # 4. Parse Response
+        return NIPMessageFormatter.parse_funds_transfer_response(response_xml)
 
     @staticmethod
     def calculate_nuban_check_digit(bank_code: str, serial_number: str) -> int:

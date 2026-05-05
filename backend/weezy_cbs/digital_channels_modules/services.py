@@ -565,16 +565,22 @@ class USSDService(BaseDigitalChannelService):
                 elif user_input == "2": # Transfer
                     response_text = "CON Select Bank:\n" + NigerianMarketUtils.get_ussd_bank_list(page=session_data.get("page", 1))
                     ussd_session.current_menu_code = "TRANSFER_BANK_SELECT"
+                elif user_input == "3": # Airtime
+                    response_text = "CON Select Network:\n1. MTN\n2. Airtel\n3. Glo\n4. 9mobile"
+                    ussd_session.current_menu_code = "AIRTIME_NETWORK_SELECT"
+                elif user_input == "4": # Bills
+                    response_text = "CON Select Category:\n1. Electricity\n2. Cable TV\n3. Internet\n0. Back"
+                    ussd_session.current_menu_code = "BILL_CATEGORY_SELECT"
                 elif user_input == "0":
                     response_text = "END Thank you for using WeezyBank."
                 else:
-                    response_text = "CON Invalid choice.\n1. Check Balance\n2. Transfer\n0. Exit"
+                    response_text = "CON Invalid choice.\n1. Check Balance\n2. Transfer\n3. Airtime\n4. Bills\n0. Exit"
 
             # --- BALANCE FLOW ---
             elif current_menu == "PIN_FOR_BALANCE":
-                # Mock PIN check
-                if user_input == "1234":
-                    profile = self._get_digital_user_profile(db, user_id=ussd_session.digital_user_profile_id)
+                profile = self._get_digital_user_profile(db, user_id=ussd_session.digital_user_profile_id)
+                # Simulated PIN validation (Should use hashing in production)
+                if user_input == "1234": 
                     accounts = get_accounts_for_customer(db, profile.customer_id)
                     if accounts:
                         acc = accounts[0]
@@ -583,6 +589,86 @@ class USSDService(BaseDigitalChannelService):
                         response_text = "END No active accounts found."
                 else:
                     response_text = "END Incorrect PIN. Please try again."
+
+            # --- AIRTIME FLOW ---
+            elif current_menu == "AIRTIME_NETWORK_SELECT":
+                networks = {"1": "MTN", "2": "Airtel", "3": "Glo", "4": "9mobile"}
+                if user_input in networks:
+                    session_data["network"] = networks[user_input]
+                    response_text = f"CON Buy {networks[user_input]} Airtime\nEnter Phone Number:"
+                    ussd_session.current_menu_code = "AIRTIME_PHONE_INPUT"
+                else:
+                    response_text = "CON Invalid Network. Try again:\n1. MTN\n2. Airtel\n3. Glo\n4. 9mobile"
+
+            elif current_menu == "AIRTIME_PHONE_INPUT":
+                if len(user_input) >= 11:
+                    session_data["airtime_phone"] = user_input
+                    response_text = "CON Enter Amount (₦):"
+                    ussd_session.current_menu_code = "AIRTIME_AMOUNT_INPUT"
+                else:
+                    response_text = "CON Invalid Phone Number. Enter 11 digits:"
+
+            elif current_menu == "AIRTIME_AMOUNT_INPUT":
+                try:
+                    amt = decimal.Decimal(user_input)
+                    if 50 <= amt <= 50000:
+                        session_data["amount"] = str(amt)
+                        response_text = f"CON Buy ₦{amt:,.2f} {session_data['network']} airtime for {session_data['airtime_phone']}?\nEnter PIN:"
+                        ussd_session.current_menu_code = "AIRTIME_PIN_CONFIRM"
+                    else:
+                        response_text = "CON Limit exceeded. Enter amount between 50 and 50,000:"
+                except:
+                    response_text = "CON Invalid amount. Enter numbers only:"
+
+            elif current_menu == "AIRTIME_PIN_CONFIRM":
+                if user_input == "1234":
+                    # Execute Airtime Purchase (Conceptual)
+                    response_text = f"END Success! ₦{decimal.Decimal(session_data['amount']):,.2f} airtime sent to {session_data['airtime_phone']}."
+                else:
+                    response_text = "END Incorrect PIN. Purchase cancelled."
+
+            # --- BILLS FLOW ---
+            elif current_menu == "BILL_CATEGORY_SELECT":
+                categories = {"1": "ELECTRICITY", "2": "CABLE_TV", "3": "INTERNET"}
+                if user_input in categories:
+                    session_data["bill_category"] = categories[user_input]
+                    # Fetch billers for category (conceptual)
+                    if user_input == "1":
+                        response_text = "CON Select Provider:\n1. IKEDC\n2. EKEDC\n3. AEDC"
+                    elif user_input == "2":
+                        response_text = "CON Select Provider:\n1. DSTV\n2. GOTV\n3. Startimes"
+                    else:
+                        response_text = "CON Select Provider:\n1. Smile\n2. Spectranet"
+                    ussd_session.current_menu_code = "BILLER_SELECT"
+                elif user_input == "0":
+                    profile = self._get_digital_user_profile(db, user_id=ussd_session.digital_user_profile_id)
+                    response_text = f"CON Welcome back {profile.username}!\n1. Balance\n2. Transfer\n3. Airtime\n4. Bills"
+                    ussd_session.current_menu_code = "MAIN_MENU_CHOICE"
+                else:
+                    response_text = "CON Invalid category. Select again:"
+
+            elif current_menu == "BILLER_SELECT":
+                # Mock mapping
+                billers = {"1": "IKEDC", "2": "DSTV"} # and so on
+                session_data["biller_name"] = "Selected Biller"
+                response_text = "CON Enter Customer ID / Meter Number:"
+                ussd_session.current_menu_code = "BILL_IDENTIFIER_INPUT"
+
+            elif current_menu == "BILL_IDENTIFIER_INPUT":
+                session_data["bill_id"] = user_input
+                response_text = "CON Enter Amount (₦):"
+                ussd_session.current_menu_code = "BILL_AMOUNT_INPUT"
+
+            elif current_menu == "BILL_AMOUNT_INPUT":
+                session_data["amount"] = user_input
+                response_text = f"CON Pay ₦{user_input} to {session_data['biller_name']} for {session_data['bill_id']}?\nEnter PIN:"
+                ussd_session.current_menu_code = "BILL_PIN_CONFIRM"
+
+            elif current_menu == "BILL_PIN_CONFIRM":
+                if user_input == "1234":
+                    response_text = f"END Bill payment of ₦{session_data['amount']} successful. Ref: {uuid.uuid4().hex[:10].upper()}"
+                else:
+                    response_text = "END Incorrect PIN."
 
             # --- TRANSFER FLOW: BANK SELECT ---
             elif current_menu == "TRANSFER_BANK_SELECT":

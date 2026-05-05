@@ -401,3 +401,101 @@ def trigger_report_generation(db: Session, report_request: schemas.ReportGenerat
     generated_log = generate_report_file(db, report_log.id)
     
     return generated_log
+
+# --- Nigerian Market: Compliance Polling Services ---
+class CompliancePollService:
+    """
+    Automates synchronization with external regulatory watchlists (e.g. CBN, NFIU).
+    """
+
+    @staticmethod
+    async def poll_bvn_watchlist(db: Session):
+        """
+        Simulates polling the CBN BVN Watchlist API and taking action on matches.
+        """
+        logger.info("COMPLIANCE: Polling CBN BVN Watchlist...")
+        
+        # Mocking an external API response
+        mock_watchlist = [
+            {"bvn": "22233344455", "reason": "Suspected Fraud", "category": "HIGH_RISK"},
+            {"bvn": "11122233344", "reason": "Identity Theft", "category": "CRITICAL"}
+        ]
+        
+        from weezy_cbs.customer_identity_management.models import Customer
+        from weezy_cbs.accounts_ledger_management.models import Account, AccountStatusEnum
+        
+        matches_found = 0
+        for entry in mock_watchlist:
+            # 1. Check if we have a customer with this BVN
+            customer = db.query(Customer).filter(Customer.bvn == entry["bvn"]).first()
+            if customer:
+                matches_found += 1
+                logger.warning(f"COMPLIANCE: Match found on Watchlist for BVN {entry['bvn']} (Customer {customer.id})")
+                
+                # 2. Log suspicious activity
+                log_suspicious_activity(
+                    db, 
+                    customer_bvn=entry["bvn"],
+                    account_number=None,
+                    transaction_ref=None,
+                    rule_code="CBN_WATCHLIST_POLL",
+                    description=f"Automatic match from CBN Watchlist: {entry['reason']}"
+                )
+                
+                # 3. Restrict all accounts belonging to this customer
+                accounts = db.query(Account).filter(Account.customer_id == customer.id).all()
+                for account in accounts:
+                    if account.status != AccountStatusEnum.BLOCKED:
+                        account.status = AccountStatusEnum.BLOCKED
+                        account.is_post_no_debit = True
+                        account.block_reason = f"CBN WATCHLIST: {entry['reason']}"
+                        logger.info(f"COMPLIANCE: Account {account.account_number} BLOCKED due to BVN match.")
+                
+                db.commit()
+        
+        logger.info(f"COMPLIANCE: Watchlist poll completed. {matches_found} matches processed.")
+        return matches_found
+
+class CRMSReportService:
+    """
+    Automates reporting to the CBN Credit Risk Management System (CRMS).
+    Mandatory for all loans > ₦1,000,000.
+    """
+
+    @staticmethod
+    def generate_crms_xml(db: Session, start_date: date, end_date: date) -> str:
+        """
+        Generates the mandatory CRMS XML report for high-value loans.
+        """
+        from weezy_cbs.loan_management_module.models import LoanAccount
+        from weezy_cbs.customer_identity_management.models import Customer
+        
+        # 1. Fetch Loans above 1M NGN
+        loans = db.query(LoanAccount, Customer).join(Customer).filter(
+            LoanAccount.principal_disbursed >= 1000000,
+            LoanAccount.disbursement_date >= start_date,
+            LoanAccount.disbursement_date <= end_date
+        ).all()
+        
+        # 2. Build XML Root
+        root = ET.Element("CRMSReport")
+        header = ET.SubElement(root, "Header")
+        ET.SubElement(header, "BankCode").text = "999"
+        ET.SubElement(header, "ReportDate").text = str(end_date)
+        
+        loans_node = ET.SubElement(root, "Loans")
+        for loan, customer in loans:
+            loan_el = ET.SubElement(loans_node, "LoanRecord")
+            ET.SubElement(loan_el, "BorrowerID").text = customer.bvn or customer.rc_number
+            ET.SubElement(loan_el, "LoanRef").text = loan.loan_account_number
+            ET.SubElement(loan_el, "Amount").text = f"{loan.principal_disbursed:.2f}"
+            ET.SubElement(loan_el, "DisbursementDate").text = str(loan.disbursement_date)
+            ET.SubElement(loan_el, "MaturityDate").text = str(loan.maturity_date)
+            ET.SubElement(loan_el, "Status").text = loan.status.value
+        
+        return ET.tostring(root, encoding='unicode', method='xml')
+
+crms_service = CRMSReportService()
+compliance_poll_service = CompliancePollService()
+import logging
+logger = logging.getLogger(__name__)

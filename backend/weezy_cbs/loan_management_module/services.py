@@ -225,6 +225,12 @@ def get_loan_account(db: Session, loan_account_id: int) -> Optional[models.LoanA
 def get_loan_account_by_number(db: Session, loan_account_number: str) -> Optional[models.LoanAccount]:
     return db.query(models.LoanAccount).filter(models.LoanAccount.loan_account_number == loan_account_number).first()
 
+def get_active_loans_for_customer(db: Session, customer_id: int) -> List[models.LoanAccount]:
+    return db.query(models.LoanAccount).filter(
+        models.LoanAccount.customer_id == customer_id,
+        models.LoanAccount.status == LoanAccountStatusEnum.ACTIVE
+    ).all()
+
 
 # --- Repayment Schedule Generation ---
 def generate_repayment_schedule(db: Session, loan_account_id: int):

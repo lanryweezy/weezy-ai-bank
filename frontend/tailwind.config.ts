@@ -69,6 +69,17 @@ export default {
 					background: "#0f172a",
 					foreground: "#e2e8f0",
 				},
+				obsidian: {
+					DEFAULT: "#020617",
+					lighter: "#0f172a",
+					border: "rgba(255, 255, 255, 0.1)",
+				},
+				fintech: {
+					black: "#000000",
+					blue: "#3b82f6",
+					emerald: "#10b981",
+					orange: "#f59e0b",
+				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

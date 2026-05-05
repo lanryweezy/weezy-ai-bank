@@ -9,6 +9,40 @@ from . import models, schemas
 from weezy_cbs.transaction_management.services import initiate_transaction
 from weezy_cbs.transaction_management.schemas import TransactionCreateRequest
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+class BillerRouter:
+    """
+    Intelligent routing for bill payments across multiple Nigerian aggregators.
+    Tracks provider health and routes transactions to the most stable node.
+    """
+    PROVIDERS = ["PAYSTACK", "INTERSWITCH", "REMITA"]
+    
+    def __init__(self):
+        # Simulated health/uptime stats (0.0 to 1.0)
+        self.health_scores = {p: 1.0 for p in self.PROVIDERS}
+
+    def get_best_provider(self, category: models.BillerCategoryEnum) -> str:
+        """Routes to the provider with the highest current health score."""
+        # Policy: Remita is the primary gateway for GOVERNMENT categories (TSA)
+        if category == models.BillerCategoryEnum.GOVERNMENT:
+            return "REMITA"
+            
+        # Select healthiest available node
+        sorted_providers = sorted(self.health_scores.items(), key=lambda x: x[1], reverse=True)
+        return sorted_providers[0][0]
+
+    def report_failure(self, provider: str):
+        self.health_scores[provider] = max(0.0, self.health_scores[provider] - 0.2)
+        logger.warning(f"ROUTER: Provider {provider} health degraded to {self.health_scores[provider]}")
+
+    def report_success(self, provider: str):
+        self.health_scores[provider] = min(1.0, self.health_scores[provider] + 0.05)
+
+biller_router = BillerRouter()
+
 class BillsPaymentService:
     
     def seed_nigerian_billers(self, db: Session):
@@ -21,6 +55,7 @@ class BillsPaymentService:
             {"name": "GOTV", "code": "GOTV", "cat": models.BillerCategoryEnum.CABLE_TV, "val": True},
             {"name": "IKEDC (Electric)", "code": "IKEDC_PREPAID", "cat": models.BillerCategoryEnum.ELECTRICITY, "val": True},
             {"name": "EKEDC (Electric)", "code": "EKEDC_PREPAID", "cat": models.BillerCategoryEnum.ELECTRICITY, "val": True},
+            {"name": "FIRS Tax", "code": "FIRS_TAX", "cat": models.BillerCategoryEnum.GOVERNMENT, "val": True},
         ]
 
         for b in billers:
@@ -55,14 +90,17 @@ class BillsPaymentService:
 
     async def process_bill_payment(self, db: Session, customer_id: int, request: schemas.BillPaymentRequest) -> dict:
         """
-        Executes a bill payment.
-        Debits User -> Credits Biller Settlement Account.
+        Executes a bill payment with multi-provider fallback routing.
         """
         biller = db.query(models.Biller).filter(models.Biller.biller_code == request.biller_code).first()
         if not biller:
             raise HTTPException(status_code=404, detail="Biller not found")
 
-        # 1. Execute Ledger Transaction
+        # 1. Route to Best Provider
+        provider = biller_router.get_best_provider(biller.category)
+        logger.info(f"BILLER: Routing {biller.name} payment via {provider}")
+
+        # 2. Execute Ledger Transaction
         try:
             txn_req = TransactionCreateRequest(
                 transaction_type="BILL_PAYMENT",
@@ -70,21 +108,21 @@ class BillsPaymentService:
                 amount=request.amount,
                 currency="NGN",
                 debit_account_number=request.account_number,
-                credit_account_number="GL-BILLER-SETTLE-001", # Internal settlement GL
-                narration=request.narration or f"Bill Payment: {biller.name} - {request.customer_identifier}"
+                credit_account_number="GL-BILLER-SETTLE-001", 
+                narration=request.narration or f"Bill: {biller.name} ({provider})"
             )
             
-            # Using the existing transaction service
             txn = await initiate_transaction(db, txn_req)
             
-            # 2. Simulate External Provider Call (Paystack/Interswitch/Remita)
-            # In production, this is where you'd call the provider's API.
-            provider_ref = f"PVD-{random.randint(1000000, 9999999)}"
+            # 3. Call Provider API (Simulated)
+            provider_ref = f"{provider[:3]}-{random.randint(1000000, 9999999)}"
+            biller_router.report_success(provider)
+            
             token = None
             if biller.category == models.BillerCategoryEnum.ELECTRICITY:
-                token = "-".join(["".join(random.choices(string.digits, k=4)) for _ in range(5)]) # 20-digit token
+                token = "-".join(["".join(random.choices(string.digits, k=4)) for _ in range(5)])
 
-            # 3. Log the successful bill payment
+            # 4. Log the successful bill payment
             log = models.BillPaymentLog(
                 transaction_id=str(txn.id),
                 customer_id=customer_id,
@@ -101,13 +139,54 @@ class BillsPaymentService:
             return {
                 "status": "SUCCESS",
                 "transaction_id": txn.id,
+                "provider": provider,
                 "provider_reference": provider_ref,
                 "token": token,
                 "biller_name": biller.name
             }
 
         except Exception as e:
+            biller_router.report_failure(provider)
             db.rollback()
             raise HTTPException(status_code=400, detail=f"Bill payment failed: {str(e)}")
 
+class RemitaTSAService:
+    """
+    Handles Treasury Single Account (TSA) payments via Remita for corporate clients.
+    """
+    GOVERNMENT_TSA_GL = "GL-LIAB-TSA-GOVT-001"
+
+    async def initiate_tsa_payment(self, db: Session, corporate_customer_id: int, account_number: str, amount: decimal.Decimal, service_type: str) -> Dict[str, Any]:
+        """
+        Simulates the generation of an RRR and immediate TSA settlement.
+        """
+        # 1. Generate a Mock RRR (12 digits)
+        rrr = "".join(random.choices(string.digits, k=12))
+        
+        # 2. Execute Transaction (Double Entry)
+        txn_req = TransactionCreateRequest(
+            transaction_type="GOVT_PAYMENT_TSA",
+            channel="AGENT_PORTAL",
+            amount=amount,
+            currency="NGN",
+            debit_account_number=account_number,
+            credit_account_number=self.GOVERNMENT_TSA_GL,
+            narration=f"TSA Payment: {service_type} | RRR: {rrr}"
+        )
+        
+        try:
+            txn = await initiate_transaction(db, txn_req)
+            return {
+                "status": "SUCCESS",
+                "rrr": rrr,
+                "transaction_id": txn.id,
+                "amount": float(amount),
+                "service_type": service_type,
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"TSA Payment Failed: {str(e)}")
+
+tsa_service = RemitaTSAService()
 bills_service = BillsPaymentService()
+

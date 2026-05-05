@@ -88,6 +88,8 @@ import LoanOrigination from "./pages/LoanOrigination";
 import LoanCollateral from "./pages/LoanCollateral";
 import ChequeManagement from "./pages/ChequeManagement";
 
+import LuxuryLayout from "./components/LuxuryLayout";
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -108,65 +110,65 @@ const App = () => (
           />
 
           {/* User Routes */}
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/agent-banking" element={<ProtectedRoute><AgentBankingPage /></ProtectedRoute>} />
-          <Route path="/agent-earnings" element={<ProtectedRoute><AgentEarnings /></ProtectedRoute>} />
-          <Route path="/card-center" element={<ProtectedRoute><CardCenter /></ProtectedRoute>} />
-          <Route path="/comms-hub" element={<ProtectedRoute><CommunicationsLog /></ProtectedRoute>} />
-          <Route path="/payroll" element={<ProtectedRoute><CorporatePayroll /></ProtectedRoute>} />
-          <Route path="/standing-instructions" element={<ProtectedRoute><StandingInstructions /></ProtectedRoute>} />
-          <Route path="/bills" element={<ProtectedRoute><BillsPayment /></ProtectedRoute>} />
-          <Route path="/savings" element={<ProtectedRoute><SavingsInvestments /></ProtectedRoute>} />
-          <Route path="/fixed-deposits" element={<ProtectedRoute><FixedDeposits /></ProtectedRoute>} />
-          <Route path="/fx-global" element={<ProtectedRoute><FXDomiciliary /></ProtectedRoute>} />
-          <Route path="/cognitive-core" element={<ProtectedRoute><CognitiveCore /></ProtectedRoute>} />
-          <Route path="/fx-wire" element={<ProtectedRoute><InternationalWire /></ProtectedRoute>} />
-          <Route path="/qr-payments" element={<ProtectedRoute><QRPayments /></ProtectedRoute>} />
-          <Route path="/merchant-console" element={<ProtectedRoute><MerchantConsole /></ProtectedRoute>} />
-          <Route path="/virtual-accounts" element={<ProtectedRoute><VirtualAccounts /></ProtectedRoute>} />
-          <Route path="/developer" element={<ProtectedRoute allowedRoles={['platform_admin']}><DeveloperHub /></ProtectedRoute>} />
-          <Route path="/terminal" element={<ProtectedRoute allowedRoles={['platform_admin']}><IntelligenceTerminal /></ProtectedRoute>} />
-          <Route path="/assets" element={<ProtectedRoute allowedRoles={['platform_admin']}><FixedAssets /></ProtectedRoute>} />
-          <Route path="/eod-center" element={<ProtectedRoute allowedRoles={['platform_admin']}><EODDashboard /></ProtectedRoute>} />
-          <Route path="/fraud-shield" element={<ProtectedRoute allowedRoles={['platform_admin']}><FraudShieldDashboard /></ProtectedRoute>} />
-          <Route path="/loan-recovery" element={<ProtectedRoute allowedRoles={['platform_admin']}><LoanRecovery /></ProtectedRoute>} />
-          <Route path="/compliance" element={<ProtectedRoute allowedRoles={['platform_admin']}><ComplianceDashboard /></ProtectedRoute>} />
-          <Route path="/regulatory-reporting" element={<ProtectedRoute allowedRoles={['platform_admin']}><RegulatoryReporting /></ProtectedRoute>} />
-          <Route path="/ai-templates" element={<ProtectedRoute><AIAgentTemplatesPage /></ProtectedRoute>} />
-          <Route path="/configure-agent" element={<ProtectedRoute><ConfigureAgentPage /></ProtectedRoute>} />
-          <Route path="/my-agents" element={<ProtectedRoute><MyConfiguredAgentsPage /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><LuxuryLayout><Dashboard /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/agent-banking" element={<ProtectedRoute><LuxuryLayout><AgentBankingPage /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/agent-earnings" element={<ProtectedRoute><LuxuryLayout><AgentEarnings /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/card-center" element={<ProtectedRoute><LuxuryLayout><CardCenter /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/comms-hub" element={<ProtectedRoute><LuxuryLayout><CommunicationsLog /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/payroll" element={<ProtectedRoute><LuxuryLayout><CorporatePayroll /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/standing-instructions" element={<ProtectedRoute><LuxuryLayout><StandingInstructions /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/bills" element={<ProtectedRoute><LuxuryLayout><BillsPayment /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/savings" element={<ProtectedRoute><LuxuryLayout><SavingsInvestments /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/fixed-deposits" element={<ProtectedRoute><LuxuryLayout><FixedDeposits /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/fx-global" element={<ProtectedRoute><LuxuryLayout><FXDomiciliary /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/cognitive-core" element={<ProtectedRoute><LuxuryLayout><CognitiveCore /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/fx-wire" element={<ProtectedRoute><LuxuryLayout><InternationalWire /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/qr-payments" element={<ProtectedRoute><LuxuryLayout><QRPayments /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/merchant-console" element={<ProtectedRoute><LuxuryLayout><MerchantConsole /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/virtual-accounts" element={<ProtectedRoute><LuxuryLayout><VirtualAccounts /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/developer" element={<ProtectedRoute allowedRoles={['platform_admin']}><LuxuryLayout><DeveloperHub /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/terminal" element={<ProtectedRoute allowedRoles={['platform_admin']}><LuxuryLayout><IntelligenceTerminal /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/assets" element={<ProtectedRoute allowedRoles={['platform_admin']}><LuxuryLayout><FixedAssets /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/eod-center" element={<ProtectedRoute allowedRoles={['platform_admin']}><LuxuryLayout><EODDashboard /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/fraud-shield" element={<ProtectedRoute allowedRoles={['platform_admin']}><LuxuryLayout><FraudShieldDashboard /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/loan-recovery" element={<ProtectedRoute allowedRoles={['platform_admin']}><LuxuryLayout><LoanRecovery /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/compliance" element={<ProtectedRoute allowedRoles={['platform_admin']}><LuxuryLayout><ComplianceDashboard /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/regulatory-reporting" element={<ProtectedRoute allowedRoles={['platform_admin']}><LuxuryLayout><RegulatoryReporting /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/ai-templates" element={<ProtectedRoute><LuxuryLayout><AIAgentTemplatesPage /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/configure-agent" element={<ProtectedRoute><LuxuryLayout><ConfigureAgentPage /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/my-agents" element={<ProtectedRoute><LuxuryLayout><MyConfiguredAgentsPage /></LuxuryLayout></ProtectedRoute>} />
 
-          <Route path="/workflows" element={<ProtectedRoute><WorkflowsPage /></ProtectedRoute>} />
-          <Route path="/workflow-runs" element={<ProtectedRoute><WorkflowRunsPage /></ProtectedRoute>} />
-          <Route path="/workflow-runs/:runId" element={<ProtectedRoute><WorkflowRunDetailsPage /></ProtectedRoute>} />
+          <Route path="/workflows" element={<ProtectedRoute><LuxuryLayout><WorkflowsPage /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/workflow-runs" element={<ProtectedRoute><LuxuryLayout><WorkflowRunsPage /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/workflow-runs/:runId" element={<ProtectedRoute><LuxuryLayout><WorkflowRunDetailsPage /></LuxuryLayout></ProtectedRoute>} />
 
-          <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
+          <Route path="/tasks" element={<ProtectedRoute><LuxuryLayout><Tasks /></LuxuryLayout></ProtectedRoute>} />
 
           {/* Placeholder/Other User Routes (ensure protection as needed) */}
-          <Route path="/knowledge" element={<ProtectedRoute><KnowledgeBase /></ProtectedRoute>} />
-          <Route path="/monitor" element={<ProtectedRoute><Monitor /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
-          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-          <Route path="/security" element={<ProtectedRoute><Security /></ProtectedRoute>} />
-          <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
-          <Route path="/customers" element={<ProtectedRoute><CustomerManagementPage /></ProtectedRoute>} />
-          <Route path="/portal" element={<ProtectedRoute><CustomerPortal /></ProtectedRoute>} />
-          <Route path="/portal/vault" element={<ProtectedRoute><DocumentVault /></ProtectedRoute>} />
-          <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
-          <Route path="/treasury" element={<ProtectedRoute><TreasuryPage /></ProtectedRoute>} />
-          <Route path="/open-banking" element={<ProtectedRoute><OpenBankingPage /></ProtectedRoute>} />
-          <Route path="/loans" element={<ProtectedRoute><LoanManagementPage /></ProtectedRoute>} />
-          <Route path="/loan-origination" element={<ProtectedRoute><LoanOrigination /></ProtectedRoute>} />
-          <Route path="/loan-collateral" element={<ProtectedRoute><LoanCollateral /></ProtectedRoute>} />
-          <Route path="/cheque-vault" element={<ProtectedRoute><ChequeManagement /></ProtectedRoute>} />
-          <Route path="/transactions" element={<ProtectedRoute><TransactionManagementPage /></ProtectedRoute>} />
+          <Route path="/knowledge" element={<ProtectedRoute><LuxuryLayout><KnowledgeBase /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/monitor" element={<ProtectedRoute><LuxuryLayout><Monitor /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/analytics" element={<ProtectedRoute><LuxuryLayout><AnalyticsPage /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><LuxuryLayout><Notifications /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/security" element={<ProtectedRoute><LuxuryLayout><Security /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/integrations" element={<ProtectedRoute><LuxuryLayout><Integrations /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/customers" element={<ProtectedRoute><LuxuryLayout><CustomerManagementPage /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/portal" element={<ProtectedRoute><LuxuryLayout><CustomerPortal /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/portal/vault" element={<ProtectedRoute><LuxuryLayout><DocumentVault /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/onboarding" element={<ProtectedRoute><LuxuryLayout><OnboardingPage /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/treasury" element={<ProtectedRoute><LuxuryLayout><TreasuryPage /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/open-banking" element={<ProtectedRoute><LuxuryLayout><OpenBankingPage /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/loans" element={<ProtectedRoute><LuxuryLayout><LoanManagementPage /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/loan-origination" element={<ProtectedRoute><LuxuryLayout><LoanOrigination /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/loan-collateral" element={<ProtectedRoute><LuxuryLayout><LoanCollateral /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/cheque-vault" element={<ProtectedRoute><LuxuryLayout><ChequeManagement /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/transactions" element={<ProtectedRoute><LuxuryLayout><TransactionManagementPage /></LuxuryLayout></ProtectedRoute>} />
 
           {/* Admin Routes - Protected by role */}
           <Route
             path="/admin/agent-templates"
             element={
               <ProtectedRoute allowedRoles={['platform_admin']}>
-                <AgentTemplatesListPageAdmin />
+                <LuxuryLayout><AgentTemplatesListPageAdmin /></LuxuryLayout>
               </ProtectedRoute>
             }
           />
@@ -174,7 +176,7 @@ const App = () => (
             path="/admin/audit-trail"
             element={
               <ProtectedRoute allowedRoles={['platform_admin']}>
-                <AuditTrail />
+                <LuxuryLayout><AuditTrail /></LuxuryLayout>
               </ProtectedRoute>
             }
           />
@@ -182,7 +184,7 @@ const App = () => (
             path="/admin/health"
             element={
               <ProtectedRoute allowedRoles={['platform_admin']}>
-                <SystemHealth />
+                <LuxuryLayout><SystemHealth /></LuxuryLayout>
               </ProtectedRoute>
             }
           />
@@ -190,7 +192,7 @@ const App = () => (
             path="/admin/agent-templates/new"
             element={
               <ProtectedRoute allowedRoles={['platform_admin']}>
-                <AgentTemplateEditPage />
+                <LuxuryLayout><AgentTemplateEditPage /></LuxuryLayout>
               </ProtectedRoute>
             }
           />
@@ -198,7 +200,7 @@ const App = () => (
             path="/admin/agent-templates/edit/:templateId"
             element={
               <ProtectedRoute allowedRoles={['platform_admin']}>
-                <AgentTemplateEditPage />
+                <LuxuryLayout><AgentTemplateEditPage /></LuxuryLayout>
               </ProtectedRoute>
             }
           />
@@ -206,7 +208,7 @@ const App = () => (
             path="/admin/workflow-definitions"
             element={
               <ProtectedRoute allowedRoles={['platform_admin']}>
-                <WorkflowDefinitionsListPageAdmin />
+                <LuxuryLayout><WorkflowDefinitionsListPageAdmin /></LuxuryLayout>
               </ProtectedRoute>
             }
           />
@@ -214,7 +216,7 @@ const App = () => (
             path="/admin/workflow-definitions/new"
             element={
               <ProtectedRoute allowedRoles={['platform_admin']}>
-                <WorkflowDefinitionEditPage />
+                <LuxuryLayout><WorkflowDefinitionEditPage /></LuxuryLayout>
               </ProtectedRoute>
             }
           />
@@ -222,7 +224,7 @@ const App = () => (
             path="/admin/workflow-definitions/edit/:workflowId"
             element={
               <ProtectedRoute allowedRoles={['platform_admin']}>
-                <WorkflowDefinitionEditPage />
+                <LuxuryLayout><WorkflowDefinitionEditPage /></LuxuryLayout>
               </ProtectedRoute>
             }
           />
@@ -230,7 +232,7 @@ const App = () => (
             path="/admin/workflow-definitions/new-version/:workflowName"
             element={
               <ProtectedRoute allowedRoles={['platform_admin']}>
-                <WorkflowDefinitionEditPage />
+                <LuxuryLayout><WorkflowDefinitionEditPage /></LuxuryLayout>
               </ProtectedRoute>
             }
           />
@@ -238,16 +240,16 @@ const App = () => (
             path="/admin/agent-monitoring"
             element={
               <ProtectedRoute allowedRoles={['platform_admin']}>
-                <AgentMonitoringPage />
+                <LuxuryLayout><AgentMonitoringPage /></LuxuryLayout>
               </ProtectedRoute>
             }
           />
 
 
           {/* Legacy/Example Routes (Review and protect as needed) */}
-          <Route path="/team" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/email" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/team" element={<ProtectedRoute><LuxuryLayout><Dashboard /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/email" element={<ProtectedRoute><LuxuryLayout><Dashboard /></LuxuryLayout></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><LuxuryLayout><Dashboard /></LuxuryLayout></ProtectedRoute>} />
 
           {/* Not Found Route */}
           <Route path="*" element={<NotFound />} />

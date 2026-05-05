@@ -30,6 +30,9 @@ class CognitiveOrchestrator:
                 banking_tools.verify_beneficiary,
                 banking_tools.analyze_customer_risk,
                 banking_tools.list_recent_transactions,
+                banking_tools.predictive_cash_flow_forecast,
+                banking_tools.autonomous_support_resolution,
+                banking_tools.generate_mermaid_architecture,
             ]
             
             # 2. Initialize the model with these capabilities
@@ -55,6 +58,7 @@ class CognitiveOrchestrator:
         accounts = get_accounts_for_customer(db, customer_id)
         
         context = {
+            "customer_id": customer_id,
             "customer_name": f"{customer.first_name} {customer.last_name}" if customer else "User",
             "tier": str(customer.account_tier) if customer else "Unknown",
             "accounts": [{"nuban": a.account_number, "currency": a.currency.value, "type": a.account_type.value} for a in accounts]
@@ -87,7 +91,7 @@ class CognitiveOrchestrator:
 
         prompt = f"""
         You are 'Weezy Prime', the Cognitive Core of a Nigerian Bank.
-        You can execute actual banking transactions using the tools provided.
+        You can execute actual banking transactions and operations using the tools provided.
         
         CURRENT CUSTOMER CONTEXT:
         {json.dumps(session.context_data)}
@@ -95,8 +99,14 @@ class CognitiveOrchestrator:
         GOVERNANCE RULES:
         1. Always perform a 'verify_beneficiary' before doing a 'perform_transfer' for inter-bank.
         2. If a transfer is > ₦1,000,000, tell the user it requires 'Dual Authorization' (Maker-Checker).
-        3. If you use 'perform_transfer', you must output [TRANSACTION EXECUTED] in your final reply.
-        4. Provide a brief 'Thought Log' at the start of your response formatted as [THOUGHT: step1, step2...].
+        3. For 'predictive_cash_flow_forecast', use the primary NUBAN provided in the context.
+        4. For 'autonomous_support_resolution', first assess the user's sentiment. 
+           - If they are angry or using caps, sentiment is 'AGGRESSIVE'.
+           - Otherwise 'NEUTRAL'.
+           - Use 'UNBLOCK_ACCOUNT' only if they express a valid need and sentiment is not 'AGGRESSIVE'.
+        5. For 'generate_mermaid_architecture', use it when asked to visualize or show the system structure.
+        6. If you execute a critical action, output [ACTION EXECUTED: name] in your final reply.
+        7. Provide a brief 'Thought Log' at the start of your response formatted as [THOUGHT: step1, step2...].
         
         User Request: {request.message}
         """
@@ -115,15 +125,24 @@ class CognitiveOrchestrator:
             
             # 2. Determine Intent (Heuristic for logging)
             intent = models.CognitiveIntentEnum.UNKNOWN
-            if "transfer" in request.message.lower() or "send money" in request.message.lower():
+            lower_msg = request.message.lower()
+            if "transfer" in lower_msg or "send money" in lower_msg:
                 intent = models.CognitiveIntentEnum.TRANSFER
-            elif "balance" in request.message.lower() or "how much" in request.message.lower():
+            elif "forecast" in lower_msg or "prediction" in lower_msg or "how much will i have" in lower_msg:
+                intent = models.CognitiveIntentEnum.PREDICTIVE_FORECAST
+            elif "unblock" in lower_msg or "blocked" in lower_msg:
+                intent = models.CognitiveIntentEnum.ACCOUNT_RESOLUTION
+            elif "architecture" in lower_msg or "diagram" in lower_msg or "schema" in lower_msg:
+                intent = models.CognitiveIntentEnum.ARCHITECTURE_VISUALIZATION
+            elif "balance" in lower_msg or "how much" in lower_msg:
                 intent = models.CognitiveIntentEnum.CUSTOMER_SUPPORT
                 
             executed_actions = []
-            if "[TRANSACTION EXECUTED]" in final_reply:
-                executed_actions.append("perform_transfer")
-                final_reply = final_reply.replace("[TRANSACTION EXECUTED]", "").strip()
+            if "[ACTION EXECUTED:" in final_reply:
+                # Extract the action name
+                action_name = final_reply.split("[ACTION EXECUTED:")[1].split("]")[0].strip()
+                executed_actions.append(action_name)
+                final_reply = final_reply.replace(f"[ACTION EXECUTED: {action_name}]", "").replace(f"[ACTION EXECUTED:{action_name}]", "").strip()
 
             # 3. Log the Interaction
             action_log = models.CognitiveActionLog(
