@@ -16,6 +16,7 @@ const NeuralBackdrop: React.FC = () => {
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      init();
     };
 
     class Particle {
@@ -29,10 +30,10 @@ const NeuralBackdrop: React.FC = () => {
       constructor() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 2 + 0.5;
-        this.speedX = Math.random() * 0.5 - 0.25;
-        this.speedY = Math.random() * 0.5 - 0.25;
-        this.opacity = Math.random() * 0.5;
+        this.size = Math.random() * 1.5 + 0.5;
+        this.speedX = (Math.random() - 0.5) * 0.4;
+        this.speedY = (Math.random() - 0.5) * 0.4;
+        this.opacity = Math.random() * 0.3 + 0.1;
       }
 
       update() {
@@ -56,41 +57,36 @@ const NeuralBackdrop: React.FC = () => {
 
     const init = () => {
       particles = [];
-      for (let i = 0; i < 100; i++) {
+      const density = window.innerWidth < 768 ? 40 : 80;
+      for (let i = 0; i < density; i++) {
         particles.push(new Particle());
       }
     };
 
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
-        p.update();
-        p.draw();
-      });
-
-      // Draw subtle connections
-      for (let a = 0; idxA < particles.length; a++) {
-        // Limited for performance
-      }
-
-      animationFrameId = requestAnimationFrame(animate);
-    };
-
-    // Optimization: manual loop for connections to keep it performant
     const drawLines = () => {
-        for (let i = 0; i < particles.length; i++) {
-            for (let j = i; j < particles.length; j++) {
-                const dx = particles[i].x - particles[j].x;
-                const dy = particles[i].y - particles[j].y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-
-                if (distance < 150) {
-                    ctx.strokeStyle = `rgba(99, 102, 241, ${0.1 * (1 - distance/150)})`;
-                    ctx.lineWidth = 0.5;
-                    ctx.beginPath();
-                    ctx.moveTo(particles[i].x, particles[i].y);
-                    ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.stroke();
+        const particleCount = particles.length;
+        const maxDist = 150;
+        ctx.lineWidth = 0.5;
+        
+        for (let i = 0; i < particleCount; i++) {
+            const p1 = particles[i];
+            for (let j = i + 1; j < particleCount; j++) {
+                const p2 = particles[j];
+                const dx = p1.x - p2.x;
+                const dy = p1.y - p2.y;
+                
+                // Fast distance check (AABB)
+                if (Math.abs(dx) < maxDist && Math.abs(dy) < maxDist) {
+                    const distSq = dx * dx + dy * dy;
+                    if (distSq < 22500) { // 150 * 150
+                        const distance = Math.sqrt(distSq);
+                        const opacity = 0.1 * (1 - distance / maxDist);
+                        ctx.strokeStyle = `rgba(99, 102, 241, ${opacity})`;
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
                 }
             }
         }
@@ -98,10 +94,11 @@ const NeuralBackdrop: React.FC = () => {
 
     window.addEventListener('resize', resize);
     resize();
-    init();
     
     const render = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(2, 2, 3, 0.2)'; // Neural trail effect
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
         particles.forEach(p => {
             p.update();
             p.draw();

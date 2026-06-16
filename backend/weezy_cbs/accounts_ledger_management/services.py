@@ -364,9 +364,71 @@ def post_double_entry_transaction(
             db.rollback()
         raise InvalidOperationException(f"Ledger posting failed: {str(e)}")
 
-def post_internal_transaction(db: Session, request: schemas.InternalTransactionPostingRequest) -> schemas.InternalTransactionPostingResponse:
-    # Deprecated for MVP double entry approach. Use post_double_entry_transaction instead.
-    pass
+def post_batch_double_entry_transaction(
+    db: Session, 
+    legs: List[Dict[str, Any]],
+    financial_transaction_id: str,
+    channel: str = "SYSTEM",
+    auto_commit: bool = True
+) -> Dict[str, Any]:
+    """
+    Performs multiple double-entry ledger postings atomically.
+    legs: List of {debit_account, credit_account, amount, currency, narration}
+    1. Collects all unique accounts.
+    2. Locks all involved accounts in sorted order to prevent deadlocks.
+    3. Executes all legs and commits.
+    """
+    unique_account_numbers = set()
+    for leg in legs:
+        unique_account_numbers.add(leg["debit_account"])
+        unique_account_numbers.add(leg["credit_account"])
+    
+    sorted_accounts = sorted(list(unique_account_numbers))
+    
+    # 1. Batch Lock
+    accounts_map = {}
+    for acc_num in sorted_accounts:
+        acc = get_account_by_number(db, acc_num, for_update=True)
+        if not acc: raise NotFoundException(f"Account {acc_num} not found.")
+        accounts_map[acc_num] = acc
+
+    # 2. Validation & Execution
+    ledger_entries = []
+    try:
+        for leg in legs:
+            debit_acc = accounts_map[leg["debit_account"]]
+            credit_acc = accounts_map[leg["credit_account"]]
+            amount = leg["amount"]
+            currency = leg["currency"]
+            
+            # Validation (simplified)
+            if debit_acc.available_balance < amount:
+                raise InsufficientFundsException(f"Insufficient funds in {debit_acc.account_number}")
+
+            # Debit
+            ledger_entries.append(_create_ledger_entry_internal(
+                db=db, account_id=debit_acc.id, financial_transaction_id=financial_transaction_id,
+                entry_type=TransactionTypeEnum.DEBIT, amount=amount, currency=currency,
+                narration=leg["narration"], value_date=datetime.utcnow(), channel=channel
+            ))
+            
+            # Credit
+            ledger_entries.append(_create_ledger_entry_internal(
+                db=db, account_id=credit_acc.id, financial_transaction_id=financial_transaction_id,
+                entry_type=TransactionTypeEnum.CREDIT, amount=amount, currency=currency,
+                narration=leg["narration"], value_date=datetime.utcnow(), channel=channel
+            ))
+
+        if auto_commit:
+            db.commit()
+        else:
+            db.flush()
+            
+        return {"status": "SUCCESS", "entry_count": len(ledger_entries)}
+    except Exception as e:
+        if auto_commit:
+            db.rollback()
+        raise e
 
 
 def post_cash_deposit_to_account(db: Session, account_number: str, amount: decimal.Decimal, currency: CurrencyEnum,
