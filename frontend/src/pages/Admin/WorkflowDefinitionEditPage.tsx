@@ -9,9 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { ArrowLeft, Save, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Save, ShieldAlert, AlertTriangle, Layout as LayoutIcon, Code, Eye, BrainCircuit } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import WorkflowVisualEditor from '@/components/admin/workflow-editor/WorkflowVisualEditor';
+import { NIGERIAN_BANKING_TEMPLATES } from '@/data/bankingTemplates';
+import { Sparkles, Library, Zap as ZapIcon } from 'lucide-react';
 
 // Basic JSON validation helper (can be improved)
 const isValidJson = (str: string) => {
@@ -299,7 +303,7 @@ const WorkflowDefinitionEditPage: React.FC = () => {
           Back to Definitions List
         </Button>
 
-        <Card className="max-w-3xl mx-auto">
+        <Card className="max-w-6xl mx-auto">
           <CardHeader>
             <CardTitle className="text-2xl">{pageTitle}</CardTitle>
             <CardDescription>
@@ -383,25 +387,125 @@ const WorkflowDefinitionEditPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Definition JSON Field */}
-              <div>
-                <Label htmlFor="definition_json">Definition JSON</Label>
-                <Textarea
-                  id="definition_json"
-                  name="definition_json"
-                  value={definitionJsonString}
-                  onChange={(e) => handleDefinitionJsonChange(e.target.value)}
-                  placeholder='{ "start_step": "step1", "steps": [ ... ] }'
-                  rows={15}
-                  className="mt-1 font-mono text-sm"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Define steps, transitions, and agent interactions. For agent steps, use
-                  <code className="text-xs bg-gray-200 p-0.5 rounded">"type": "agent_execution"</code>.
-                  Assign agents via <code className="text-xs bg-gray-200 p-0.5 rounded">"configured_agent_id": "uuid"</code> for direct assignment,
-                  or <code className="text-xs bg-gray-200 p-0.5 rounded">"agent_selection_criteria": {"{/* criteria */}"}</code> for dynamic selection.
-                  Example criteria: <code className="text-xs bg-gray-200 p-0.5 rounded">{"{\"name_matches\": \"LoanAgent_US\", \"status\": \"active\"}"}</code>.
-                </p>
+              {/* Definition Editor (Visual & JSON) */}
+              <div className="space-y-4 pt-4 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                    <Label className="text-xl font-black italic uppercase tracking-tighter text-slate-900">Automation Logic</Label>
+                    <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg shadow-sm">
+                            <Eye className="h-3 w-3 text-indigo-500" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">Dynamic Preview</span>
+                        </div>
+                    </div>
+                </div>
+
+                <Tabs defaultValue="visual" className="w-full">
+                    <TabsList className="bg-slate-100/50 p-1 rounded-2xl mb-4 grid grid-cols-2 h-14">
+                        <TabsTrigger value="visual" className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-indigo-600 font-black text-[10px] uppercase tracking-[0.2em] transition-all">
+                            <LayoutIcon className="h-4 w-4 mr-2" /> Visual Designer
+                        </TabsTrigger>
+                        <TabsTrigger value="visual-json" className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-indigo-600 font-black text-[10px] uppercase tracking-[0.2em] transition-all">
+                            <Code className="h-4 w-4 mr-2" /> JSON Specification
+                        </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="visual" className="mt-0 border-none p-0 focus-visible:ring-0">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            <div className="lg:col-span-8">
+                                <WorkflowVisualEditor 
+                                    steps={definition.definition_json.steps}
+                                    startStep={definition.definition_json.start_step}
+                                    onDefinitionChange={(steps, startStep) => {
+                                        const newDefJson = { ...definition.definition_json, steps, start_step: startStep };
+                                        setDefinition(prev => ({ ...prev, definition_json: newDefJson }));
+                                        setDefinitionJsonString(JSON.stringify(newDefJson, null, 2));
+                                    }}
+                                />
+                                <div className="mt-4 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 flex gap-4">
+                                    <BrainCircuit className="h-6 w-6 text-indigo-500 shrink-0" />
+                                    <p className="text-[10px] text-indigo-900 leading-relaxed font-bold italic">
+                                        "The Visual Designer maps your logical nodes to the CBS Automation Lattice. Changes made here are automatically synced to the JSON specification."
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Template Marketplace Sidebar */}
+                            <div className="lg:col-span-4 space-y-6">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="p-2 bg-slate-900 rounded-lg shadow-lg">
+                                        <Library className="h-4 w-4 text-white" />
+                                    </div>
+                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900">Marketplace</h3>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {Object.entries(NIGERIAN_BANKING_TEMPLATES).map(([key, template]) => (
+                                        <Card key={key} className="border-none shadow-sm ring-1 ring-slate-200/60 rounded-2xl overflow-hidden hover:ring-indigo-500/50 transition-all group cursor-pointer" 
+                                            onClick={() => {
+                                                setDefinition(prev => ({
+                                                    ...prev,
+                                                    description: template.description,
+                                                    definition_json: template.definition_json
+                                                }));
+                                                setDefinitionJsonString(JSON.stringify(template.definition_json, null, 2));
+                                                setSuccessMessage(`Template "${template.name}" injected successfully.`);
+                                            }}
+                                        >
+                                            <CardHeader className="p-5 pb-2">
+                                                <div className="flex justify-between items-start">
+                                                    <Badge className="bg-slate-100 text-slate-500 border-none text-[8px] font-black tracking-widest px-2 py-0">🇳🇬 STANDARDIZED</Badge>
+                                                    <Sparkles className="h-3 w-3 text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                </div>
+                                                <CardTitle className="text-sm font-black italic uppercase tracking-tight mt-3">{template.name}</CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="p-5 pt-0">
+                                                <p className="text-[10px] text-slate-500 font-medium leading-relaxed line-clamp-2">
+                                                    {template.description}
+                                                </p>
+                                            </CardContent>
+                                            <CardFooter className="p-0">
+                                                <Button variant="ghost" className="w-full rounded-none h-10 border-t border-slate-50 text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700">
+                                                    Inject Lattice <ZapIcon className="ml-2 h-3 w-3" />
+                                                </Button>
+                                            </CardFooter>
+                                        </Card>
+                                    ))}
+                                </div>
+
+                                <div className="p-6 rounded-3xl bg-slate-900 text-white shadow-2xl relative overflow-hidden">
+                                    <div className="absolute -right-4 -bottom-4 opacity-10 rotate-12">
+                                        <BrainCircuit className="h-24 w-24" />
+                                    </div>
+                                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] mb-3">Custom Node Hub</h4>
+                                    <p className="text-[10px] text-slate-300 leading-relaxed font-medium mb-4">
+                                        Need a specialized regulator node for NFIU or NDIC reporting?
+                                    </p>
+                                    <Button variant="outline" className="w-full rounded-xl h-10 bg-white/10 border-white/20 text-white font-black text-[9px] uppercase tracking-widest hover:bg-white/20 transition-all">
+                                        Request Node Build
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="visual-json" className="mt-0 border-none p-0 focus-visible:ring-0">
+                        <div className="relative group">
+                            <div className="absolute left-6 top-6"><Code className="h-4 w-4 text-slate-400 opacity-40 group-focus-within:opacity-100" /></div>
+                            <Textarea
+                                id="definition_json"
+                                name="definition_json"
+                                value={definitionJsonString}
+                                onChange={(e) => handleDefinitionJsonChange(e.target.value)}
+                                placeholder='{ "start_step": "step1", "steps": [ ... ] }'
+                                rows={20}
+                                className="mt-1 font-mono text-xs bg-slate-50 border-none pl-14 pr-8 py-8 rounded-[32px] h-[600px] shadow-inner focus-visible:ring-4 focus-visible:ring-indigo-600/10 transition-all text-slate-900 font-bold"
+                            />
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-bold mt-4 px-4 uppercase tracking-widest">
+                            Directly modifying the JSON specification overrides the visual mapping.
+                        </p>
+                    </TabsContent>
+                </Tabs>
               </div>
             </CardContent>
             <CardFooter>

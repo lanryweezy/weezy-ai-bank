@@ -287,11 +287,13 @@ def post_double_entry_transaction(
     currency: CurrencyEnum, 
     narration: str, 
     financial_transaction_id: str,
-    channel: str = "SYSTEM"
+    channel: str = "SYSTEM",
+    auto_commit: bool = True
 ) -> Dict[str, Any]:
     """
     Performs a strict double-entry ledger posting between two customer accounts.
     Locks both accounts to prevent race conditions during concurrent transactions.
+    Supports atomic batching via the auto_commit flag.
     """
     # Always lock accounts in a consistent order to prevent deadlocks (e.g., sort by account number)
     accounts = sorted([debit_account_number, credit_account_number])
@@ -347,7 +349,10 @@ def post_double_entry_transaction(
             channel=channel
         )
 
-        db.commit()
+        if auto_commit:
+            db.commit()
+        else:
+            db.flush() # Ensure entries are available in the session
         
         return {
             "status": "SUCCESS",
@@ -355,7 +360,8 @@ def post_double_entry_transaction(
             "credit_ledger_entry_id": credit_entry.id
         }
     except Exception as e:
-        db.rollback()
+        if auto_commit:
+            db.rollback()
         raise InvalidOperationException(f"Ledger posting failed: {str(e)}")
 
 def post_internal_transaction(db: Session, request: schemas.InternalTransactionPostingRequest) -> schemas.InternalTransactionPostingResponse:

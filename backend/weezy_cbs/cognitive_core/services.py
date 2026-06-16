@@ -51,11 +51,11 @@ class CognitiveOrchestrator:
         sid = f"COG-{uuid.uuid4().hex[:12].upper()}"
         
         # Build initial context
-        from weezy_cbs.accounts_ledger_management.services import get_accounts_for_customer
+        from weezy_cbs.accounts_ledger_management.services import get_accounts_by_customer_id
         from weezy_cbs.customer_identity_management.models import Customer
         
         customer = db.query(Customer).filter(Customer.id == customer_id).first()
-        accounts = get_accounts_for_customer(db, customer_id)
+        accounts = get_accounts_by_customer_id(db, customer_id)
         
         context = {
             "customer_id": customer_id,

@@ -9,7 +9,7 @@ import google.generativeai as genai
 
 from . import models, schemas
 from weezy_cbs.customer_identity_management.models import Customer
-from weezy_cbs.accounts_ledger_management.services import get_accounts_for_customer
+from weezy_cbs.accounts_ledger_management.services import get_accounts_by_customer_id
 from weezy_cbs.transaction_management.services import initiate_transaction
 from weezy_cbs.transaction_management.schemas import TransactionCreateRequest
 
@@ -81,7 +81,7 @@ class SavingsInvestmentsService:
         AI Investment Advisor: Analyzes spending and suggests saving plans.
         """
         customer = db.query(Customer).filter(Customer.id == customer_id).first()
-        accounts = get_accounts_for_customer(db, customer_id)
+        accounts = get_accounts_by_customer_id(db, customer_id)
         
         balance = sum(acc.available_balance for acc in accounts)
         

@@ -1,24 +1,18 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 
-# SQLALCHEMY_DATABASE_URL = "sqlite:///./weezy_cbs.db" # For SQLite
-# For PostgreSQL, from environment variable or config:
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/weezy_cbs_db")
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./weezy_cbs.db")
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL
-    # For SQLite, add: connect_args={"check_same_thread": False}
-    # For production PostgreSQL, you might want to configure pool size, etc.
-    # pool_size=10, max_overflow=20
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False}
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-# Dependency to get DB session in FastAPI routes
 def get_db():
     db = SessionLocal()
     try:
@@ -26,14 +20,9 @@ def get_db():
     finally:
         db.close()
 
-# Function to create all tables (call this from main.py or a migration script)
 def create_all_tables():
-    # Import all model modules here so Base knows about them
-    # This is crucial. Base.metadata.create_all(engine) will only create tables
-    # for models that have been imported and thus registered with Base.
-
-    # Core CBS Modules
-    from weezy_cbs.customer_identity_management import models as cust_models
+    print("Importing models for table creation...")
+    from weezy_cbs.customer_identity_management import models as cust_id_models
     from weezy_cbs.accounts_ledger_management import models as acc_models
     from weezy_cbs.loan_management_module import models as loan_models
     from weezy_cbs.transaction_management import models as txn_models
@@ -49,19 +38,16 @@ def create_all_tables():
     from weezy_cbs.reports_analytics import models as report_models
     from weezy_cbs.third_party_fintech_integration import models as third_party_models
     from weezy_cbs.ai_automation_layer import models as ai_models
-
-    # Agents (if they have their own DB models, usually they don't directly)
-    # from weezy_cbs.agents.customer_onboarding_agent import models as coa_models # Example if agent had models
-
+    from weezy_cbs.fixed_deposits import models as fd_models
+    from weezy_cbs.teller_operations import models as teller_models
+    from weezy_cbs.bills_payment import models as bills_models
+    from weezy_cbs.messaging_notifications import models as msg_models
+    from weezy_cbs.customer_risk_profiling import models as risk_models
+    
+    print(f"Tables in metadata: {Base.metadata.tables.keys()}")
     print("Creating all tables in the database...")
     Base.metadata.create_all(bind=engine)
-    print("Tables created (if they didn't exist).")
+    print("Tables created.")
 
 if __name__ == "__main__":
-    # This allows running `python weezy_cbs/database.py` to create tables
-    print("Running table creation script...")
-    # You might want to add a confirmation step or command-line arg here
-    # for safety in a real environment.
-    # IMPORTANT: Ensure your database (e.g., 'weezy_cbs_db') exists before running this.
-    # For PostgreSQL: createdb weezy_cbs_db
     create_all_tables()

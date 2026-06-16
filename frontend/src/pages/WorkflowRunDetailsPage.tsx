@@ -168,6 +168,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onViewAction }) => {
 };
 
 
+import WorkflowVisualEditor from '@/components/admin/workflow-editor/WorkflowVisualEditor';
+import { useMemo } from 'react';
+
 const WorkflowRunDetailsPage: React.FC = () => {
   const { runId } = useParams<{ runId: string }>();
   const navigate = useNavigate();
@@ -186,26 +189,21 @@ const WorkflowRunDetailsPage: React.FC = () => {
     enabled: !!runId
   });
 
-  const getStatusBadge = (status: WorkflowRun['status']) => {
-    switch (status) {
-      case 'completed': return <Badge className="bg-emerald-50 text-emerald-700 font-bold border-none">Completed</Badge>;
-      case 'in_progress': return <Badge className="bg-indigo-50 text-indigo-700 font-bold border-none">Active</Badge>;
-      case 'failed': return <Badge className="bg-rose-50 text-rose-700 font-bold border-none">Failed</Badge>;
-      default: return <Badge variant="outline">{status}</Badge>;
-    }
-  };
+  const { data: workflowDefinition } = useQuery({
+    queryKey: ['workflow-definition', runDetails?.workflow_id],
+    queryFn: () => apiClient<any>(`/admin/workflows/${runDetails?.workflow_id}`),
+    enabled: !!runDetails?.workflow_id
+  });
 
-  if (isLoadingRun || isLoadingTasks) {
-    return (
-      <Layout>
-        <div className="p-8 space-y-6">
-          <Skeleton className="h-12 w-48 rounded-xl" />
-          <Skeleton className="h-64 w-full rounded-2xl" />
-          <Skeleton className="h-12 w-full rounded-xl" />
-        </div>
-      </Layout>
-    );
-  }
+  const executedStepNames = useMemo(() => 
+    tasks?.filter(t => t.status === 'completed').map(t => t.step_name_in_workflow) || [],
+  [tasks]);
+
+  const failedStepNames = useMemo(() => 
+    tasks?.filter(t => t.status === 'failed').map(t => t.step_name_in_workflow) || [],
+  [tasks]);
+
+  // ... (rest of helper functions)
 
   return (
     <Layout>
@@ -271,15 +269,49 @@ const WorkflowRunDetailsPage: React.FC = () => {
                     </CardContent>
                 </Card>
 
-                <Tabs defaultValue="nodes" className="w-full">
+                <Tabs defaultValue="visual" className="w-full">
                     <TabsList className="bg-gray-100 p-1 rounded-xl mb-6">
+                        <TabsTrigger value="visual" className="rounded-lg px-6 font-bold flex items-center gap-2">
+                            <Activity className="h-4 w-4" /> Neural Map
+                        </TabsTrigger>
                         <TabsTrigger value="nodes" className="rounded-lg px-6 font-bold flex items-center gap-2">
                             <Database className="h-4 w-4" /> Node Timeline
                         </TabsTrigger>
                         <TabsTrigger value="logs" className="rounded-lg px-6 font-bold flex items-center gap-2 text-gray-500 data-[state=active]:text-indigo-600">
-                            <Cpu className="h-4 w-4" /> Low-Level Logs
+                            <Cpu className="h-4 w-4" /> Execution Logs
                         </TabsTrigger>
                     </TabsList>
+
+                    <TabsContent value="visual" className="mt-0">
+                        {workflowDefinition ? (
+                            <div className="rounded-[40px] overflow-hidden border-4 border-white shadow-2xl bg-[#020203]">
+                                <WorkflowVisualEditor 
+                                    mode="monitoring"
+                                    steps={workflowDefinition.definition_json.steps}
+                                    startStep={workflowDefinition.definition_json.start_step}
+                                    activeStepName={runDetails?.current_step_name}
+                                    executedStepNames={executedStepNames}
+                                    failedStepNames={failedStepNames}
+                                />
+                            </div>
+                        ) : (
+                            <Skeleton className="h-[600px] w-full rounded-[40px]" />
+                        )}
+                        <div className="mt-6 flex items-center gap-6 px-4">
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Executed</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)] animate-pulse" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Active Node</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Failed</span>
+                            </div>
+                        </div>
+                    </TabsContent>
 
                     <TabsContent value="nodes" className="space-y-4">
                         {tasks?.map(task => (
@@ -292,7 +324,7 @@ const WorkflowRunDetailsPage: React.FC = () => {
                     </TabsContent>
 
                     <TabsContent value="logs" className="space-y-4">
-                        {runDetails?.execution_logs?.map((log, idx) => (
+                        {runDetails?.execution_logs?.map((log: any, idx: number) => (
                             <div key={idx} className="bg-slate-900 rounded-2xl p-6 font-mono text-[11px] text-indigo-300">
                                 <div className="flex justify-between items-center mb-4 border-b border-indigo-500/20 pb-2">
                                     <span className="text-indigo-500 font-bold uppercase">{log.step_name} ({log.step_type})</span>

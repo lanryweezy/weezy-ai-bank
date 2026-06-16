@@ -6,7 +6,7 @@ from datetime import datetime
 from weezy_cbs.database import get_db
 from . import schemas, services, models
 from .services import interest_engine
-from weezy_cbs.core_infrastructure_config_engine.api import get_current_active_superuser
+from weezy_cbs.core_infrastructure_config_engine.api import get_current_active_user, get_current_active_superuser
 
 router = APIRouter(
     tags=["Automated Interest Engine"],

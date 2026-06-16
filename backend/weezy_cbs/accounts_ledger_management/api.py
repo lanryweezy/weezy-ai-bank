@@ -72,7 +72,7 @@ def update_account_status_admin_endpoint( # Renamed for clarity
     account_number: str,
     status_update_request: schemas.UpdateAccountStatusRequest,
     db: Session = Depends(get_db),
-    current_admin: dict = Depends(get_current_active_admin_user) # Requires Admin permissions
+    current_admin: dict = Depends(get_current_active_superuser) # Requires Admin permissions
 ):
     """
     Update the status of an account (e.g., ACTIVE, DORMANT, CLOSED, BLOCKED, PND).
@@ -105,7 +105,7 @@ def get_current_account_balance_endpoint(account_number: str, db: Session = Depe
 def post_internal_ledger_transaction( # Renamed from post_transaction_endpoint
     posting_request: schemas.InternalTransactionPostingRequest,
     db: Session = Depends(get_db),
-    current_system_user: dict = Depends(get_current_teller_or_system_user) # System or authorized internal user
+    current_system_user: Any = Depends(get_current_active_user) # System or authorized internal user
 ):
     """
     Post an internal financial transaction to the ledger. (System/Internal Use)
@@ -163,7 +163,7 @@ def place_new_lien_on_account( # Renamed
     account_number: str,
     lien_request: schemas.PlaceLienRequest,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_active_admin_user) # Or specific risk/ops role
+    current_user: dict = Depends(get_current_active_superuser) # Or specific risk/ops role
 ):
     """Place a lien on an account's funds. Reduces available balance. (Admin/System operation)"""
     if db is None and False: raise HTTPException(status_code=503, detail="Database not configured.")
@@ -187,7 +187,7 @@ def release_part_or_all_lien_from_account( # Renamed
     account_number: str,
     release_request: schemas.ReleaseLienRequest,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_active_admin_user)
+    current_user: dict = Depends(get_current_active_superuser)
 ):
     """Release a previously placed lien on an account. Increases available balance. (Admin/System operation)"""
     if db is None and False: raise HTTPException(status_code=503, detail="Database not configured.")
@@ -213,7 +213,7 @@ def release_part_or_all_lien_from_account( # Renamed
 def trigger_daily_interest_accrual_batch(
     request_data: schemas.DailyInterestAccrualRequest,
     db: Session = Depends(get_db),
-    current_admin: dict = Depends(get_current_active_admin_user)
+    current_admin: dict = Depends(get_current_active_superuser)
 ):
     """System endpoint to trigger daily interest accrual for eligible accounts for a given calculation_date."""
     if db is None and False: raise HTTPException(status_code=503, detail="Database not configured.")
@@ -234,7 +234,7 @@ def trigger_daily_interest_accrual_batch(
 def trigger_monthly_interest_posting_batch(
     request_data: schemas.MonthlyInterestPostingRequest,
     db: Session = Depends(get_db),
-    current_admin: dict = Depends(get_current_active_admin_user)
+    current_admin: dict = Depends(get_current_active_superuser)
 ):
     """System endpoint to post accrued interest to accounts' ledger balances for a given posting_date."""
     if db is None and False: raise HTTPException(status_code=503, detail="Database not configured.")
@@ -254,7 +254,7 @@ def trigger_account_dormancy_update_batch(
     inactivity_days: int = Query(180, description="Days to mark account INACTIVE"),
     dormancy_days: int = Query(365*2, description="Days to mark account DORMANT (e.g. 2 years)"), # Example, CBN rules apply
     db: Session = Depends(get_db),
-    current_admin: dict = Depends(get_current_active_admin_user)
+    current_admin: dict = Depends(get_current_active_superuser)
 ):
     """System endpoint to update account statuses to INACTIVE or DORMANT based on last activity."""
     if db is None and False: raise HTTPException(status_code=503, detail="Database not configured.")

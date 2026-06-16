@@ -19,7 +19,7 @@ class ReportStatusEnum(enum.Enum):
     FAILED_GENERATION = "FAILED_GENERATION"; FAILED_SUBMISSION = "FAILED_SUBMISSION"
 
 class GeneratedReportLog(Base):
-    __tablename__ = "generated_report_logs"
+    __tablename__ = "regulatory_report_logs"
     id = Column(Integer, primary_key=True, index=True)
     report_name = Column(SQLAlchemyEnum(ReportNameEnum), nullable=False, index=True)
     reporting_period_start_date = Column(Date, nullable=False)
@@ -70,7 +70,7 @@ class SuspiciousActivityLog(Base):
     assigned_to_user_id = Column(String(50), nullable=True)
     investigation_notes = Column(Text, nullable=True)
     resolution_date = Column(DateTime(timezone=True), nullable=True)
-    str_report_log_id = Column(Integer, ForeignKey("generated_report_logs.id"), nullable=True)
+    str_report_log_id = Column(Integer, ForeignKey("regulatory_report_logs.id"), nullable=True)
 
     rule_triggered = relationship("AMLRule") # Add back_populates if needed
     str_report = relationship("GeneratedReportLog") # Add back_populates if needed
@@ -116,7 +116,7 @@ class CTRLog(Base):
     account_number = Column(String(20), nullable=True, index=True)
     transaction_type = Column(String(50), nullable=False) # e.g. "CASH_DEPOSIT", "CASH_WITHDRAWAL", "AGGREGATED_CASH"
 
-    ctr_report_log_id = Column(Integer, ForeignKey("generated_report_logs.id"), nullable=True)
+    ctr_report_log_id = Column(Integer, ForeignKey("regulatory_report_logs.id"), nullable=True)
 
     # Relationships for clarity if needed, though denormalized fields are primary for CTR
     # financial_transaction = relationship("FinancialTransaction")

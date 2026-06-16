@@ -36,6 +36,38 @@ async def list_my_fixed_deposits(
     """Returns all active investments for the logged-in user."""
     return db.query(models.FixedDepositAccount).filter(models.FixedDepositAccount.customer_id == current_user.id).all()
 
+@router.get("/account/{account_number}", response_model=schemas.FDAccountResponse)
+async def get_fd_by_account_number(
+    account_number: str,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Retrieves a specific FD account by its account number."""
+    fd = db.query(models.FixedDepositAccount).filter(models.FixedDepositAccount.fd_account_number == account_number).first()
+    if not fd: raise HTTPException(status_code=404, detail="Fixed Deposit account not found")
+    return fd
+
+@router.get("/liquidation-account/{account_number}", response_model=List[schemas.FDAccountResponse])
+async def get_fd_by_liquidation_account(
+    account_number: str,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Retrieves FD accounts linked to a specific liquidation (savings) account."""
+    return db.query(models.FixedDepositAccount).filter(models.FixedDepositAccount.linked_savings_account == account_number).all()
+
+@router.get("/phone/{phone_number}", response_model=List[schemas.FDAccountResponse])
+async def get_fd_by_phone_number(
+    phone_number: str,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Retrieves FD accounts for a customer using their phone number."""
+    from weezy_cbs.customer_identity_management.models import Customer
+    customer = db.query(Customer).filter(Customer.phone_number == phone_number).first()
+    if not customer: raise HTTPException(status_code=404, detail="Customer not found")
+    return db.query(models.FixedDepositAccount).filter(models.FixedDepositAccount.customer_id == customer.id).all()
+
 @router.post("/{fd_id}/liquidate")
 async def request_early_liquidation(
     fd_id: int,

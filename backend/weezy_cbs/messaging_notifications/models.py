@@ -21,7 +21,7 @@ class NotificationLog(Base):
     Audit trail for every message sent to a customer.
     Critical for trust and compliance (e.g. proof of transaction alert).
     """
-    __tablename__ = "notification_logs"
+    __tablename__ = "messaging_notification_logs"
 
     id = Column(Integer, primary_key=True, index=True)
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, index=True)

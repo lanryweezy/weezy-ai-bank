@@ -9,33 +9,59 @@ class NIPMessageFormatter:
     for NIBSS Instant Payments (NIP).
     """
 
+    NIP_RESPONSE_CODES = {
+        "00": "Approved or completed successfully",
+        "01": "Status unknown, please wait for settlement report",
+        "03": "Invalid Sender",
+        "05": "Do not Honor",
+        "06": "Error",
+        "07": "Invalid Account",
+        "08": "Invalid Batch",
+        "09": "Request processing in progress",
+        "12": "Invalid Transaction",
+        "13": "Invalid Amount",
+        "14": "Invalid Batch Number",
+        "21": "No action taken",
+        "25": "Unable to locate record",
+        "26": "Duplicate record",
+        "30": "Format Error",
+        "34": "Suspected Fraud",
+        "51": "Insufficient Funds",
+        "57": "Transaction not permitted to sender",
+        "58": "Transaction not permitted on terminal",
+        "61": "Exceeds withdrawal limit",
+        "63": "Security violation",
+        "68": "Response received too late",
+        "91": "Destination institution inoperative",
+        "92": "Routing error",
+        "94": "Duplicate transaction",
+        "96": "System malfunction",
+        "EE": "Ambiguous status, require manual reconciliation"
+    }
+
     @staticmethod
-    def format_name_enquiry_request(bank_code: str, account_number: str, channel_code: str = "1") -> str:
+    def format_status_inquiry_request(session_id: str, channel_code: str = "1") -> str:
         """
-        Generates the XML for a NIP Name Enquiry Request.
+        Generates XML for NIP TS (Transaction Status) Inquiry.
         """
-        root = ET.Element("NameEnquiryRequest")
-        ET.SubElement(root, "SessionID").text = f"999{datetime.now().strftime('%y%m%d%H%M%S')}{uuid.uuid4().hex[:12].upper()}"
-        ET.SubElement(root, "DestinationInstitutionCode").text = bank_code
-        ET.SubElement(root, "AccountNumber").text = account_number
+        root = ET.Element("TSQueryRequest")
+        ET.SubElement(root, "SessionID").text = session_id
         ET.SubElement(root, "ChannelCode").text = channel_code
-        
         return ET.tostring(root, encoding='unicode', method='xml')
 
     @staticmethod
-    def parse_name_enquiry_response(xml_data: str) -> Dict[str, Any]:
+    def parse_status_inquiry_response(xml_data: str) -> Dict[str, Any]:
         """
-        Parses the XML response from a NIP Name Enquiry.
+        Parses XML response from NIP TS Inquiry.
         """
         try:
             root = ET.fromstring(xml_data)
+            response_code = root.findtext("ResponseCode")
             return {
                 "session_id": root.findtext("SessionID"),
-                "account_name": root.findtext("AccountName"),
-                "account_number": root.findtext("AccountNumber"),
-                "bank_code": root.findtext("DestinationInstitutionCode"),
-                "response_code": root.findtext("ResponseCode"),
-                "status": "success" if root.findtext("ResponseCode") == "00" else "error"
+                "response_code": response_code,
+                "status": "success" if response_code == "00" else "pending" if response_code in ["01", "09"] else "error",
+                "message": NIPMessageFormatter.NIP_RESPONSE_CODES.get(response_code, "Unknown response code")
             }
         except Exception as e:
             return {"status": "error", "message": f"XML Parsing Error: {str(e)}"}

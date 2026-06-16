@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from weezy_cbs.database import SessionLocal
 
 from weezy_cbs.accounts_ledger_management.services import get_account_by_number
-from weezy_cbs.transaction_management.services import initiate_transaction, get_transaction_history
+from weezy_cbs.transaction_management.services import initiate_transaction, get_transactions_for_account
 from weezy_cbs.transaction_management.schemas import TransactionCreateRequest
 from weezy_cbs.nigerian_market_utils import NigerianMarketUtils
 from weezy_cbs.customer_risk_profiling.services import risk_profiling_service
@@ -93,7 +93,7 @@ class BankingTools:
         """Fetch the transaction history for an account."""
         db = SessionLocal()
         try:
-            txns = get_transaction_history(db, account_number=account_number, limit=limit)
+            txns = get_transactions_for_account(db, account_number=account_number, limit=limit)
             return [
                 {
                     "id": t.id,
@@ -120,7 +120,7 @@ class BankingTools:
             if not acc: return {"error": "Account not found"}
             
             # 1. Fetch 90 days of history for pattern recognition
-            txns = get_transaction_history(db, account_number=account_number, limit=100)
+            txns = get_transactions_for_account(db, account_number=account_number, limit=100)
             
             # 2. Heuristic for recurring debits (Utility bills, Subscriptions, Rent)
             # In production, this data is fed into Gemini for actual time-series forecasting

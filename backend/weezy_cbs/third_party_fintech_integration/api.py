@@ -13,6 +13,55 @@ from .services import (
 from weezy_cbs.core_infrastructure_config_engine.api import get_current_active_superuser
 from weezy_cbs.core_infrastructure_config_engine.models import User as CoreUser # For type hint
 
+from .hub_services import integration_hub_service
+
+# Integration Hub endpoints for selective feature enabling
+hub_router = APIRouter(
+    prefix="/hub",
+    tags=["Integration Hub"],
+)
+
+@hub_router.get("/providers")
+async def list_providers(db: Session = Depends(get_db)):
+    """Returns all available fintech providers and their granular services."""
+    return integration_hub_service.get_all_providers(db)
+
+@hub_router.post("/providers/{provider_id}/toggle")
+async def toggle_provider_endpoint(
+    provider_id: int, 
+    is_active: bool = Body(..., embed=True), 
+    db: Session = Depends(get_db)
+):
+    """Enables or disables a specific fintech provider."""
+    return integration_hub_service.toggle_provider(db, provider_id, is_active)
+
+@hub_router.post("/services/{service_id}/toggle")
+async def toggle_service_endpoint(
+    service_id: int, 
+    is_enabled: bool = Body(..., embed=True), 
+    db: Session = Depends(get_db)
+):
+    """Enables or disables a specific service within a provider."""
+    return integration_hub_service.toggle_service(db, service_id, is_enabled)
+
+@hub_router.put("/services/{service_id}/config")
+async def update_service_config_endpoint(
+    service_id: int, 
+    config: Dict[str, Any] = Body(...), 
+    db: Session = Depends(get_db)
+):
+    """Updates the secure configuration for a granular service."""
+    updated = integration_hub_service.update_service_config(db, service_id, config)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Service not found")
+    return {"message": "Configuration updated successfully and encrypted."}
+
+@hub_router.post("/seed")
+async def seed_hub_endpoint(db: Session = Depends(get_db)):
+    """Seeds the initial Nigerian fintech providers and their services."""
+    integration_hub_service.seed_initial_providers(db)
+    return {"message": "Hub seeded successfully"}
+
 # Main router for Third-Party Integration Admin & Webhooks
 integrations_api_router = APIRouter(
     prefix="/integrations",

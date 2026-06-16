@@ -74,10 +74,10 @@ class WorkflowEngine:
             customer_id = context_data["customer_id"]
             # Fetch recent transactions for analysis
             from weezy_cbs.transaction_management.services import get_transactions_for_account
-            from weezy_cbs.accounts_ledger_management.services import get_accounts_for_customer
+            from weezy_cbs.accounts_ledger_management.services import get_accounts_by_customer_id
             
             # Simplified: get the first account for the customer and its last 10 txns
-            accounts = get_accounts_for_customer(self.db, customer_id)
+            accounts = get_accounts_by_customer_id(self.db, customer_id)
             if accounts:
                 primary_account = accounts[0].account_number
                 txns = get_transactions_for_account(self.db, primary_account, limit=10)

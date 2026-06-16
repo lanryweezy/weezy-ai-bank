@@ -6,7 +6,7 @@ import logging
 import json
 
 from .schemas import TransactionEventInput, FraudAnalysisOutput, FraudRuleMatch, RiskLevel, FraudActionRecommended
-from .tools import transaction_profile_tool, rule_engine_tool, anomaly_detection_tool
+from .tools import transaction_profile_tool, rule_engine_tool, anomaly_detection_tool, sovereign_manifold_tool
 
 from crewai import Agent, Task, Crew, Process
 from langchain_community.llms.fake import FakeListLLM
@@ -16,30 +16,21 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
-# --- LLM Configuration (Mocked for CrewAI) ---
-mock_llm_fraud_responses = [
-    "Okay, I need to analyze this transaction for fraud. First, I'll get the customer's profile.", # Profile Task
-    "Profile fetched. Now, I'll apply fraud rules.", # Rule Engine Task
-    "Rules applied. Next, I'll get the anomaly detection score.", # Anomaly Detection Task
-    "All data gathered. I will now consolidate to give a final fraud assessment, score, and recommendation." # Final Assessment Task
-] * 2
-llm_fraud_detector = FakeListLLM(responses=mock_llm_fraud_responses)
-
 # --- Agent Definition ---
-fraud_detection_tools = [transaction_profile_tool, rule_engine_tool, anomaly_detection_tool]
+fraud_detection_tools: List[Any] = [transaction_profile_tool, rule_engine_tool, anomaly_detection_tool, sovereign_manifold_tool]
 
 fraud_detector_agent = Agent(
     role="AI Fraud Detection Analyst",
-    goal="Proactively identify and assess fraudulent transactions by analyzing transaction events, customer profiles, applying rules, and using anomaly detection models. Provide a clear fraud score, risk level, and recommended action.",
+    goal="Proactively identify and assess fraudulent transactions by analyzing transaction events, customer profiles, applying rules, using anomaly detection, and screening semantics via the Sovereign Manifold. Provide a clear fraud score, risk level, and recommended action.",
     backstory=(
         "A vigilant AI system dedicated to safeguarding the bank and its customers from financial fraud. "
         "It processes transaction events in near real-time, correlating them with historical customer behavior, "
-        "checking against known fraud patterns and rules, and leveraging machine learning to detect subtle anomalies. "
-        "Its analysis results in actionable insights for fraud prevention and mitigation."
+        "checking against known fraud patterns, and leveraging the Sovereign Manifold to detect subtle cultural "
+        "and semantic anomalies that traditional PCA-based systems miss."
     ),
     tools=fraud_detection_tools,
-    llm=llm_fraud_detector,
-    verbose=1,
+    llm="gpt-4o-mini", 
+    verbose=True,
     allow_delegation=False,
 )
 
@@ -86,11 +77,23 @@ def create_fraud_analysis_tasks(transaction_event_dict: Dict[str, Any]) -> List[
     )
     tasks.append(anomaly_task)
 
-    # Task 4: Final Fraud Assessment (Consolidation)
+    # Task 4: Sovereign Manifold Screening (New)
+    manifold_task = Task(
+        description=f"""\
+        Screen the transaction narrative for cultural fraud patterns using the Sovereign Manifold Encoder.
+        Extract the narration or description from metadata in the transaction event: '{transaction_event_json_str}'.
+        Pass the description to the SovereignManifoldTool.
+        """,
+        expected_output="A JSON string from SovereignManifoldTool: {'manifold_risk_score': ..., 'detected_pattern': ..., 'residual_entropy': ...}",
+        agent=fraud_detector_agent,
+    )
+    tasks.append(manifold_task)
+
+    # Task 5: Final Fraud Assessment (Consolidation)
     assessment_task = Task(
         description=f"""\
-        Consolidate all findings: customer profile (from profile_task), triggered rules (from rules_task),
-        and anomaly detection results (from anomaly_task) for the transaction event: '{transaction_event_json_str}'.
+        Consolidate all findings: customer profile (profile_task), triggered rules (rules_task),
+        anomaly detection (anomaly_task), and Sovereign Manifold risk (manifold_task).
         Calculate an overall 'fraud_score' (0-100).
         Determine a 'risk_level' (Low, Medium, High, Critical).
         Recommend an 'action' (Allow, FlagForReview, BlockTransaction, SuspendAccount).
@@ -102,7 +105,7 @@ def create_fraud_analysis_tasks(transaction_event_dict: Dict[str, Any]) -> List[
         """,
         expected_output="A single JSON string structured like the FraudAnalysisOutput schema, summarizing the comprehensive fraud assessment.",
         agent=fraud_detector_agent,
-        context_tasks=[profile_task, rules_task, anomaly_task] # Depends on all previous tasks
+        context_tasks=[profile_task, rules_task, anomaly_task, manifold_task] # Depends on all previous tasks
     )
     tasks.append(assessment_task)
     return tasks
@@ -129,48 +132,53 @@ async def analyze_transaction_for_fraud_async(event_data_model: TransactionEvent
         verbose=0 # 1 or 2 for more detailed logs if using real kickoff
     )
 
-    # --- ACTUAL CREWAI KICKOFF (Commented out for pure mock) ---
-    # logger.info(f"Agent (CrewAI): Kicking off crew for fraud analysis of event {event_id}. Inputs: {event_data_dict}")
-    # try:
-    #     # The input dict is passed to the crew; tasks can access it via their descriptions or context.
-    #     crew_result_str = fraud_analysis_crew.kickoff(inputs=event_data_dict)
-    #     logger.info(f"Agent (CrewAI): Crew kickoff raw result for event '{event_id}': {crew_result_str[:500]}...")
-    # except Exception as e:
-    #     logger.error(f"Agent (CrewAI): Crew kickoff failed for event '{event_id}': {e}", exc_info=True)
-    #     crew_result_str = json.dumps({
-    #         "event_id": event_id, "status": "FailedToAnalyze", # type: ignore
-    #         "reason_for_action": f"Agent workflow execution error: {str(e)}"
-    #     })
-    # --- END ACTUAL CREWAI KICKOFF ---
-
     # --- MOCKING CREW EXECUTION (Simulating the final task's output string) ---
     if True: # Keep this block for controlled mocking until LLM is fully active
         logger.warning(f"Agent (CrewAI): Using MOCKED CrewAI execution path for event {event_id}.")
 
         # Simulate the sequence of tool calls the agent would make
-        profile_res = transaction_profile_tool.run({"customer_id": event_data_model.customer_id, "account_number": event_data_model.account_number})
+        profile_res = transaction_profile_tool.run(customer_id=event_data_model.customer_id, account_number=event_data_model.account_number)
         customer_profile = profile_res if profile_res.get("status") == "Success" else {"profile_data": {}} # Ensure profile_data key exists
 
-        rules_res = rule_engine_tool.run({"transaction_event": event_data_dict, "customer_profile": customer_profile})
+        rules_res = rule_engine_tool.run(transaction_event=event_data_dict, customer_profile=customer_profile)
         triggered_rules_raw = rules_res.get("triggered_rules", [])
 
-        anomaly_res = anomaly_detection_tool.run({"transaction_event": event_data_dict, "customer_profile": customer_profile})
+        anomaly_res = anomaly_detection_tool.run(transaction_event=event_data_dict, customer_profile=customer_profile)
         anomaly_score = anomaly_res.get("anomaly_score", 0.0)
         anomaly_factors = anomaly_res.get("contributing_factors", [])
 
+        # --- Sovereign Manifold Call (New) ---
+        metadata_dict = event_data_dict.get("metadata") or {}
+        narration = metadata_dict.get("narration") or "No narration provided"
+        manifold_res = sovereign_manifold_tool.run(transaction_description=narration)
+        manifold_risk = manifold_res.get("manifold_risk_score", 0.0)
+        manifold_pattern = manifold_res.get("detected_pattern", "Clear")
+
         # Mock consolidation logic from the final task
         base_score = sum(rule.get("score_impact", 0) for rule in triggered_rules_raw)
+        
+        # Manifold Contribution
+        if manifold_risk > 0.8: base_score += 50
+        elif manifold_risk > 0.6: base_score += 30
+        
         if anomaly_score > 0.75: base_score += 40
         elif anomaly_score > 0.5: base_score += 20
         elif anomaly_score > 0.25: base_score += 10
+        
         final_fraud_score = min(max(base_score, 0), 100)
 
         risk_level_val: RiskLevel = "Low" # type: ignore
         recommended_action_val: FraudActionRecommended = "Allow" # type: ignore
-        reason = "Transaction appears normal (mocked consolidation)."
-        if final_fraud_score >= 80: risk_level_val, recommended_action_val, reason = "Critical", "BlockTransaction", "Critical fraud score from multiple indicators." # type: ignore
-        elif final_fraud_score >= 60: risk_level_val, recommended_action_val, reason = "High", "BlockTransaction", "High fraud score." # type: ignore
-        elif final_fraud_score >= 40: risk_level_val, recommended_action_val, reason = "Medium", "FlagForReview", "Medium fraud score, requires review." # type: ignore
+        reason = f"Transaction appears normal (Sovereign Manifold Pattern: {manifold_pattern})."
+        
+        if final_fraud_score >= 80: risk_level_val, recommended_action_val, reason = "Critical", "BlockTransaction", f"Critical fraud score. Sovereign detected pattern: {manifold_pattern}." # type: ignore
+        elif final_fraud_score >= 60: risk_level_val, recommended_action_val, reason = "High", "BlockTransaction", "High risk detected via multi-tier analysis." # type: ignore
+        elif final_fraud_score >= 40: risk_level_val, recommended_action_val, reason = "Medium", "FlagForReview", "Medium risk, semantic anomaly flagged." # type: ignore
+
+        # Include manifold details in factors
+        anomaly_factors.append(f"Manifold Risk: {manifold_risk}")
+        if manifold_pattern != "Clear":
+            anomaly_factors.append(f"Detected Sovereign Pattern: {manifold_pattern}")
 
         mock_final_assessment_dict = {
             "event_id": event_id, "analysis_timestamp": datetime.utcnow().isoformat(),
@@ -208,11 +216,11 @@ if __name__ == "__main__":
         event1_data = TransactionEventInput(
             transaction_id="TRN_SAFE_CREW_001", customer_id="CUST-SAFE-001",
             transaction_type="CardPayment", amount=5000.00, currency="NGN", channel="WebApp",
+            metadata={"narration": "Payment for cinema tickets at Eko Mall"}
         )
         print(f"\nTesting Low Risk Event with Crew: {event1_data.event_id}")
         analysis1 = await analyze_transaction_for_fraud_async(event1_data)
         print(f"Analysis Result 1 (Crew): Score={analysis1.get('fraud_score')}, Risk={analysis1.get('risk_level')}, Action={analysis1.get('recommended_action')}")
-        # print(json.dumps(analysis1, indent=2, default=str))
 
 
         event2_data = TransactionEventInput(
@@ -220,7 +228,11 @@ if __name__ == "__main__":
             transaction_type="NIPTransferOut", amount=750000.00, currency="NGN", channel="ThirdPartyAPI",
             counterparty_account_number="SUSP001", counterparty_bank_code="999",
             geolocation_info=Geolocation(city="RiskyVille", country_code="XZ"),
-            metadata={"beneficiary_added_recently": True, "is_new_device_for_customer": True}
+            metadata={
+                "beneficiary_added_recently": True, 
+                "is_new_device_for_customer": True,
+                "narration": "Urgent: Verify your OTP to prevent suspension" # This should trigger LEECH_MATCH
+            }
         )
         print(f"\nTesting High Risk Event with Crew: {event2_data.event_id}")
         analysis2 = await analyze_transaction_for_fraud_async(event2_data)
@@ -228,6 +240,6 @@ if __name__ == "__main__":
         # print(json.dumps(analysis2, indent=2, default=str))
 
     # To run tests:
-    # logging.basicConfig(level=logging.DEBUG) # For more verbose logs
-    # asyncio.run(test_fraud_detection_crew_workflow())
+    logging.basicConfig(level=logging.INFO) # For more verbose logs
+    asyncio.run(test_fraud_detection_crew_workflow())
     print("Fraud Detection Agent logic (agent.py) updated with CrewAI Agent and Task structure (simulated CrewAI kickoff).")

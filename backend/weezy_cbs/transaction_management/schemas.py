@@ -110,6 +110,8 @@ class TransactionDetailResponse(TransactionStatusQueryResponse):
     # rtgs_details: Optional[RTGSTransactionDetailsSchema] = None # etc.
     class Config: orm_mode = True; use_enum_values = True; json_encoders = {decimal.Decimal: str}
 
+TransactionResponse = TransactionDetailResponse
+
 
 class TransactionReversalRequest(BaseModel):
     original_transaction_id: str = Field(..., max_length=40)

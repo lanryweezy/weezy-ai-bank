@@ -69,12 +69,19 @@ class CardBase(BaseModel):
     card_type: CardTypeSchema
     card_scheme: CardSchemeSchema
     cardholder_name: str
-    expiry_date: str
+    # expiry_date: str - Not needed for creation, set by system
+
+class CardCreateRequest(BaseModel):
+    card_type: CardTypeSchema
+    card_scheme: CardSchemeSchema
+    cardholder_name: str
+    linked_account_number: str
 
 class CardResponse(CardBase):
     id: int
     customer_id: int
     card_number_masked: str
+    expiry_date: str
     status: CardStatusSchema
     created_at: datetime
 

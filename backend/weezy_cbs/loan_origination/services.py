@@ -128,8 +128,8 @@ class LoanOriginationService:
         from weezy_cbs.transaction_management.schemas import TransactionCreateRequest
         
         # Find primary account
-        from weezy_cbs.accounts_ledger_management.services import get_accounts_for_customer
-        accounts = get_accounts_for_customer(db, loan_app.customer_id)
+        from weezy_cbs.accounts_ledger_management.services import get_accounts_by_customer_id
+        accounts = get_accounts_by_customer_id(db, loan_app.customer_id)
         if not accounts: return
         
         target_acc = accounts[0].account_number

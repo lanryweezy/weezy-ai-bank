@@ -85,7 +85,8 @@ def get_all_report_logs(db: Session, skip: int = 0, limit: int = 100, report_nam
         query = query.filter(models.GeneratedReportLog.status == status)
     return query.order_by(models.GeneratedReportLog.reporting_period_end_date.desc(), models.GeneratedReportLog.id.desc()).offset(skip).limit(limit).all()
 
-from weezy_cbs.accounts_ledger_management.models import LoanAccount, GeneralLedgerAccount, GLTypeEnum
+from weezy_cbs.accounts_ledger_management.models import GeneralLedgerAccount, GLTypeEnum
+from weezy_cbs.loan_management_module.models import LoanAccount
 from weezy_cbs.customer_identity_management.models import Customer
 
 # --- Report Generation (Specific logic for each report type) ---

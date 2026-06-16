@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Numeric, ForeignKey, Enum as SQLAlchemyEnum, Text, JSON, Float
+from sqlalchemy import Column, Integer, String, DateTime, Numeric, ForeignKey, Enum as SQLAlchemyEnum, Text, JSON, Float, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
@@ -23,9 +23,9 @@ class CustomerRiskProfile(Base):
     last_assessment_date = Column(DateTime(timezone=True), server_default=func.now())
     
     # Specific Flags (Nigerian AML Context)
-    is_pep = Column(bool, default=False) # Politically Exposed Person
-    sanction_list_match = Column(bool, default=False)
-    unusual_transaction_velocity = Column(bool, default=False)
+    is_pep = Column(Boolean, default=False) # Politically Exposed Person
+    sanction_list_match = Column(Boolean, default=False)
+    unusual_transaction_velocity = Column(Boolean, default=False)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

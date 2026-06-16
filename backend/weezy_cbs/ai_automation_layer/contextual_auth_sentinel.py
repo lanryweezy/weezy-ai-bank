@@ -29,10 +29,10 @@ class ContextualAuthorizationSentinel:
         """
         if not self.model: return {"status": "ERROR", "reason": "AI_OFFLINE"}
         
-        from weezy_cbs.accounts_ledger_management.services import get_accounts_for_customer
+        from weezy_cbs.accounts_ledger_management.services import get_accounts_by_customer_id
         from weezy_cbs.mcp_gateway.tools import banking_tools
         
-        accounts = get_accounts_for_customer(db, customer_id)
+        accounts = get_accounts_by_customer_id(db, customer_id)
         if not accounts: return {"status": "NO_ACCOUNTS"}
         
         # 1. Fetch recent transactions to look for travel indicators (e.g., Airlines, Hotels)

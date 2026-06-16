@@ -1,5 +1,5 @@
 # Database models for Treasury & Liquidity Management Module
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Numeric, ForeignKey, Enum as SQLAlchemyEnum, Date, Text, UniqueConstraint
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Numeric, ForeignKey, Enum as SQLAlchemyEnum, Date, Text, UniqueConstraint, Float, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from weezy_cbs.database import Base # Use the shared Base

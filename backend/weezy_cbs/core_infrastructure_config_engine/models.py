@@ -25,8 +25,9 @@ class Branch(Base):
     is_active = Column(Boolean, default=True)
     opening_date = Column(Date, nullable=True)
     branch_manager_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    vault_gl_account = Column(String(20), nullable=True) # For teller operations
 
-    users = relationship("User", back_populates="branch")
+    users = relationship("User", back_populates="branch", foreign_keys="User.branch_id")
     agents = relationship("Agent", back_populates="supervising_branch")
 
 class Agent(Base):
@@ -62,7 +63,7 @@ class User(Base):
     last_login_at = Column(DateTime(timezone=True), nullable=True)
     branch_id = Column(Integer, ForeignKey("branches.id"), nullable=True)
 
-    branch = relationship("Branch", back_populates="users")
+    branch = relationship("Branch", back_populates="users", foreign_keys=[branch_id])
     roles = relationship("Role", secondary="user_roles", back_populates="users")
 
 class Role(Base):

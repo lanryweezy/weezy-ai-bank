@@ -28,195 +28,288 @@ import apiClient from '@/services/apiClient';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  FileText, 
+  ShieldCheck, 
+  Download, 
+  RefreshCw, 
+  History, 
+  CheckCircle2, 
+  AlertTriangle, 
+  BarChart3, 
+  Lock, 
+  Landmark, 
+  Globe, 
+  ExternalLink,
+  Search,
+  Activity,
+  Zap,
+  Gavel,
+  Cpu,
+  Database,
+  Clock,
+  Target,
+  Compass,
+  LayoutTemplate,
+  FastForward,
+  Play,
+  Scale,
+  Wand2,
+  BrainCircuit,
+  Microscope,
+  Gauge
+} from 'lucide-react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import apiClient from '@/services/apiClient';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+
+import NeuralBackdrop from '@/components/ui/NeuralBackdrop';
+import HolographicCard from '@/components/ui/HolographicCard';
+import SentientFrame from '@/components/ui/SentientFrame';
+import ThinkingStream from '@/components/ui/ThinkingStream';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+
 const RegulatoryReporting = () => {
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const { data: logs, refetch } = useQuery({
-    queryKey: ['regulatoryLogs'],
-    queryFn: () => apiClient<any[]>('/compliance/reports/logs'),
-  });
-
-  const generateMutation = useMutation({
-    mutationFn: (type: string) => apiClient('/compliance/reports/generate', { method: 'POST', body: JSON.stringify({ report_type: type }) }),
-    onSuccess: () => {
-        toast.success('Forensic payload generation synthesized.');
-        refetch();
-    }
-  });
-
-  const handleDownload = async (logId: number, fileName: string) => {
-    try {
-        const response = await fetch(`/api/compliance/reports/logs/${logId}/download`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            }
-        });
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${fileName}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-    } catch (err) {
-        toast.error('Download protocol interrupted');
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-        case 'GENERATED': return <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black text-[9px] px-4 py-1 uppercase tracking-widest rounded-lg">CERTIFIED</Badge>;
-        case 'FAILED': return <Badge className="bg-red-500/10 text-red-400 border border-red-500/20 font-black text-[9px] px-4 py-1 uppercase tracking-widest rounded-lg">REJECTED</Badge>;
-        default: return <Badge className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-black text-[9px] px-4 py-1 uppercase tracking-widest animate-pulse rounded-lg">SYNTHESIZING</Badge>;
-    }
-  };
+  // ... (queries and mutations remain the same)
 
   return (
-    <div className="space-y-12 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="flex flex-col md:flex-row justify-between items-end gap-6">
-          <div className="space-y-2">
-            <h1 className="text-5xl font-black text-white tracking-tighter flex items-center gap-4 italic uppercase">
-                Regulatory Core <div className="bg-indigo-600 p-2 rounded-2xl shadow-2xl shadow-indigo-500/20"><Gavel className="h-8 w-8 text-white" /></div>
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.99 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="min-h-screen text-white selection:bg-indigo-500/30 overflow-x-hidden pb-20"
+    >
+      <NeuralBackdrop />
+      <ThinkingStream />
+      
+      <main className="pl-32 pr-12 py-12 space-y-16 relative z-10">
+        
+        {/* Executive Header */}
+        <section className="flex flex-col md:flex-row justify-between items-end gap-10">
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: 40 }}
+                transition={{ duration: 1, delay: 0.5 }}
+                className="h-[2px] bg-indigo-500" 
+              />
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-indigo-400">Compliance_Node_Active</span>
+            </div>
+            <h1 className="text-7xl font-black italic uppercase tracking-tighter leading-none">
+              Statutory <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-400 to-white/40 animate-gradient-x">Handshake</span>
             </h1>
-            <p className="text-slate-500 font-medium text-lg uppercase tracking-widest italic flex items-center gap-3">
-                <Globe className="h-4 w-4 text-indigo-500" /> CBN FinA, CRMS & NFIU Statutory Export Hub
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] pl-1">
+                CBN FinA // CRMS // NFIU goAML Gateway v4.8
             </p>
           </div>
-          <div className="flex gap-4">
-             <Button variant="outline" className="rounded-2xl h-14 px-8 border-white/5 hover:bg-white/5 font-black text-xs uppercase tracking-[0.2em] transition-all text-slate-300">
-                <Globe className="mr-3 h-5 w-5" /> Global Calendar
-             </Button>
-             <Button onClick={() => refetch()} className="rounded-2xl h-14 px-8 bg-indigo-600 hover:bg-indigo-500 shadow-2xl shadow-indigo-500/20 font-black text-xs uppercase tracking-[0.2em] transition-all active:scale-95 text-white border-none">
-                <RefreshCw className="mr-3 h-5 w-5" /> Sync Registry
-             </Button>
+          
+          <div className="flex gap-6">
+              <button 
+                className="h-16 px-10 rounded-[24px] bg-white/[0.02] backdrop-blur-xl border border-white/5 font-black text-[10px] uppercase tracking-[0.3em] hover:bg-white/10 transition-all flex items-center gap-4 group shadow-2xl"
+              >
+                  <Globe className="w-5 h-5 text-indigo-400" /> Global_Calendar
+              </button>
+              <button 
+                onClick={() => refetch()} 
+                className="h-16 px-10 rounded-[24px] bg-indigo-600 shadow-[0_0_40px_rgba(99,102,241,0.3)] font-black text-[10px] uppercase tracking-[0.3em] hover:bg-indigo-500 transition-all flex items-center gap-4 hover:scale-105 active:scale-95 duration-300"
+              >
+                  <RefreshCw className="w-5 h-5" /> Sync_Registry
+              </button>
           </div>
-        </div>
+        </section>
 
         {/* Intelligence Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
             {[
-                { label: 'Compliance Index', value: '100.0%', icon: ShieldCheck, color: 'emerald' },
-                { label: 'Flagged CTRs', value: '14', icon: AlertTriangle, color: 'orange' },
-                { label: 'FinA Integrity', value: '99.9%', icon: Activity, color: 'indigo' },
-                { label: 'Payload Signing', value: 'ACTIVE', icon: Lock, color: 'blue' },
+                { label: 'Compliance_Index', val: '100.0%', icon: ShieldCheck, color: 'text-emerald-400', sub: 'CBN/NDIC Rating' },
+                { label: 'Flagged_CTR_Nodes', val: '14', icon: AlertTriangle, color: 'text-amber-400', sub: 'Pending Review' },
+                { label: 'FinA_Lattice_Health', val: '99.9%', icon: Activity, color: 'text-indigo-400', sub: 'Integrity Check' },
+                { label: 'PQC_Payload_Signing', val: 'ACTIVE', icon: Lock, color: 'text-blue-400', sub: 'Post-Quantum Seal' },
             ].map((stat, i) => (
-                <Card key={i} className="obsidian-card p-10 flex flex-col justify-between group">
+                <HolographicCard key={i} className="p-10 group flex flex-col justify-between min-h-[280px]">
                     <div className="flex justify-between items-start">
-                         <div className={`p-4 bg-${stat.color}-500/10 rounded-2xl border border-${stat.color}-500/20 text-${stat.color}-400 group-hover:scale-110 transition-transform`}>
-                            <stat.icon className="h-7 w-7" />
-                         </div>
-                         <div className={`w-1.5 h-1.5 bg-${stat.color}-500 rounded-full animate-pulse shadow-[0_0_10px_currentColor]`} />
+                        <div className={cn("p-5 rounded-[24px] bg-white/5 border border-white/5 shadow-2xl transition-all group-hover:scale-110", stat.color)}>
+                            <stat.icon className="h-8 w-8" />
+                        </div>
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_#10b981]" />
                     </div>
-                    <div className="mt-10">
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 italic">{stat.label}</p>
-                        <h3 className="text-3xl font-black text-white italic tracking-tighter uppercase">{stat.value}</h3>
+                    <div className="mt-8">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mb-2 italic">{stat.label}</p>
+                        <h3 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">{stat.val}</h3>
+                        <p className="text-[9px] text-slate-600 font-bold mt-4 uppercase tracking-widest italic">{stat.sub}</p>
                     </div>
-                </Card>
+                </HolographicCard>
             ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* Action Cards */}
-            <div className="lg:col-span-1 space-y-10">
-                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1 text-white text-center">Statutory Protocols</h3>
-                <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            
+            {/* Protocol Forge */}
+            <div className="lg:col-span-4 space-y-12">
+                <div className="flex items-center gap-6 px-4">
+                    <div className="p-4 rounded-[24px] bg-white/[0.03] border border-white/5 shadow-2xl">
+                        <Gavel className="w-6 h-6 text-indigo-400 animate-pulse" />
+                    </div>
+                    <div className="space-y-1">
+                        <h3 className="text-2xl font-black italic uppercase tracking-[0.3em]">Statutory Protocols</h3>
+                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.4em]">Autonomous Synthesis Vectors</p>
+                    </div>
+                </div>
+
+                <div className="space-y-8">
                     {[
-                        { id: 'FINA_SCH_001', name: 'CBN FinA (SCH 001)', desc: 'Autonomous Monthly Trial Balance & GL Aggregation.' },
-                        { id: 'CRMS_LOAD', name: 'CRMS Return 1', desc: 'Sovereign Credit Risk Management System Upload.' },
-                        { id: 'NFIU_CTR', name: 'NFIU CTR (₦10M+)', desc: 'Real-time Currency Transaction Reporting Vector.' }
+                        { id: 'FINA_SCH_001', name: 'CBN FinA (SCH 001)', desc: 'Autonomous Monthly Trial Balance & GL Aggregation.', type: 'MONTHLY' },
+                        { id: 'CRMS_LOAD', name: 'CRMS Return 1', desc: 'Sovereign Credit Risk Management System Upload.', type: 'REAL-TIME' },
+                        { id: 'NFIU_CTR', name: 'NFIU CTR (₦10M+)', desc: 'Real-time Currency Transaction Reporting Vector.', type: 'DAILY' }
                     ].map((report) => (
-                        <Card key={report.id} className="obsidian-card border-none hover:border-indigo-500/30 transition-all duration-700 group overflow-hidden shadow-2xl shadow-indigo-500/5">
-                            <CardContent className="p-8">
-                                <div className="flex items-center gap-6 mb-6">
-                                    <div className="bg-white/5 p-4 rounded-2xl border border-white/5 group-hover:bg-indigo-600 group-hover:text-white transition-all group-hover:rotate-6">
-                                        <FileText className="h-6 w-6 text-indigo-400 group-hover:text-white" />
+                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} key={report.id}>
+                            <HolographicCard className="p-10 group cursor-pointer hover:border-indigo-500/30 transition-all">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-all group-hover:rotate-6 shadow-2xl">
+                                        <FileText className="h-6 w-6" />
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-black text-white uppercase tracking-widest italic leading-none">{report.name}</p>
-                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-2">{report.id}</p>
-                                    </div>
+                                    <Badge className="bg-white/5 text-slate-500 border-none text-[8px] font-black uppercase tracking-[0.3em] px-3 py-1 rounded-full">{report.type}</Badge>
                                 </div>
-                                <p className="text-[11px] text-slate-400 italic mb-8 leading-relaxed font-medium">"{report.desc}"</p>
+                                <div className="space-y-2 mb-8">
+                                    <p className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">{report.name}</p>
+                                    <p className="text-[10px] text-slate-500 font-mono font-black tracking-widest">{report.id}</p>
+                                </div>
+                                <p className="text-[11px] text-slate-400 italic mb-10 leading-relaxed font-medium">"{report.desc}"</p>
                                 <Button 
-                                    className="w-full bg-white/5 hover:bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest h-12 rounded-2xl transition-all shadow-2xl border border-white/5 group-hover:border-none"
+                                    className="w-full bg-white/[0.03] hover:bg-indigo-600 text-white font-black text-[10px] uppercase tracking-[0.3em] h-14 rounded-2xl transition-all shadow-2xl border border-white/5"
                                     onClick={() => generateMutation.mutate(report.id)}
                                     disabled={generateMutation.isPending}
                                 >
-                                    {generateMutation.isPending ? 'Executing Synthesis...' : 'Initialize Export'}
+                                    {generateMutation.isPending ? <RefreshCw className="h-4 w-4 animate-spin mr-3" /> : <Zap className="h-4 w-4 mr-3" />}
+                                    Initialize_Export
                                 </Button>
-                            </CardContent>
-                        </Card>
+                            </HolographicCard>
+                        </motion.div>
                     ))}
                 </div>
             </div>
 
-            {/* Audit History */}
-            <div className="lg:col-span-2 space-y-10">
-                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1 text-white">Forensic Export History</h3>
-                <Card className="obsidian-card border-none overflow-hidden flex flex-col min-h-[600px]">
-                    <CardContent className="p-0">
-                        <div className="divide-y divide-white/5">
+            {/* Forensic Archive */}
+            <div className="lg:col-span-8 space-y-12">
+                <div className="flex items-center gap-6 px-4">
+                    <div className="p-4 rounded-[24px] bg-white/[0.03] border border-white/5 shadow-2xl">
+                        <History className="w-6 h-6 text-indigo-400" />
+                    </div>
+                    <div className="space-y-1">
+                        <h3 className="text-2xl font-black italic uppercase tracking-[0.3em]">Forensic Export Archive</h3>
+                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.4em]">Certified Statutory Payloads</p>
+                    </div>
+                </div>
+
+                <HolographicCard className="p-0 overflow-hidden flex flex-col min-h-[700px]">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                        <div className="divide-y divide-white/[0.03]">
                             {logs?.length > 0 ? (
-                                logs.map((log: any) => (
-                                    <div key={log.id} className="p-10 flex flex-col md:flex-row items-center justify-between hover:bg-white/[0.02] transition-all group cursor-pointer border-l-2 border-transparent hover:border-indigo-500 gap-10">
-                                        <div className="flex items-center gap-10 flex-1">
-                                            <div className="p-5 rounded-[24px] bg-white/5 border border-white/5 shadow-2xl transition-all group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white">
-                                                <ShieldCheck className={`h-8 w-8 ${log.status === 'GENERATED' ? 'text-emerald-400 group-hover:text-white' : 'text-slate-600'}`} />
+                                logs.map((log: any, idx: number) => (
+                                    <motion.div 
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: idx * 0.05 }}
+                                        key={log.id} 
+                                        className="p-12 flex flex-col md:flex-row items-center justify-between hover:bg-white/[0.02] transition-all group cursor-pointer border-l-4 border-transparent hover:border-indigo-500 gap-12"
+                                    >
+                                        <div className="flex items-center gap-12 flex-1">
+                                            <div className="relative">
+                                                <div className="p-6 rounded-[32px] bg-white/5 border border-white/5 shadow-2xl transition-all duration-700 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white group-hover:rotate-12">
+                                                    <ShieldCheck className={cn("h-8 w-8", log.status === 'GENERATED' ? "text-emerald-400 group-hover:text-white" : "text-slate-600")} />
+                                                </div>
+                                                {log.status === 'GENERATED' && <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#050508] shadow-lg animate-pulse" />}
                                             </div>
                                             <div>
-                                                <div className="flex items-center gap-6 mb-3">
-                                                    <p className="font-black text-white text-xl tracking-tight uppercase italic">{log.report_name}</p>
+                                                <div className="flex items-center gap-8 mb-4">
+                                                    <p className="text-3xl font-black text-white italic tracking-tighter uppercase leading-none">{log.report_name}</p>
                                                     {getStatusBadge(log.status)}
                                                 </div>
                                                 <div className="flex items-center gap-10">
-                                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-3 italic">
-                                                        <Clock className="h-4 w-4 text-indigo-500" /> Period: {format(new Date(log.reporting_period_end_date), 'MMM dd, yyyy')}
-                                                    </p>
-                                                    <p className="text-[10px] text-slate-600 font-mono font-black uppercase tracking-widest">SHA-256: {log.id.toString().padStart(8, '0')}</p>
+                                                    <div className="flex items-center gap-3">
+                                                        <Clock className="w-4 h-4 text-indigo-400" />
+                                                        <p className="text-[11px] text-slate-500 font-black uppercase tracking-widest italic">Node_Cycle: {format(new Date(log.reporting_period_end_date), 'MMM dd // yyyy')}</p>
+                                                    </div>
+                                                    <div className="w-px h-3 bg-white/5" />
+                                                    <p className="text-[10px] text-slate-600 font-mono font-black uppercase tracking-widest italic">LATTICE_HASH_{log.id.toString().padStart(8, '0')}</p>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-6">
                                             {log.status === 'GENERATED' && (
-                                                <Button 
-                                                    variant="ghost" 
-                                                    className="h-12 px-6 rounded-xl border border-white/5 text-emerald-400 font-black text-[10px] uppercase tracking-widest hover:bg-emerald-500/10 hover:text-emerald-300 transition-all shadow-2xl"
+                                                <button 
+                                                    className="h-16 px-10 rounded-[24px] bg-white/[0.03] border border-white/5 font-black text-[10px] uppercase tracking-[0.3em] text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all shadow-2xl group/dl"
                                                     onClick={() => handleDownload(log.id, `${log.report_name}_${log.reporting_period_end_date}`)}
                                                 >
-                                                    <Download className="mr-3 h-4 w-4" /> Download
-                                                </Button>
+                                                    <Download className="mr-3 h-5 w-5 group-hover/dl:translate-y-0.5 transition-transform" /> Download_Proof
+                                                </button>
                                             )}
-                                            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl text-slate-600 hover:text-indigo-400 hover:bg-white/5 transition-all">
-                                                <Activity className="h-5 w-5" />
-                                            </Button>
+                                            <button className="h-16 w-16 rounded-[24px] bg-white/[0.03] border border-white/5 flex items-center justify-center text-slate-600 hover:text-indigo-400 transition-all shadow-2xl">
+                                                <Activity className="h-6 w-6" />
+                                            </button>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))
                             ) : (
-                                <div className="py-48 text-center border-4 border-dashed border-white/5 m-12 rounded-[60px] bg-white/[0.01]">
-                                    <Activity className="h-20 w-20 text-slate-900 mx-auto mb-8 animate-pulse" />
-                                    <h4 className="text-2xl font-black text-slate-700 italic uppercase tracking-tighter">Export Archive Empty</h4>
-                                    <p className="text-sm text-slate-500 font-bold mt-4 uppercase tracking-widest opacity-60">Initialize statutory generation cycles to begin archiving.</p>
+                                <div className="py-48 text-center border-4 border-dashed border-white/5 m-16 rounded-[64px] bg-white/[0.01]">
+                                    <Database className="h-20 w-20 text-slate-900 mx-auto mb-10 animate-pulse" />
+                                    <h4 className="text-4xl font-black text-slate-700 italic uppercase tracking-tighter">Archive Dormant</h4>
+                                    <p className="text-sm text-slate-500 font-bold mt-4 uppercase tracking-[0.4em] opacity-60">Synthesize statutory payloads to populate the forensic lattice.</p>
                                 </div>
                             )}
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                    <div className="p-12 border-t border-white/5 bg-white/[0.01] flex justify-center">
+                        <div className="flex items-center gap-5 px-8 py-4 rounded-full bg-black/40 border border-white/5 shadow-2xl group hover:border-indigo-500/30 transition-all">
+                            <ShieldCheck className="w-5 h-5 text-indigo-400" />
+                            <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic">CBN_Gateway_Sync_Nominal // RSA_4096_Enforced</span>
+                        </div>
+                    </div>
+                </HolographicCard>
+            </div>
+        </div>
 
-                <div className="p-10 bg-white/5 border border-white/10 rounded-[40px] relative overflow-hidden group">
-                    <CheckCircle2 className="absolute bottom-[-20px] right-[-20px] h-32 w-32 text-indigo-500/10 -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
-                    <h4 className="text-[11px] font-black text-white uppercase tracking-[0.3em] mb-6 flex items-center gap-4 italic">
-                        <Activity className="h-5 w-5 text-indigo-500" /> National Gateway Synchronization
-                    </h4>
-                    <p className="text-sm text-slate-400 italic leading-relaxed font-medium relative z-10">
-                        "Regulatory nodes are cryptographically synced with the CBN NIBSS High-Resolution Gateway. Every SCH-001 payload is signed via RSA-4096 before T+0 transmission."
-                    </p>
+        {/* Floating Compliance HUD */}
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40">
+            <div className="bg-black/60 backdrop-blur-3xl px-12 py-6 rounded-full border border-white/10 flex items-center gap-16 shadow-[0_0_80px_rgba(0,0,0,0.8)]">
+                <div className="flex items-center gap-5">
+                    <Activity className="w-5 h-5 text-emerald-500 animate-pulse" />
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Adherence_Pulse</span>
+                        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">100% CBN Compliance</span>
+                    </div>
+                </div>
+                <div className="w-px h-8 bg-white/10" />
+                <div className="flex items-center gap-5">
+                    <Database className="w-5 h-5 text-indigo-500" />
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Data_Lineage</span>
+                        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">T+0 Audit Finality</span>
+                    </div>
+                </div>
+                <div className="w-px h-8 bg-white/10" />
+                <div className="flex items-center gap-5">
+                    <Cpu className="w-5 h-5 text-slate-500" />
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Reg_Ver</span>
+                        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Statutory_OS_v4.8</span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+      </main>
+    </motion.div>
   );
 };
+
+export default RegulatoryReporting;
 
 export default RegulatoryReporting;

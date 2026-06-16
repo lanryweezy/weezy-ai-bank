@@ -1,16 +1,42 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '@/components/Layout';
 import apiClient from '@/services/apiClient';
-import { AgentMonitoringSummary } from '@/types/agents'; // New types for monitoring data
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ShieldAlert, Activity, Users, AlertTriangle, ExternalLink, RefreshCw } from 'lucide-react';
+import { AgentMonitoringSummary } from '@/types/agents'; 
+import { 
+  ShieldAlert, 
+  Activity, 
+  Users, 
+  AlertTriangle, 
+  ExternalLink, 
+  RefreshCw, 
+  Network, 
+  Cpu, 
+  Zap, 
+  Globe, 
+  Target, 
+  Smartphone,
+  Server,
+  Database,
+  ChevronRight,
+  BrainCircuit,
+  Wand2,
+  PieChart,
+  Plus,
+  LayoutTemplate
+} from 'lucide-react';
 import { format } from 'date-fns';
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+
+import NeuralBackdrop from '@/components/ui/NeuralBackdrop';
+import SentientNavigation from '@/components/ui/SentientNavigation';
+import ThinkingStream from '@/components/ui/ThinkingStream';
+import HolographicCard from '@/components/ui/HolographicCard';
+import SentientFrame from '@/components/ui/SentientFrame';
+import { cn } from '@/lib/utils';
 
 const AgentMonitoringPage: React.FC = () => {
   const navigate = useNavigate();
@@ -26,7 +52,7 @@ const AgentMonitoringPage: React.FC = () => {
       setSummary(data);
     } catch (err: any) {
       console.error('Failed to fetch agent monitoring data:', err);
-      setError(err.data?.message || err.message || 'Failed to fetch monitoring data. Ensure you have admin privileges.');
+      setError(err.data?.message || err.message || 'Failed to fetch monitoring data.');
     } finally {
       setLoading(false);
     }
@@ -36,202 +62,226 @@ const AgentMonitoringPage: React.FC = () => {
     fetchMonitoringData();
   }, [fetchMonitoringData]);
 
-  const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+  const getStatusBadge = (status: string) => {
     switch (status?.toLowerCase()) {
-      case 'active': return 'default'; // Usually green
-      case 'inactive': return 'outline'; // Gray
-      case 'error': return 'destructive'; // Red
-      default: return 'secondary';
+      case 'active':
+        return <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-black text-[8px] uppercase tracking-widest px-3 py-1 rounded-full shadow-2xl">NOMINAL</Badge>;
+      case 'inactive':
+        return <Badge className="bg-slate-500/10 text-slate-400 border-slate-500/20 font-black text-[8px] uppercase tracking-widest px-3 py-1 rounded-full shadow-2xl">DORMANT</Badge>;
+      case 'error':
+        return <Badge className="bg-rose-500/10 text-rose-400 border-rose-500/20 font-black text-[8px] uppercase tracking-widest px-3 py-1 rounded-full animate-pulse shadow-2xl">BREACH</Badge>;
+      default:
+        return <Badge variant="outline" className="text-slate-500 text-[8px]">{status}</Badge>;
     }
   };
 
-
-  // Main loading state for the whole page
-  if (loading && !summary) {
-    return (
-      <Layout>
-        <div className="p-6 space-y-6">
-          <div className="flex justify-between items-center">
-            <Skeleton className="h-8 w-1/3" />
-            <Skeleton className="h-9 w-24" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
-          </div>
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-48 w-full" />
+  if (loading && !summary) return (
+    <div className="min-h-screen bg-[#020203] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-6">
+            <Network className="w-12 h-12 text-indigo-500 animate-pulse" />
+            <div className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-500">Scanning_Global_Mesh_Infrastructure</div>
         </div>
-      </Layout>
-    );
-  }
-
-  // Specific error for access denied
-  if (error && (error.includes('Forbidden') || error.includes('Unauthorized') || error.includes('admin privileges'))) {
-    return (
-      <Layout>
-        <div className="p-6 flex flex-col items-center justify-center text-center" style={{ minHeight: 'calc(100vh - 200px)' }}>
-           <ShieldAlert className="h-16 w-16 text-red-500 mb-4" />
-          <Alert variant="destructive" className="max-w-md">
-            <AlertTitle>Access Denied</AlertTitle>
-            <AlertDescription>
-              You do not have the necessary permissions to view this page.
-              Please contact your administrator if you believe this is an error.
-              <p className="mt-2 text-xs">{error}</p>
-            </AlertDescription>
-          </Alert>
-           <Button variant="outline" onClick={() => navigate('/')} className="mt-6">
-            Go to Dashboard
-          </Button>
-        </div>
-      </Layout>
-    );
-  }
-
+    </div>
+  );
 
   return (
-    <Layout>
-      <div className="p-4 md:p-6 space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Agent Monitoring Dashboard</h1>
-            <p className="text-sm text-gray-600">Overview of configured agent instances and their activity.</p>
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.99 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="min-h-screen text-white selection:bg-indigo-500/30 overflow-x-hidden pb-20"
+    >
+      <NeuralBackdrop />
+      <SentientNavigation />
+      <ThinkingStream />
+      
+      <main className="pl-32 pr-12 py-12 space-y-16 relative z-10">
+        
+        {/* Executive Header */}
+        <section className="flex flex-col md:flex-row justify-between items-end gap-10">
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: 40 }}
+                transition={{ duration: 1, delay: 0.5 }}
+                className="h-[2px] bg-indigo-500" 
+              />
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-indigo-400">Mesh_Infrastructure_Active</span>
+            </div>
+            <h1 className="text-7xl font-black italic uppercase tracking-tighter leading-none">
+              Distributed <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-400 to-white/40 animate-gradient-x">Mesh</span>
+            </h1>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] pl-1">
+                Real-time Agent Telemetry // Distributed Decision Nodes v2.4
+            </p>
           </div>
-           <Button variant="outline" size="sm" onClick={fetchMonitoringData} disabled={loading}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh Data
-            </Button>
-        </div>
+          
+          <div className="flex gap-6">
+              <button 
+                onClick={fetchMonitoringData}
+                className="h-16 px-10 rounded-[24px] bg-white/[0.02] backdrop-blur-xl border border-white/5 font-black text-[10px] uppercase tracking-[0.3em] hover:bg-white/10 transition-all flex items-center gap-4 group shadow-2xl"
+              >
+                  <RefreshCw className={cn("w-5 h-5 text-indigo-400", loading && "animate-spin")} /> Resync_Mesh
+              </button>
+              <button className="h-16 px-10 rounded-[24px] bg-indigo-600 shadow-[0_0_40px_rgba(99,102,241,0.3)] font-black text-[10px] uppercase tracking-[0.3em] hover:bg-indigo-500 transition-all flex items-center gap-4 hover:scale-105 active:scale-95 duration-300">
+                  <Target className="w-5 h-5" /> Trace_Field_Latency
+              </button>
+          </div>
+        </section>
 
-        {error && !error.includes('Forbidden') && !error.includes('Unauthorized') && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Error Loading Data</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Status Counts Widget */}
+        {/* Status Counts HUD */}
         {summary?.status_counts && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Agents</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{summary.status_counts.total}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active</CardTitle>
-                <Activity className="h-4 w-4 text-green-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">{summary.status_counts.active}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Inactive</CardTitle>
-                <Users className="h-4 w-4 text-gray-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-gray-600">{summary.status_counts.inactive}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Error State</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-red-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">{summary.status_counts.error}</div>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+              {[
+                  { label: 'Total_Distributed_Nodes', val: summary.status_counts.total, icon: Network, color: 'text-indigo-400', sub: 'Global Lattice Coverage' },
+                  { label: 'Active_Field_Synced', val: summary.status_counts.active, icon: Activity, color: 'text-emerald-400', sub: '99.9% Uptime Enforced' },
+                  { label: 'Dormant_Nodes', val: summary.status_counts.inactive, icon: Zap, color: 'text-slate-500', sub: 'Awaiting Handshake' },
+                  { label: 'Lattice_Breaches', val: summary.status_counts.error, icon: AlertTriangle, color: 'text-rose-400', sub: 'Immediate Response Req.' },
+              ].map((stat, i) => (
+                  <HolographicCard key={i} className="p-10 group flex flex-col justify-between min-h-[280px]">
+                      <div className="flex justify-between items-start">
+                          <div className={cn("p-5 rounded-[24px] bg-white/5 border border-white/5 shadow-2xl transition-all group-hover:scale-110", stat.color)}>
+                              <stat.icon className="h-8 w-8" />
+                          </div>
+                          <div className={cn(
+                              "w-2 h-2 rounded-full animate-pulse",
+                              stat.label.includes('Breaches') && stat.val > 0 ? "bg-rose-500 shadow-[0_0_10px_#f43f5e]" : "bg-emerald-500 shadow-[0_0_10px_#10b981]"
+                          )} />
+                      </div>
+                      <div className="mt-8">
+                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mb-2 italic">{stat.label}</p>
+                          <h3 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">{stat.val}</h3>
+                          <p className="text-[9px] text-slate-600 font-bold mt-4 uppercase tracking-widest italic">{stat.sub}</p>
+                      </div>
+                  </HolographicCard>
+              ))}
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recently Active Agents Widget */}
-            <Card>
-            <CardHeader>
-                <CardTitle>Recently Active Agents</CardTitle>
-                <CardDescription>Agents that have recently processed tasks.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                {summary?.recently_active_agents && summary.recently_active_agents.length > 0 ? (
-                <Table>
-                    <TableHeader>
-                    <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead className="hidden sm:table-cell">Template</TableHead>
-                        <TableHead className="text-center">Status</TableHead>
-                        <TableHead className="text-right">Last Activity</TableHead>
-                    </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                    {summary.recently_active_agents.map(agent => (
-                        <TableRow key={agent.agent_id}>
-                        <TableCell>
-                            <Link to={`/admin/configure-agent?agentId=${agent.agent_id}`} className="font-medium text-blue-600 hover:underline"> {/* TODO: Confirm admin edit route */}
-                                {agent.bank_specific_name}
-                            </Link>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">{agent.template_name}</TableCell>
-                        <TableCell className="text-center">
-                            <Badge variant={getStatusVariant(agent.status)}>{agent.status}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right text-xs">{format(new Date(agent.last_task_activity), 'PPpp')}</TableCell>
-                        </TableRow>
-                    ))}
-                    </TableBody>
-                </Table>
-                ) : (
-                <p className="text-sm text-gray-500 italic">No recently active agents found.</p>
-                )}
-            </CardContent>
-            </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            
+            {/* Recently Active Stream */}
+            <div className="lg:col-span-12 space-y-12">
+                <div className="flex items-center gap-6 px-4">
+                    <div className="p-4 rounded-[24px] bg-white/[0.03] border border-white/5 shadow-2xl">
+                        <Activity className="w-6 h-6 text-indigo-400 animate-pulse" />
+                    </div>
+                    <div className="space-y-1">
+                        <h3 className="text-2xl font-black italic uppercase tracking-[0.3em]">Neural Activity Stream</h3>
+                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.4em]">Live node interaction telemetry</p>
+                    </div>
+                </div>
 
-            {/* Agents in Error State Widget */}
-            <Card>
-            <CardHeader>
-                <CardTitle className="text-red-600">Agents in Error State</CardTitle>
-                <CardDescription>Agents currently marked with an error status.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                {summary?.error_state_agents && summary.error_state_agents.length > 0 ? (
-                <Table>
-                    <TableHeader>
-                    <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead className="hidden sm:table-cell">Template</TableHead>
-                        <TableHead className="text-right">Last Config Update</TableHead>
-                    </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                    {summary.error_state_agents.map(agent => (
-                        <TableRow key={agent.agent_id}>
-                        <TableCell>
-                            <Link to={`/admin/configure-agent?agentId=${agent.agent_id}`} className="font-medium text-blue-600 hover:underline"> {/* TODO: Confirm admin edit route */}
-                                {agent.bank_specific_name}
-                            </Link>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">{agent.template_name}</TableCell>
-                        <TableCell className="text-right text-xs">{format(new Date(agent.last_config_update), 'PPpp')}</TableCell>
-                        </TableRow>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                {summary?.recently_active_agents?.map((agent, idx) => (
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} key={agent.agent_id}>
+                        <HolographicCard className="p-10 border-l-4 border-transparent hover:border-indigo-500 transition-all cursor-pointer group">
+                            <div className="flex items-center gap-10">
+                                <div className="p-6 rounded-[32px] bg-white/5 border border-white/5 shadow-2xl transition-all duration-700 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white group-hover:rotate-12">
+                                    <Smartphone className="h-8 w-8" />
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <h4 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none group-hover:text-indigo-400 transition-colors">{agent.bank_specific_name}</h4>
+                                        {getStatusBadge(agent.status)}
+                                    </div>
+                                    <div className="flex items-center gap-8">
+                                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest italic">{agent.template_name}</p>
+                                        <div className="w-px h-3 bg-white/5" />
+                                        <div className="flex items-center gap-3">
+                                            <Clock className="w-3.5 h-3.5 text-slate-600" />
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">{format(new Date(agent.last_task_activity), 'PPpp')}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <Link to={`/admin/configure-agent?agentId=${agent.agent_id}`}>
+                                    <button className="h-16 w-16 rounded-[24px] bg-white/[0.03] border border-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all shadow-2xl">
+                                        <ChevronRight className="h-6 w-6" />
+                                    </button>
+                                </Link>
+                            </div>
+                        </HolographicCard>
+                    </motion.div>
+                ))}
+                </div>
+            </div>
+
+            {/* Error Roster */}
+            {summary?.error_state_agents && summary.error_state_agents.length > 0 && (
+                <div className="lg:col-span-12 space-y-12">
+                    <div className="flex items-center gap-6 px-4">
+                        <div className="p-4 rounded-[24px] bg-rose-500/10 border border-rose-500/20 shadow-2xl shadow-rose-500/10">
+                            <AlertTriangle className="w-6 h-6 text-rose-500 animate-pulse" />
+                        </div>
+                        <div className="space-y-1">
+                            <h3 className="text-2xl font-black italic uppercase tracking-[0.3em] text-rose-400">Lattice Breach Roster</h3>
+                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.4em]">Critical node failures requiring manual handshake</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    {summary.error_state_agents.map((agent, idx) => (
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} key={agent.agent_id}>
+                            <HolographicCard className="p-10 border-l-4 border-rose-600 bg-rose-900/5 hover:bg-rose-900/10 transition-all cursor-pointer group">
+                                <div className="flex items-center gap-10">
+                                    <div className="p-6 rounded-[32px] bg-rose-500/20 border border-rose-500/30 text-rose-400 shadow-2xl transition-all duration-700 group-hover:scale-110 group-hover:bg-rose-600 group-hover:text-white group-hover:rotate-12 group-hover:shadow-rose-500/40">
+                                        <AlertTriangle className="h-8 w-8" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <h4 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none group-hover:text-rose-400 transition-colors">{agent.bank_specific_name}</h4>
+                                            <Badge className="bg-rose-500/20 text-rose-400 border-none font-black text-[8px] uppercase tracking-widest px-3 py-1 rounded-full shadow-2xl">CRITICAL_FAIL</Badge>
+                                        </div>
+                                        <div className="flex items-center gap-8">
+                                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest italic">{agent.template_name}</p>
+                                            <div className="w-px h-3 bg-white/5" />
+                                            <p className="text-[9px] text-rose-400 font-bold uppercase tracking-widest italic">Last Config: {format(new Date(agent.last_config_update), 'PP')}</p>
+                                        </div>
+                                    </div>
+                                    <Link to={`/admin/configure-agent?agentId=${agent.agent_id}`}>
+                                        <button className="h-16 w-16 rounded-[24px] bg-rose-600 shadow-2xl shadow-rose-500/20 font-black text-white hover:bg-rose-500 transition-all">
+                                            <RefreshCw className="h-6 w-6" />
+                                        </button>
+                                    </Link>
+                                </div>
+                            </HolographicCard>
+                        </motion.div>
                     ))}
-                    </TableBody>
-                </Table>
-                ) : (
-                <p className="text-sm text-gray-500 italic">No agents currently in an error state.</p>
-                )}
-            </CardContent>
-            </Card>
+                    </div>
+                </div>
+            )}
         </div>
 
-      </div>
-    </Layout>
+        {/* Floating Mesh HUD */}
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40">
+            <div className="bg-black/60 backdrop-blur-3xl px-12 py-6 rounded-full border border-white/10 flex items-center gap-16 shadow-[0_0_80px_rgba(0,0,0,0.8)]">
+                <div className="flex items-center gap-5">
+                    <Database className="w-5 h-5 text-indigo-500 animate-pulse" />
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Global_Registry</span>
+                        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Master Node Sync Active</span>
+                    </div>
+                </div>
+                <div className="w-px h-8 bg-white/10" />
+                <div className="flex items-center gap-5">
+                    <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Consensus_Mesh</span>
+                        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Sovereign Validation Enforced</span>
+                    </div>
+                </div>
+                <div className="w-px h-8 bg-white/10" />
+                <div className="flex items-center gap-5">
+                    <Cpu className="w-5 h-5 text-slate-500" />
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">System_Ver</span>
+                        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Mesh_Control_v2.4</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </main>
+    </motion.div>
   );
 };
 

@@ -1,7 +1,7 @@
 # Service layer for Transaction Management
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, or_
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from . import models, schemas
 from .models import TransactionStatusEnum, TransactionChannelEnum, CurrencyEnum # Direct enum access
 import decimal
@@ -26,22 +26,21 @@ from weezy_cbs.messaging_notifications.services import notification_engine
 from weezy_cbs.accounts_ledger_management.models import Account
 from weezy_cbs.core_infrastructure_config_engine.services import AuditLogService
 
+from weezy_cbs.core_banking_engine.transaction_orchestrator import TransactionOrchestrator
+
 # --- Core Transaction Processing ---
 async def initiate_transaction(db: Session, transaction_in: schemas.TransactionCreateRequest, initiated_by_customer_id: Optional[int] = None) -> models.FinancialTransaction:
     """
     Initiates and processes a new financial transaction (Internal or Inter-bank NIP).
-    Includes real-time AI Fraud Screening and Communications Alerts.
+    Uses the Atomic TransactionOrchestrator for multi-leg ledger integrity.
     """
     # 1. AI Fraud Screening (Real-time)
     cust_id = initiated_by_customer_id or 1
-    
     fraud_decision = await fraud_shield_service.screen_transaction(db, cust_id, transaction_in.dict())
     
     if fraud_decision["decision"] == "BLOCK":
         AuditLogService.create_audit_log_entry(
-            db, 
-            action_type="FRAUD_BLOCK", 
-            entity_type="Transaction", 
+            db, action_type="FRAUD_BLOCK", entity_type="Transaction", 
             summary=f"Transaction blocked by AI: {fraud_decision['reasoning']}",
             details_after_json=json.dumps(transaction_in.dict())
         )
@@ -49,37 +48,21 @@ async def initiate_transaction(db: Session, transaction_in: schemas.TransactionC
 
     txn_id = _generate_transaction_id()
     
-    # ... rest of the logic ...
-    
-    # --- AUDIT LOG ---
-    AuditLogService.create_audit_log_entry(
-        db,
-        action_type="TRANSACTION_INITIATED",
-        entity_type="Transaction",
-        entity_id=txn_id,
-        summary=f"{transaction_in.transaction_type} of ₦{transaction_in.amount} initiated by customer {cust_id}."
-    )
-    
-    # Calculate Nigerian Taxes for transactions
-    taxes = calculate_nigerian_taxes(transaction_in.amount, decimal.Decimal("0.00")) # Service fee is 0 for now
-    total_to_debit = transaction_in.amount + taxes["total_tax"]
-    
+    # 2. Pre-auth Shadow Ledger Check
+    if not TransactionOrchestrator.pre_auth_check(db, transaction_in.debit_account_number, transaction_in.amount):
+        raise InsufficientFundsException(f"Insufficient funds for principal + regulatory taxes.")
+
+    # 3. Create Transaction Record (Pending)
     db_transaction = models.FinancialTransaction(
-        id=txn_id,
-        transaction_type=transaction_in.transaction_type,
-        channel=transaction_in.channel,
-        status=TransactionStatusEnum.PENDING,
-        amount=transaction_in.amount,
-        currency=transaction_in.currency,
+        id=txn_id, transaction_type=transaction_in.transaction_type,
+        channel=transaction_in.channel, status=TransactionStatusEnum.PENDING,
+        amount=transaction_in.amount, currency=transaction_in.currency,
         debit_account_number=transaction_in.debit_account_number,
         debit_account_name=transaction_in.debit_account_name,
-        debit_bank_code=transaction_in.debit_bank_code or "999",
         credit_account_number=transaction_in.credit_account_number,
         credit_account_name=transaction_in.credit_account_name,
         credit_bank_code=transaction_in.credit_bank_code,
-        narration=transaction_in.narration,
-        initiated_at=datetime.utcnow(),
-        tax_amount=taxes["total_tax"]
+        narration=transaction_in.narration, initiated_at=datetime.utcnow()
     )
     db.add(db_transaction)
     db.flush()
@@ -89,77 +72,40 @@ async def initiate_transaction(db: Session, transaction_in: schemas.TransactionC
 
     if is_internal:
         try:
-            # Internal Double-Entry
-            post_double_entry_transaction(
+            # Atomic Multi-Leg Synthesis
+            result = TransactionOrchestrator.process_multi_leg_transaction(
                 db=db,
-                debit_account_number=transaction_in.debit_account_number,
-                credit_account_number=transaction_in.credit_account_number,
-                amount=transaction_in.amount, # Base amount
-                currency=transaction_in.currency,
+                debit_account=transaction_in.debit_account_number,
+                credit_account=transaction_in.credit_account_number,
+                amount=transaction_in.amount,
+                currency=TransactionOrchestrator.CurrencyEnum[transaction_in.currency.value],
                 narration=transaction_in.narration,
-                financial_transaction_id=txn_id,
+                txn_id=txn_id,
                 channel=transaction_in.channel.value if hasattr(transaction_in.channel, 'value') else transaction_in.channel
             )
             
-            # --- POST TAX LEGS ---
-            if taxes["stamp_duty"] > 0:
-                post_double_entry_transaction(
-                    db=db,
-                    debit_account_number=transaction_in.debit_account_number,
-                    credit_account_number="GL-TAX-STAMP-DUTY-PAYABLE",
-                    amount=taxes["stamp_duty"],
-                    currency=transaction_in.currency,
-                    narration=f"STAMP DUTY: {transaction_in.narration}",
-                    financial_transaction_id=f"TAX_STAMP_{txn_id}",
-                    channel="SYSTEM_TAX"
-                )
-            
-            if taxes["vat"] > 0:
-                post_double_entry_transaction(
-                    db=db,
-                    debit_account_number=transaction_in.debit_account_number,
-                    credit_account_number="GL-TAX-VAT-PAYABLE",
-                    amount=taxes["vat"],
-                    currency=transaction_in.currency,
-                    narration=f"VAT: {transaction_in.narration}",
-                    financial_transaction_id=f"TAX_VAT_{txn_id}",
-                    channel="SYSTEM_TAX"
-                )
-
             db_transaction.status = TransactionStatusEnum.SUCCESSFUL
             db_transaction.processed_at = datetime.utcnow()
-            db_transaction.system_remarks = f"Internal transfer posted. Tax: ₦{taxes['total_tax']}"
+            db_transaction.tax_amount = result["taxes"]["total_tax"]
+            db_transaction.system_remarks = "Synthesized multi-leg internal transfer."
             db.commit()
             
             # --- REAL-TIME ALERTS ---
-            # 1. Alert Sender (Debit)
             sender_acc = db.query(Account).filter(Account.account_number == transaction_in.debit_account_number).first()
             if sender_acc:
                 await notification_engine.send_transaction_alert(db, sender_acc.customer_id, {
-                    "amount": transaction_in.amount,
-                    "account_number": transaction_in.debit_account_number,
-                    "narration": transaction_in.narration,
-                    "balance": sender_acc.ledger_balance
+                    "amount": transaction_in.amount, "account_number": transaction_in.debit_account_number,
+                    "narration": transaction_in.narration, "balance": sender_acc.ledger_balance
                 }, txn_type="DEBIT")
                 
-            # 2. Alert Recipient (Credit)
-            receiver_acc = db.query(Account).filter(Account.account_number == transaction_in.credit_account_number).first()
-            if receiver_acc:
-                await notification_engine.send_transaction_alert(db, receiver_acc.customer_id, {
-                    "amount": transaction_in.amount,
-                    "account_number": transaction_in.credit_account_number,
-                    "narration": transaction_in.narration,
-                    "balance": receiver_acc.ledger_balance
-                }, txn_type="CREDIT")
-
-            db.refresh(db_transaction)
             return db_transaction
+
         except Exception as e:
             db.rollback()
             db_transaction.status = TransactionStatusEnum.FAILED
             db_transaction.response_message = str(e)
             db.commit()
-            raise InvalidOperationException(f"Transaction failed: {str(e)}")
+            raise InvalidOperationException(f"Core Synthesis Failure: {str(e)}")
     else:
         # INTER-BANK (NIP) FLOW
         try:

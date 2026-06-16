@@ -9,7 +9,7 @@ from .services import (
     support_ticket_service, customer_note_service, faq_item_service, campaign_service
 )
 # Assuming an authentication dependency from core_infrastructure_config_engine
-from weezy_cbs.core_infrastructure_config_engine.api import get_current_active_superuser, get_performing_user_username
+from weezy_cbs.core_infrastructure_config_engine.api import get_current_active_user, get_current_active_superuser, get_performing_user_username
 from weezy_cbs.core_infrastructure_config_engine.models import User as CoreUser # For type hint
 
 # Main router for CRM & Customer Support
@@ -288,7 +288,6 @@ async def get_campaign_logs_endpoint(
 
 
 from .ai_support_service import ai_support_service
-from weezy_cbs.core_infrastructure_config_engine.api import get_current_active_user, get_current_active_superuser
 
 # --- AI Chatbot Endpoints ---
 chatbot_router = APIRouter(prefix="/chatbot", tags=["AI Support Bot"])

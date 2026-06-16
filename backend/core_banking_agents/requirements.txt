@@ -47,6 +47,9 @@ python-dotenv>=1.0.0,<1.2.0 # For loading .env files
 # Other specific needs for tools:
 # requests # For making HTTP requests in tools
 
-# Note: Some libraries like Prophet can have tricky installations.
+# ML & Embeddings
+torch>=2.0.0
+sentence-transformers>=2.2.0
+faiss-cpu>=1.7.0
 # It's good to specify versions to ensure compatibility.
 # Always check for the latest stable versions compatible with your Python version.

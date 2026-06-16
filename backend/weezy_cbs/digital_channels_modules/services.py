@@ -21,8 +21,13 @@ MAX_LOGIN_ATTEMPTS = 5
 ACCOUNT_LOCK_DURATION_MINUTES = 30
 USSD_SESSION_TIMEOUT_MINUTES = 5 # Standard USSD timeout
 
-# Local pwd_context if not sharing directly from core_infra for digital user passwords
+# Digital pwd_context if not sharing directly from core_infra for digital user passwords
 digital_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# JWT Configuration
+JWT_SECRET_KEY = "weezy-digital-secret-key-2026"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 def verify_digital_password(plain_password: str, hashed_password: str) -> bool:
     return digital_pwd_context.verify(plain_password, hashed_password)
@@ -298,7 +303,7 @@ class DigitalUserProfileService(BaseDigitalChannelService):
         dashboard_accounts: List[schemas.DashboardAccountSummarySchema] = []
         # In a real app:
         # from weezy_cbs.accounts_ledger_management.services import account_service as alm_account_service
-        # customer_accounts, _ = alm_account_service.get_accounts_for_customer(db, customer_id=profile.customer_id, limit=3, active_only=True)
+        # customer_accounts, _ = alm_account_service.get_accounts_by_customer_id(db, customer_id=profile.customer_id, limit=3, active_only=True)
         # for acc_model in customer_accounts:
         #     dashboard_accounts.append(schemas.DashboardAccountSummarySchema(
         #         account_id=acc_model.id,
@@ -498,7 +503,7 @@ class SessionLogService(BaseDigitalChannelService):
         return None
 
 from weezy_cbs.nigerian_market_utils import NigerianMarketUtils
-from weezy_cbs.accounts_ledger_management.services import get_account_by_number, get_accounts_for_customer
+from weezy_cbs.accounts_ledger_management.services import get_account_by_number, get_accounts_by_customer_id
 from weezy_cbs.transaction_management.services import initiate_transaction
 
 # --- USSD Service (Robust State Machine for Nigeria) ---
@@ -581,7 +586,7 @@ class USSDService(BaseDigitalChannelService):
                 profile = self._get_digital_user_profile(db, user_id=ussd_session.digital_user_profile_id)
                 # Simulated PIN validation (Should use hashing in production)
                 if user_input == "1234": 
-                    accounts = get_accounts_for_customer(db, profile.customer_id)
+                    accounts = get_accounts_by_customer_id(db, profile.customer_id)
                     if accounts:
                         acc = accounts[0]
                         response_text = f"END Account: {acc.account_number}\nBalance: ₦{acc.available_balance:,.2f}"
@@ -721,7 +726,7 @@ class USSDService(BaseDigitalChannelService):
                 if user_input == "1234": # Mock PIN
                     # Trigger real transaction
                     profile = self._get_digital_user_profile(db, user_id=ussd_session.digital_user_profile_id)
-                    accounts = get_accounts_for_customer(db, profile.customer_id)
+                    accounts = get_accounts_by_customer_id(db, profile.customer_id)
                     
                     from .schemas import USSDRequestSchema # Re-check imports if needed
                     from weezy_cbs.transaction_management.schemas import TransactionCreateRequest

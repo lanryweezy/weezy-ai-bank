@@ -3,23 +3,12 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
 from weezy_cbs.database import Base
+from weezy_cbs.core_infrastructure_config_engine.models import Branch
 
 class TillStatusEnum(enum.Enum):
     CLOSED = "CLOSED"
     OPEN = "OPEN"
     LOCKED = "LOCKED" # Due to limit breach
-
-class Branch(Base):
-    __tablename__ = "branches"
-
-    id = Column(Integer, primary_key=True, index=True)
-    branch_code = Column(String(10), unique=True, index=True, nullable=False) # e.g. "001"
-    name = Column(String(100), nullable=False) # e.g. "Ikeja Main Branch"
-    
-    vault_gl_account = Column(String(20), nullable=False) # e.g. "GL-CASH-VAULT-001"
-    address = Column(Text, nullable=True)
-    
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class TellerTill(Base):
     """A cash drawer assigned to a specific bank staff."""

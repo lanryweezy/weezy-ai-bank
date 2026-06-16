@@ -515,6 +515,12 @@ audit_log_router = APIRouter(
     dependencies=[Depends(get_current_active_superuser)] # Audit logs should be protected
 )
 
+@router.get("/account-officers/", response_model=List[schemas.UserResponse])
+def get_account_officers(db: Session = Depends(get_db)):
+    """Retrieves all staff members acting as Account Officers (Relationship Managers)."""
+    # Filter users who have the 'ACCOUNT_OFFICER' role
+    return db.query(models.User).join(models.User.roles).filter(models.Role.name == "ACCOUNT_OFFICER").all()
+
 @audit_log_router.get("/", response_model=schemas.PaginatedAuditLogResponse)
 def read_audit_logs(
     action_type: Optional[str] = None,

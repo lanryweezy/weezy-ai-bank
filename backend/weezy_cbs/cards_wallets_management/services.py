@@ -3,7 +3,7 @@ import decimal
 import random
 import string
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 
@@ -92,10 +92,24 @@ class MobileMoneyWalletService:
             "receiver_name": f"{receiver.customer.first_name} {receiver.customer.last_name}"
         }
 
+import os
 import hashlib
 import logging
+import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
+
+class CardBinRoutingService:
+    @staticmethod
+    def get_routing_path(pan: str) -> str:
+        return "LOCAL" if pan.startswith("5061") else "INTERNATIONAL"
+    
+    @staticmethod
+    def validate_fx_transaction(pan: str, amount: float, current_intl_spend: float) -> bool:
+        # Standard CBN $20/month limit for local cards
+        if pan.startswith("5061") and amount > 20.0:
+            return False
+        return True
 
 class CardManagementService:
     """

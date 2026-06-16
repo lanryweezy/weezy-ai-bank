@@ -9,7 +9,7 @@ import google.generativeai as genai
 
 from . import models, schemas
 from weezy_cbs.customer_identity_management.models import Customer
-from weezy_cbs.accounts_ledger_management.services import get_accounts_for_customer
+from weezy_cbs.accounts_ledger_management.services import get_accounts_by_customer_id
 from weezy_cbs.transaction_management.services import get_transactions_for_account
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ class CustomerRiskProfilingService:
             return profile
 
         # 1. Gather Context
-        accounts = get_accounts_for_customer(db, customer_id)
+        accounts = get_accounts_by_customer_id(db, customer_id)
         txn_data = []
         for acc in accounts:
             txns = get_transactions_for_account(db, acc.account_number, limit=20)
